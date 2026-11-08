@@ -1,0 +1,175 @@
+"use strict";
+/* MIB CBT · app shell — session, state sync, routing, sheets */
+const EMPTY_SOC={friendships:[],wordsTo:[],wordsFrom:[],reactTo:[],reactFrom:[],feedback:[]};
+function App(){
+ const [boot,setBoot]=useState(true);const [session,setSession]=useState(null);const [profile,setProfile]=useState(null);const [gateMsg,setGateMsg]=useState("");
+ const [st,setSt]=useState(null);const [items,setItems]=useState([]);
+ const [demo,setDemo]=useState(false);const [real,setReal]=useState(null);
+ const [route,setRoute]=useState("loading");const [tab,setTab]=useState("me");const [sheet,setSheet]=useState(null);const [fbOpen,setFbOpen]=useState(false);
+ const [toastMsg,setToastMsg]=useState("");const toastT=useRef(null);
+ const [draft,setDraft]=useState({sources:{youtube:"",calendar:"",story:""},answers:["","",""],photos:[]});
+ const [reading,setReading]=useState({status:"idle",chars:0,error:null});const ctl=useRef(null);
+ const [soc,setSoc]=useState(EMPTY_SOC);const [names,setNames]=useState({});const namesRef=useRef({});
+ const [notes,setNotes]=useState([]);const [anns,setAnns]=useState([]);const [aiReady,setAiReady]=useState(null);
+ const saveT=useRef(null);const loaded=useRef(false);const pendingHash=useRef(null);
+ const toast=useCallback(m=>{setToastMsg(m);clearTimeout(toastT.current);toastT.current=setTimeout(()=>setToastMsg(""),3400)},[]);
+ const uid=session&&session.user&&session.user.id;
+ const initialCode=useMemo(()=>{try{return (new URLSearchParams(location.search).get("code")||"").toUpperCase()}catch(e){return ""}},[]);
+
+ // ── names cache
+ const ensureNames=useCallback(async ids=>{const need=[...new Set((ids||[]).filter(id=>id&&!namesRef.current[id]))];if(!need.length)return;try{const m=await api.profiles(need);namesRef.current={...namesRef.current,...m};setNames(namesRef.current)}catch(e){}},[]);
+
+ // ── session bootstrap
+ useEffect(()=>{
+  try{const h=decodeURIComponent(location.hash||"");const m=h.match(/#u=(.+)$/);if(m)pendingHash.current=m[1]}catch(e){}
+  api.admin.ping().then(r=>setAiReady(!!r.ai)).catch(()=>setAiReady(null));
+  api.session().then(s=>{setSession(s);if(!s){setBoot(false);setRoute("gate")}}).catch(()=>{setBoot(false);setRoute("gate")});
+  const sub=api.onAuth((ev,s)=>{if(ev==="SIGNED_OUT"){setSession(null);setRoute("gate")}else if(s&&(ev==="TOKEN_REFRESHED"||ev==="SIGNED_IN"))setSession(x=>x&&x.user&&s.user&&x.user.id===s.user.id?s:x||s)});
+  return()=>{try{sub.unsubscribe()}catch(e){}}
+ },[]);
+
+ useEffect(()=>{if(!uid)return;let alive=true;loaded.current=false;setBoot(true);(async()=>{
+  try{
+   const p=await api.me(uid);if(!alive)return;
+   if(!p){await api.logout();setGateMsg("초대 등록이 확인되지 않은 계정입니다. 초대 코드로 다시 등록해 주세요.");setSession(null);setRoute("gate");setBoot(false);return}
+   setProfile(p);tracker.uid=uid;namesRef.current={...namesRef.current,[uid]:p};setNames(namesRef.current);
+   const [s,its]=await Promise.all([api.loadState(uid),api.loadItems(uid)]);if(!alive)return;
+   const ns=normState(s);setSt(ns);setItems(its);loaded.current=true;hydratePhotos(its);
+   track("app_open",{day:cbtDay(p.joined_at),w:window.innerWidth});
+   reloadSoc();loadInbox();
+   if(ns.analysis)setRoute("home");else{setRoute("welcome");setDraft(d=>({...d,sources:{youtube:ns.sources.youtube||"",calendar:ns.sources.calendar||"",story:ns.sources.story||""},answers:ns.answers}))}
+   if(pendingHash.current){const n=pendingHash.current;pendingHash.current=null;try{const t=await api.profileByNickname(n);if(t&&ns.analysis){setSheet("user:"+t.id);if(t.id!==uid)track("open_shared_link")}else if(t)toast(`${n}님의 카드는 첫 발견을 마친 뒤 볼 수 있어요.`)}catch(e){}try{history.replaceState(null,"",location.pathname+location.search)}catch(e){}}
+  }catch(e){toast("기록을 불러오지 못했습니다. 연결을 확인한 뒤 새로고침해 주세요.")}
+  finally{if(alive)setBoot(false)}
+ })();return()=>{alive=false}},[uid]);
+
+ async function hydratePhotos(its){const paths=its.flatMap(i=>[i.thumbPath,i.photoPath]).filter(Boolean);if(!paths.length)return;try{const m=await api.signedUrls(paths);setItems(list=>list.map(i=>({...i,thumbUrl:i.thumbUrl&&i.thumbUrl.startsWith("data:")?i.thumbUrl:m[i.thumbPath]||i.thumbUrl,photoUrl:i.photoUrl&&i.photoUrl.startsWith("data:")?i.photoUrl:m[i.photoPath]||i.photoUrl})))}catch(e){}}
+ const reloadSoc=useCallback(async()=>{if(!uid)return;try{const s=await api.social(uid);setSoc(s);ensureNames([...s.friendships.flatMap(f=>[f.requester,f.addressee]),...s.wordsTo.map(w=>w.from_id),...s.reactTo.map(r=>r.from_id)])}catch(e){}},[uid]);
+ const loadInbox=useCallback(async()=>{if(!uid)return;try{const [n,a]=await Promise.all([api.notifications(),api.announcements()]);setNotes(n||[]);setAnns(a||[]);ensureNames((n||[]).map(x=>x.actor_id))}catch(e){}},[uid]);
+ useEffect(()=>{if(!uid)return;const t=setInterval(()=>{if(document.visibilityState==="visible"){loadInbox();reloadSoc()}},60000);const v=()=>{if(document.visibilityState==="visible"){loadInbox();reloadSoc()}};document.addEventListener("visibilitychange",v);return()=>{clearInterval(t);document.removeEventListener("visibilitychange",v)}},[uid]);
+
+ // ── persist (debounced)
+ useEffect(()=>{if(!loaded.current||!st||demo||!uid)return;clearTimeout(saveT.current);saveT.current=setTimeout(()=>{api.saveState(uid,st).catch(()=>toast("저장하지 못했습니다. 연결을 확인해 주세요."))},800);return()=>clearTimeout(saveT.current)},[st]);
+
+ const socStats=useMemo(()=>{if(demo)return {friends:0,wordsReceived:0,wordsGiven:2,reactionsGiven:0,reactionsReceived:0,exitDone:false};return {friends:friendIds(uid,soc.friendships).length,wordsReceived:soc.wordsTo.length,wordsGiven:soc.wordsFrom.length,reactionsGiven:soc.reactFrom.length,reactionsReceived:soc.reactTo.filter(r=>r.target==="card").length,exitDone:soc.feedback.some(f=>f.kind==="exit")}},[soc,demo,uid]);
+ const day=profile?cbtDay(profile.joined_at):1;
+ const stats=useMemo(()=>st?{...statsOf(st,items,socStats),day}:null,[st,items,socStats,day]);
+ const dailyAnswered=soc.feedback.some(f=>f.kind==="daily"&&(f.payload||{}).day===Math.min(day,7));
+
+ // stage only rises; new badges → toast + feed
+ useEffect(()=>{if(!st||!stats||!st.analysis||demo||!loaded.current)return;const sg=stageOf(st,stats);const earned=BADGES.filter(b=>b.test(stats)).map(b=>b.id);const seen=st.flags.badgesSeen||[];const nw=earned.filter(id=>!seen.includes(id));
+  if(sg>(st.flags.maxStage||0)||nw.length){const prevStage=st.flags.maxStage||0;setSt(s=>({...s,flags:{...s.flags,maxStage:Math.max(sg,s.flags.maxStage||0),badgesSeen:[...new Set([...(s.flags.badgesSeen||[]),...earned])]}}));
+   if(sg>prevStage&&prevStage>0){api.postFeed("stage",{stage:sg});track("stage_up",{stage:sg})}
+   if(nw.length){const b=BADGES.find(x=>x.id===nw[0]);toast(`새 배지 · ${b.name}`);nw.forEach(id=>{if(["step1","step7","step30","shelf","comeback","refine"].includes(id))api.postFeed("badge",{id});track("badge",{id})})}}
+ },[stats]);
+
+ // keep the public card fresh
+ const pubT=useRef(null);
+ useEffect(()=>{if(demo||!uid||!st||!st.visibility.public||!st.analysis||!loaded.current)return;clearTimeout(pubT.current);pubT.current=setTimeout(()=>{api.publishCard(uid,buildPublicCard(st,items,stats),st.visibility.audience||"all").catch(()=>{})},1500);return()=>clearTimeout(pubT.current)},[st&&JSON.stringify([st.analysis,st.visibility,st.gemOverride,st.featured,activeDays(st)]),items.length,stats&&stageOf(st,stats),stats&&stats.connections]);
+
+ const update=useCallback(fn=>setSt(s=>{const n=clone(s);fn(n);return n}),[]);
+ useEffect(()=>{try{window.scrollTo(0,0)}catch(e){}},[route,tab]);
+ const screen=sheet||(route==="home"?tab:route);
+ useEffect(()=>{if(uid&&route!=="loading"&&route!=="gate")track("view",{s:String(screen).split(":")[0]})},[screen]);
+ const canAI=aiReady!==false&&!demo;
+
+ function startDemo(){setReal({st,items,route});setSt(normState(demoState()));setItems(DEMO_ITEMS);setDemo(true);setRoute("home");setTab("me");setSheet(null);track("demo_start")}
+ function endDemo(){if(real){setSt(real.st);setItems(real.items)}setDemo(false);setSheet(null);setRoute(real&&real.st&&real.st.analysis?"home":"welcome");setReal(null)}
+ function startFlow(){setRoute("connect");setSheet(null);track("flow_start")}
+
+ async function runAnalysis(feedback){
+  ctl.current=new AbortController();setReading({status:"waiting",chars:0,error:null});setRoute("reading");
+  const prev=st.analysis;const t0=Date.now();
+  const prompt=buildPrompt({sources:draft.sources,answers:draft.answers,photoCount:draft.photos.length,items,feedback,prev,logs:prev?st.logs:null,stepsDone:prev?(st.steps.done.length?[(st.steps.current||prev.firstStep).title]:[]):null,reflections:prev?st.reflections:null});
+  track("analysis_start",{re:!!prev,fb:!!feedback,photos:draft.photos.length,len:prompt.length});
+  try{
+   const images=[];for(const f of draft.photos.slice(0,4))images.push(await imageForAI(f));
+   const j=await api.aiJSON({task:"read",prompt,images,signal:ctl.current.signal});
+   const an=normAnalysis(j);
+   setSt(s=>{const n=clone(s);if(n.analysis){n.axesHistory=[...(n.axesHistory||[]),{at:n.analysis.at,axes:n.analysis.axes.map(x=>({name:x.name,level:x.level}))}].slice(-4)}if(!n.first)n.first={at:Date.now(),gem:{...an.gem},sentence:an.sentence,keywords:an.keywords,axes:an.axes.map(x=>({name:x.name,level:x.level}))};n.analysis=an;n.analyses=(n.analyses||0)+1;n.sources={youtube:draft.sources.youtube,calendar:draft.sources.calendar,story:draft.sources.story,photos:draft.photos.length,at:Date.now()};n.answers=draft.answers;n.steps.current=an.firstStep;n.steps.ideaIdx=0;n.gemOverride={};return n});
+   api.postFeed(prev?"reread":"discover",{gemName:gemName(an.gem)});track("analysis_done",{re:!!prev,ms:Date.now()-t0});
+   setDraft(d=>({...d,photos:[]}));setReading({status:"done",chars:0,error:null});setRoute("reveal");
+  }catch(e){const err=e&&e.code?e:{code:"upstream_error"};track("analysis_fail",{code:err.code});setReading({status:"error",chars:0,error:err})}
+ }
+ function stopAnalysis(){ctl.current&&ctl.current.abort()}
+
+ async function saveItem(item,opt,onlyFeature){
+  if(demo)return;
+  if(onlyFeature){update(s=>{const f=(s.featured||[]).filter(x=>x!==item.id);if(opt.feature){if(f.length>=3){toast("대표 아이템은 3개까지입니다.");s.featured=f.concat([]);return}f.push(item.id)}s.featured=f});return}
+  const exists=items.some(i=>i.id===item.id);
+  try{const body=await api.saveItem(uid,item);const view={...body,id:item.id,thumbUrl:item.thumb||(items.find(i=>i.id===item.id)||{}).thumbUrl,photoUrl:item.photo||(items.find(i=>i.id===item.id)||{}).photoUrl};setItems(list=>exists?list.map(i=>i.id===item.id?view:i):[view,...list]);track(exists?"item_edit":"item_add",{cat:item.category,photo:!!body.photoPath});toast(exists?"아이템을 저장했습니다.":"선반에 담았습니다.");setSheet("shelf")}catch(e){toast("저장하지 못했습니다. 사진이 너무 크면 다른 사진으로 시도해 주세요.")}
+ }
+ async function deleteItem(id){const it=items.find(i=>i.id===id);try{await api.deleteItem(uid,it||{id});setItems(list=>list.filter(i=>i.id!==id));update(s=>{s.featured=(s.featured||[]).filter(x=>x!==id)});track("item_delete");toast("선반에서 뺐습니다.");setSheet("shelf")}catch(e){toast("지우지 못했습니다.")}}
+ async function wipe(){try{await tracker.flush();await api.deleteMe();await api.logout();setSt(null);setItems([]);setProfile(null);setSession(null);setSheet(null);setRoute("gate");setGateMsg("계정과 모든 기록을 지웠습니다. 함께해 주셔서 고맙습니다.")}catch(e){toast("일부를 지우지 못했습니다. 다시 시도해 주세요.")}}
+ async function logout(){await tracker.flush();await api.logout();setSheet(null);setSt(null);setProfile(null);setSession(null);setRoute("gate");tracker.uid=null}
+ function reread(){setDraft(d=>({...d,sources:{youtube:st.sources.youtube||"",calendar:st.sources.calendar||"",story:st.sources.story||""},answers:st.answers||["","",""]}));setSheet(null);setRoute("connect");track("reread_open")}
+ async function setQuiet(v){try{await api.setQuiet(uid,v);setProfile(p=>({...p,quiet_view:v}));track("quiet",{on:v});toast(v?"조용히 보기를 켰어요.":"조용히 보기를 껐어요.")}catch(e){toast("바꾸지 못했습니다.")}}
+
+ function openSheet(k){
+  if(k==="home"){setRoute("home");setTab("me");setSheet(null);return}
+  if(k==="reread"){if(demo){toast("예시 모드에서는 다시 읽지 않습니다.");return}reread();return}
+  if(k.startsWith("tab:")){setRoute("home");setTab(k.slice(4));setSheet(null);return}
+  if(k==="week"&&day<7&&!(profile&&profile.role==="admin")){toast("7일 비교 카드는 Day 7에 열립니다.");return}
+  setSheet(k);
+ }
+ const openUser=id=>{if(!id)return;setSheet("user:"+id)};
+
+ // ── render
+ if(boot||route==="loading")return html`<div className="app"><div className="splash wrap"><div className="stack" style=${{alignItems:"center"}}><div className="pulse"><${GemView} g=${{stone:"오팔",form:"결정",texture:"유백",light:"번짐",hardness:2,grain:1,facets:8}} seed="splash" size=${120}/></div><p className="faint small">MyItemBook을 여는 중</p></div></div></div>`;
+ if(route==="gate"||!session||!profile||!st)return html`<div className="app">${gateMsg&&html`<div className="demo-bar wrap"><span>${gateMsg}</span><button onClick=${()=>setGateMsg("")}>닫기</button></div>`}<${Gate} initialCode=${initialCode} onSession=${(s,isNew)=>{setGateMsg("");setSession(s);if(isNew)setTimeout(()=>track("signup"),1500)}}/><${Toast} msg=${toastMsg}/></div>`;
+ if(route==="admin"&&profile.role==="admin")return html`<div className="app wide"><${AdminScreen} uid=${uid} toast=${toast} onExit=${()=>setRoute(st.analysis?"home":"welcome")}/><${Toast} msg=${toastMsg}/></div>`;
+
+ const unread=notes.filter(n=>!n.read_at).length;
+ let annSeen=0;try{annSeen=Number(localStorage.getItem("mib-ann-seen")||0)}catch(e){}
+ const newAnn=anns.length&&anns[0].id>annSeen;
+ const header=html`<header className="top wrap"><div className="logo">mib<small>${MIB_CONFIG.cohort}</small></div><div className="row" style=${{gap:"8px",flexWrap:"nowrap"}}>
+  <span className="chip gold" title="CBT 날짜">D${Math.min(day,99)}</span>
+  ${profile.role==="admin"&&html`<button className="iconbtn" aria-label="운영 콘솔" onClick=${()=>{setRoute("admin");setSheet(null)}}><${Ico} n="cog"/></button>`}
+  <button className="iconbtn badged" aria-label=${"알림"+(unread+(newAnn?1:0)?` ${unread+(newAnn?1:0)}개`:"")} onClick=${()=>setSheet("inbox")}><${Ico} n="bell"/>${(unread>0||newAnn)&&html`<span className="count">${unread+(newAnn?1:0)}</span>`}</button>
+  ${route==="home"&&html`<button className="iconbtn" aria-label="연결 지도와 내 데이터" onClick=${()=>setSheet("data")}><${Ico} n="data"/></button>`}
+ </div></header>`;
+ const demoBar=demo&&html`<div className="demo-bar wrap"><span>예시 인물 '서윤'으로 둘러보는 중 · 저장되지 않음</span><button onClick=${endDemo}>${real&&real.st&&real.st.analysis?"내 카드로 돌아가기":"나의 결 찾기"}</button></div>`;
+ const rt={aiReady};
+
+ const top=!demo&&html`<div className="stack">
+  ${newAnn&&html`<button className="panel ann" onClick=${()=>setSheet("inbox")}><span className="eyebrow">운영 공지</span><b>${anns[0].title}</b></button>`}
+  <${DailyQuestion} key=${"dq"+day} day=${day} answered=${dailyAnswered} toast=${toast} onDone=${reloadSoc}/>
+</div>`;
+ const mid=!demo&&html`<div className="stack">
+  <${Missions} day=${day} stats=${stats} onOpen=${openSheet}/>
+  ${day>=4&&stats.analyses<2&&html`<div className="panel tint stack"><b>중간 다시 읽기 · Day 4</b><span className="small muted">사흘 동안 남긴 한 줄과 한 걸음을 더해 나를 다시 읽어 보세요. 육각형에 지난 모습이 점선으로 겹쳐 보입니다.</span><button className="btn sm" onClick=${()=>openSheet("reread")}>새 기록 더해 다시 읽기</button></div>`}
+  ${day>=7&&html`<div className="panel stack weekcard"><b className="serif" style=${{color:"var(--accent)",fontSize:"18px"}}>일주일 전 vs 지금</b><span className="small muted">Day 1의 젬과 오늘의 젬을 한 장에 담았어요.</span><div className="row"><button className="btn sm grow" onClick=${()=>{openSheet("week");api.postFeed("week",{})}}>7일 비교 카드 보기</button>${!stats.exitDone&&html`<button className="btn ghost sm grow" onClick=${()=>setSheet("exit")}>마무리 설문</button>`}</div></div>`}
+ </div>`;
+
+ let body=null;
+ if(route==="welcome")body=html`<${Welcome} onStart=${startFlow} onDemo=${startDemo} rt=${rt} nickname=${profile.nickname}/>`;
+ else if(route==="connect")body=html`<${Connect} draft=${draft} setDraft=${setDraft} rt=${rt} hasItems=${items.length>0} onBack=${()=>setRoute(st.analysis?"home":"welcome")} onNext=${()=>setRoute("questions")}/>`;
+ else if(route==="questions")body=html`<${Questions} draft=${draft} setDraft=${setDraft} onBack=${()=>setRoute("connect")} onNext=${()=>runAnalysis()}/>`;
+ else if(route==="reading")body=html`<${Reading} status=${reading.status} chars=${reading.chars} error=${reading.error} onStop=${stopAnalysis} onRetry=${()=>runAnalysis()} onBack=${()=>setRoute("connect")} onDemo=${startDemo}/>`;
+ else if(route==="reveal"&&st.analysis)body=html`<${Reveal} st=${st} onOpen=${openSheet} onConfirm=${()=>{update(s=>{s.analysis.status="yes"});track("reveal_yes")}} onEdit=${(sent,kw)=>{update(s=>{s.analysis.editSentence=sent||s.analysis.sentence;s.analysis.editKeywords=kw.length?kw:s.analysis.keywords;s.analysis.status="edited";s.flags.edited=true});track("reveal_edit")}} onDiffer=${fb=>{track("reveal_differ");runAnalysis(fb)}}/>`;
+ else if(st.analysis){
+  if(tab==="me")body=html`<${MeTab} st=${st} items=${items} soc=${demo?EMPTY_SOC:soc} stats=${stats} onOpen=${openSheet} names=${names} top=${top} mid=${mid}/>`;
+  else if(tab==="step")body=html`<${StepTab} st=${st} update=${update} stats=${stats} canAI=${canAI} toast=${toast} onOpen=${openSheet} demo=${demo}/>`;
+  else if(tab==="feed")body=html`<${FeedTab} uid=${uid} soc=${soc} names=${names} openUser=${openUser} toast=${toast} demo=${demo} reloadSoc=${reloadSoc} ensureNames=${ensureNames}/>`;
+  else body=html`<${FriendsTab} uid=${uid} st=${st} soc=${soc} names=${names} reloadSoc=${reloadSoc} openUser=${openUser} toast=${toast} profile=${profile} demo=${demo} ensureNames=${ensureNames}/>`;
+ } else body=html`<${Welcome} onStart=${startFlow} onDemo=${startDemo} rt=${rt} nickname=${profile.nickname}/>`;
+
+ let sheetEl=null;const close=()=>setSheet(null);
+ if(sheet==="inbox")sheetEl=html`<${InboxSheet} uid=${uid} notes=${notes} anns=${anns} names=${names} soc=${soc} onClose=${()=>{close();loadInbox()}} openUser=${openUser} reloadSoc=${reloadSoc} toast=${toast}/>`;
+ else if(sheet==="data")sheetEl=html`<${DataSheet} st=${st} items=${items} profile=${profile} onClose=${close} onWipe=${wipe} onReread=${()=>openSheet("reread")} onLogout=${logout} toast=${toast} demo=${demo} setQuiet=${setQuiet}/>`;
+ else if(sheet&&sheet.startsWith("user:"))sheetEl=html`<${ProfileSheet} key=${sheet} id=${sheet.slice(5)} uid=${uid} st=${st} soc=${soc} names=${names} onClose=${close} openUser=${openUser} reloadSoc=${reloadSoc} toast=${toast} demo=${demo} ensureNames=${ensureNames}/>`;
+ else if(sheet&&st.analysis){
+  if(sheet==="evidence")sheetEl=html`<${EvidenceSheet} st=${st} update=${update} onClose=${close}/>`;
+  else if(sheet==="attrs")sheetEl=html`<${AttrsSheet} st=${st} update=${update} onClose=${close}/>`;
+  else if(sheet==="shelf")sheetEl=html`<${ShelfSheet} st=${st} items=${items} onOpen=${openSheet} onClose=${close}/>`;
+  else if(sheet.startsWith("item:")){const id=sheet.slice(5);const it=id==="new"?null:items.find(i=>i.id===id);sheetEl=html`<${ItemEditor} key=${sheet} item=${it} st=${st} canAI=${canAI} demo=${demo} toast=${toast} onSave=${saveItem} onDelete=${deleteItem} onClose=${()=>setSheet("shelf")}/>`}
+  else if(sheet==="publish")sheetEl=html`<${PublishSheet} st=${st} items=${items} stats=${stats} update=${update} onClose=${close} toast=${toast} demo=${demo} meName=${profile.nickname} uid=${uid}/>`;
+  else if(sheet==="mine")sheetEl=demo?null:html`<${MineSheet} uid=${uid} soc=${soc} names=${names} profile=${profile} onClose=${close} openUser=${openUser} ensureNames=${ensureNames}/>`;
+  else if(sheet==="cardimg"||sheet==="week")sheetEl=html`<${ShareImageSheet} kind=${sheet==="week"?"week":"card"} st=${st} stats=${stats} profile=${profile} onClose=${close} toast=${toast} exitDone=${stats.exitDone} onExit=${()=>setSheet("exit")}/>`;
+  else if(sheet==="exit")sheetEl=html`<${ExitSurvey} onClose=${close} stats=${stats} toast=${toast} onDone=${()=>{close();reloadSoc()}}/>`;
+ }
+ const tabs=route==="home"&&st.analysis&&html`<nav className="tabbar" aria-label="메인">${[["me","나","me"],["step","한 걸음","step"],["feed","소식","feed"],["friends","친구","people"]].map(([k,t,ic])=>html`<button key=${k} className="tab" aria-current=${tab===k?"page":undefined} onClick=${()=>{setTab(k);setSheet(null);window.scrollTo(0,0)}}><${Ico} n=${ic}/>${t}${k==="friends"&&soc.friendships.some(f=>f.status==="pending"&&f.addressee===uid)?html`<i className="tabdot" aria-label="새 친구 요청"></i>`:null}</button>`)}</nav>`;
+ const fab=!demo&&!fbOpen&&route!=="reading"&&html`<button className=${"fab"+(tabs?" up":"")} onClick=${()=>setFbOpen(true)} aria-label="이 화면에 대한 의견 보내기"><${Ico} n="chat"/>의견</button>`;
+ return html`<div className="app">${header}${demoBar}${body}${tabs}${sheetEl}${fab}${fbOpen&&html`<${FeedbackSheet} screen=${screen} onClose=${()=>setFbOpen(false)} toast=${toast}/>`}<${Toast} msg=${toastMsg}/></div>`;
+}
+ReactDOM.createRoot(document.getElementById("root")).render(html`<${App}/>`);
