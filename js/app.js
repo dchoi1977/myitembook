@@ -106,7 +106,7 @@ function App(){
 
  // keep the public card fresh
  const pubT=useRef(null);
- useEffect(()=>{if(demo||!uid||!st||!st.visibility.public||!st.analysis||!loaded.current)return;clearTimeout(pubT.current);pubT.current=setTimeout(()=>{api.publishCard(uid,buildPublicCard(st,items,stats),st.visibility.audience||"all").catch(()=>{})},1500);return()=>clearTimeout(pubT.current)},[st&&JSON.stringify([st.analysis,st.visibility,st.gemOverride,st.featured,activeDays(st)]),items.length,stats&&stageOf(st,stats),stats&&stats.connections]);
+ useEffect(()=>{if(demo||!uid||!st||!st.visibility.public||!st.analysis||!loaded.current)return;clearTimeout(pubT.current);pubT.current=setTimeout(()=>{api.publishCard(uid,buildPublicCard(st,items,stats),st.visibility.audience||"all").catch(()=>{})},1500);return()=>clearTimeout(pubT.current)},[st&&JSON.stringify([st.analysis,st.visibility,st.gemOverride,st.featured,activeDays(st),st.quick&&st.quick.answers&&[st.quick.answers.mbti,st.quick.answers.blood],st.flags&&[st.flags.title,st.flags.frame,st.flags.pins,st.flags.marks,(st.flags.badgesSeen||[]).length]]),items.length,stats&&stageOf(st,stats),stats&&stats.connections]);
 
  const update=useCallback(fn=>setSt(s=>{const n=clone(s);fn(n);return n}),[]);
  useEffect(()=>{try{window.scrollTo(0,0)}catch(e){}},[route,tab]);
