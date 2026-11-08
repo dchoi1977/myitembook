@@ -205,6 +205,7 @@ function AttrsSheet({st,update,onClose}){
     <div className="row between"><span className="v">${val[t.k]}</span><span className="faint small">${t.speed}</span></div>
     <span className="small muted">${t.mean} — ${t.look}</span>
     ${r[t.k]&&html`<span className="small"><span className="tag">근거</span>${r[t.k]}</span>`}
+    ${(a.gem.basis||{})[t.k]&&html`<span className="small faint"><span className="tag">계산</span>${a.gem.basis[t.k]}</span>`}
     ${growth[t.k]&&html`<span className="small" style=${{color:"var(--gold)"}}>${growth[t.k]}</span>`}
     ${t.k==="색"&&html`<div className="picker" role="group" aria-label="돌 고르기">${STONE_NAMES.map(s=>html`<button key=${s} aria-pressed=${g.stone===s} onClick=${()=>update(x=>{x.gemOverride={...x.gemOverride,stone:s}})}>${s}</button>`)}</div>`}
     ${t.k==="상"&&html`<div className="picker" role="group" aria-label="상 고르기">${SYMBOLS.map(s=>html`<button key=${s} aria-pressed=${g.symbol===s} onClick=${()=>update(x=>{x.gemOverride={...x.gemOverride,symbol:s}})}>${s}</button>`)}</div>`}
