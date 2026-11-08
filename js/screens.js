@@ -35,14 +35,13 @@ function Connect({draft,setDraft,rt,onNext,onBack,hasItems}){
  const tog=k=>setOpen(o=>o===k?null:k);
  return html`<div className="main wrap">
   <${Progress} n=${1}/>
-  <div className="stack"><div className="eyebrow">첫 연결</div><h1 className="h2">무엇으로 나를 읽을까요?</h1><p className="muted">하나만 건네도 충분합니다. 정식 앱에서는 계정을 연결하면 자동으로 가져오고, 이번 CBT에서는 붙여 넣거나 골라서 건넵니다.</p></div>
+  <div className="stack"><div className="eyebrow">첫 연결</div><h1 className="h2">무엇으로 나를 읽을까요?</h1><p className="muted">하나만 건네도 충분합니다. 유튜브는 채널 주소만 넣으면 자동으로 읽어오고, 나머지는 붙여 넣거나 골라서 건넵니다.</p></div>
   <div className="stack">
    <${SourceCard} icon="pen" title="나의 이야기" desc="요즘 하는 일, 오래 해 온 것, 다시 시작한 것" open=${open==="story"} onToggle=${()=>tog("story")} filled=${!!s.story.trim()}>
     <div className="field"><label htmlFor="src-story">자유롭게 적어 주세요</label><textarea id="src-story" value=${s.story} onChange=${e=>set("story",e.target.value)} placeholder="예) 3년째 주말마다 동네 뒷산을 오르고, 다녀오면 사진과 짧은 글을 블로그에 올립니다. 작년에 잠시 쉬었다가 올봄 다시 시작했어요."></textarea></div>
    <//>
-   <${SourceCard} icon="yt" title="유튜브 채널" desc="내 채널의 업로드 제목·날짜 목록" open=${open==="youtube"} onToggle=${()=>tog("youtube")} filled=${!!s.youtube.trim()}>
-    <div className="field"><label htmlFor="src-yt">업로드 목록 붙여 넣기</label><textarea id="src-yt" value=${s.youtube} onChange=${e=>set("youtube",e.target.value)} placeholder=${"예)\n2025.03.02  10분 김치찌개\n2025.03.16  자취생 일주일 장보기\n(YouTube 스튜디오 › 콘텐츠 목록을 복사해 붙여 넣어도 됩니다)"}></textarea></div>
-    <div className="reads"><b>읽는 것</b><span>제목·날짜·업로드 주기</span><b>읽지 않음</b><span>댓글 작성자, 수익, 구독자 신원</span></div>
+   <${SourceCard} icon="yt" title="유튜브 채널" desc="채널 주소만 넣으면 업로드 목록을 읽어옵니다" open=${open==="youtube"} onToggle=${()=>tog("youtube")} filled=${!!s.youtube.trim()}>
+    <${YouTubeSource} s=${s} set=${set} setDraft=${setDraft} ready=${rt.ytReady}/>
    <//>
    <${SourceCard} icon="cal" title="캘린더" desc="반복 일정이나 지난 한 달의 일정" open=${open==="calendar"} onToggle=${()=>tog("calendar")} filled=${!!s.calendar.trim()}>
     <div className="field"><label htmlFor="src-cal">일정 붙여 넣기</label><textarea id="src-cal" value=${s.calendar} onChange=${e=>set("calendar",e.target.value)} placeholder=${"예)\n매주 토 07:00 등산 모임\n화·목 20:00 영어 스터디\n11/3 후배 이력서 봐 주기"}></textarea></div>
@@ -57,6 +56,34 @@ function Connect({draft,setDraft,rt,onNext,onBack,hasItems}){
   ${hasItems&&html`<p className="small muted">선반에 담은 아이템도 함께 읽습니다.</p>`}
   <div className="panel tint small"><b>이렇게 다룹니다</b><br/>건네준 글과 사진만 읽고, 사람을 이름으로 찾거나 건강·종교·정치를 추정하지 않습니다. 해석 결과와 내가 적은 글은 나만 보기로 저장됩니다. AI 해석은 Anthropic의 Claude가 처리하며, MIB는 내 기록을 광고나 판매에 쓰지 않습니다.</div>
   <div className="row"><button className="btn ghost" onClick=${onBack}>이전</button><button className="btn grow" disabled=${!any} onClick=${onNext}>다음 — 질문 3개</button></div>
+ </div>`;
+}
+/* ───────── YouTube: channel URL → upload titles & dates (via mib-api) ───────── */
+const YT_ERR={yt_not_configured:"채널 자동 읽기는 운영자가 준비 중이에요. 지금은 아래에 목록을 직접 붙여 넣어 주세요.",yt_quota:"오늘 유튜브 조회 한도를 다 썼어요. 내일 다시 시도하거나 직접 붙여 넣어 주세요.",yt_invalid:"채널 주소를 확인해 주세요. 예) youtube.com/@핸들, @핸들, youtube.com/channel/UC…",yt_not_found:"그 주소로 채널을 찾지 못했습니다. 채널 홈 주소를 그대로 붙여 넣어 보세요.",yt_unavailable:"유튜브에서 목록을 받지 못했습니다. 잠시 뒤 다시 시도하거나 아래에 직접 붙여 넣어 주세요.",network:"인터넷 연결을 확인해 주세요."};
+function fmtSec(n){if(!n)return "";const h=Math.floor(n/3600),m=Math.floor(n%3600/60),s=n%60;return h?`${h}:${pad(m)}:${pad(s)}`:`${m}:${pad(s)}`}
+function ytDigest(res){
+ const ch=res.channel||{};const v=(res.videos||[]).filter(x=>x.t&&x.d).sort((a,b)=>a.d<b.d?1:-1);
+ const dates=v.map(x=>x.d).sort();const L=[];
+ L.push(`채널: ${ch.title||"(이름 없음)"}${ch.since?` · ${ch.since.slice(0,4)}년 개설`:""} · ${res.source==="api"?`업로드 ${v.length}편${ch.total&&ch.total>v.length?` (전체 ${ch.total}편 중 최근)`:""}`:`최근 업로드 ${v.length}편`}`);
+ if(dates.length>=3){const span=daysBetween(dates[0],dates[dates.length-1]);const avg=span/(dates.length-1);L.push(`업로드 주기: ${avg<1.5?"거의 매일":`평균 ${Math.round(avg)}일마다`} (${dates[0].replace(/-/g,".")} ~ ${dates[dates.length-1].replace(/-/g,".")})`)}
+ if(ch.description)L.push(`채널 소개: ${ch.description.replace(/\s+/g," ").slice(0,200)}`);
+ L.push("");v.forEach(x=>L.push(`${x.d.replace(/-/g,".")}  ${x.t}${x.sec?`  (${fmtSec(x.sec)})`:""}`));
+ return {text:L.join("\n"),count:v.length};
+}
+function YouTubeSource({s,set,setDraft,ready}){
+ const [url,setUrl]=useState((s.youtubeChannel&&s.youtubeChannel.url)||"");const [busy,setBusy]=useState(false);const [err,setErr]=useState("");
+ const ch=s.youtubeChannel;
+ async function fetchYT(e){e&&e.preventDefault();if(!url.trim())return;setBusy(true);setErr("");try{const r=await api.youtube(url.trim());const d=ytDigest(r);if(!d.count){setErr("공개된 영상이 없는 채널이에요. 영상이 올라온 뒤 다시 시도해 주세요.");track("yt_empty");return}
+  setDraft(x=>({...x,sources:{...x.sources,youtube:d.text,youtubeChannel:{id:r.channel.id,title:r.channel.title,count:d.count,source:r.source,url:url.trim(),at:Date.now()}}}));track("yt_fetch",{n:d.count,src:r.source})}
+  catch(x){setErr(YT_ERR[x.code]||"목록을 가져오지 못했습니다. 잠시 뒤 다시 시도해 주세요.");track("yt_fail",{code:x.code})}finally{setBusy(false)}}
+ return html`<div className="stack">
+  <form className="field" onSubmit=${fetchYT}><label htmlFor="src-yt-url">내 채널 주소 또는 @핸들</label>
+   <div className="row" style=${{flexWrap:"nowrap"}}><input type="text" id="src-yt-url" value=${url} onChange=${e=>setUrl(e.target.value)} placeholder="예) youtube.com/@mychannel" autoCapitalize="off" autoCorrect="off" style=${{flex:1,minWidth:0}}/><button className="btn sm" disabled=${busy||!url.trim()||ready===false}>${busy?"읽는 중…":"가져오기"}</button></div>
+   <span className="hint">${ready===false?"채널 자동 읽기는 운영자가 준비 중이에요. 지금은 아래에 목록을 직접 붙여 넣어 주세요.":"채널 주소, @핸들, 내 영상 링크 중 아무거나 됩니다. 공개 영상의 제목·날짜·길이만 읽어요."}</span></form>
+  ${err&&html`<p className="err" role="alert">${err}</p>`}
+  ${ch&&s.youtube.trim()&&html`<div className="panel tint small row" style=${{flexWrap:"nowrap"}}><span className="ytmark"><${Ico} n="yt"/></span><span className="grow"><b>${ch.title}</b> · 영상 ${ch.count}편을 가져왔어요</span><button className="linkbtn small" onClick=${()=>setDraft(x=>({...x,sources:{...x.sources,youtube:"",youtubeChannel:null}}))}>빼기</button></div>`}
+  <div className="field"><label htmlFor="src-yt">${ch?"가져온 목록 — 빼고 싶은 영상은 지워도 돼요":"또는 업로드 목록 직접 붙여 넣기"}</label><textarea id="src-yt" value=${s.youtube} onChange=${e=>set("youtube",e.target.value)} style=${{minHeight:ch?"160px":"110px"}} placeholder=${"예)\n2025.03.02  10분 김치찌개\n2025.03.16  자취생 일주일 장보기"}></textarea></div>
+  <div className="reads"><b>읽는 것</b><span>공개 영상 제목·날짜·길이, 업로드 주기</span><b>읽지 않음</b><span>조회수, 구독자 수, 댓글, 수익</span></div>
  </div>`;
 }
 function Questions({draft,setDraft,onNext,onBack}){
@@ -270,7 +297,7 @@ function DataSheet({st,items,profile,onClose,onWipe,onReread,onLogout,toast,demo
  return html`<${Sheet} title="연결 지도와 내 데이터" onClose=${onClose}>
   <div className="panel stack small"><b>${profile.nickname} · ${MIB_CONFIG.cohort}</b><span>${demo?"예시 모드 · 저장하지 않음":"기록은 내 계정에만 보이는 서버 저장소에 보관됩니다. 운영 화면에는 원문 기록이 나타나지 않고, 테스트 지표는 사용 횟수만 집계합니다."}</span></div>
   <div className="stack"><h2 className="h3">연결 지도</h2>
-   <div className="list">${[["yt","유튜브 채널",src.youtube],["cal","캘린더",src.calendar],["pen","나의 이야기",src.story]].map(([ic,t,v])=>html`<div className="list-row" key=${t} style=${{cursor:"default"}}><span className="ico"><${Ico} n=${ic}/></span><span className="grow"><span className="t">${t}</span><br/><span className="d">${(v||"").trim()?`${v.trim().length.toLocaleString()}자 · 해석에 사용`:"연결 안 함"}</span></span></div>`)}
+   <div className="list">${[["yt","유튜브 채널",src.youtube],["cal","캘린더",src.calendar],["pen","나의 이야기",src.story]].map(([ic,t,v])=>html`<div className="list-row" key=${t} style=${{cursor:"default"}}><span className="ico"><${Ico} n=${ic}/></span><span className="grow"><span className="t">${t}</span><br/><span className="d">${(v||"").trim()?(ic==="yt"&&src.youtubeChannel?`${src.youtubeChannel.title} · 영상 ${src.youtubeChannel.count}편 · 해석에 사용`:`${v.trim().length.toLocaleString()}자 · 해석에 사용`):"연결 안 함"}</span></span></div>`)}
    <div className="list-row" style=${{cursor:"default"}}><span className="ico"><${Ico} n="photo"/></span><span className="grow"><span className="t">사진 갤러리</span><br/><span className="d">${src.photos?`${src.photos}장 · 해석에만 쓰고 저장 안 함`:"연결 안 함"}</span></span></div></div>
    <p className="note">마지막으로 읽은 때: ${src.at?new Date(src.at).toLocaleString("ko-KR"):"없음"}</p>
   </div>

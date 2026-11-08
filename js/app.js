@@ -10,7 +10,7 @@ function App(){
  const [draft,setDraft]=useState({sources:{youtube:"",calendar:"",story:""},answers:["","",""],photos:[]});
  const [reading,setReading]=useState({status:"idle",chars:0,error:null});const ctl=useRef(null);
  const [soc,setSoc]=useState(EMPTY_SOC);const [names,setNames]=useState({});const namesRef=useRef({});
- const [notes,setNotes]=useState([]);const [anns,setAnns]=useState([]);const [aiReady,setAiReady]=useState(null);
+ const [notes,setNotes]=useState([]);const [anns,setAnns]=useState([]);const [aiReady,setAiReady]=useState(null);const [ytReady,setYtReady]=useState(null);
  const saveT=useRef(null);const loaded=useRef(false);const pendingHash=useRef(null);
  const toast=useCallback(m=>{setToastMsg(m);clearTimeout(toastT.current);toastT.current=setTimeout(()=>setToastMsg(""),3400)},[]);
  const uid=session&&session.user&&session.user.id;
@@ -22,7 +22,7 @@ function App(){
  // ── session bootstrap
  useEffect(()=>{
   try{const h=decodeURIComponent(location.hash||"");const m=h.match(/#u=(.+)$/);if(m)pendingHash.current=m[1]}catch(e){}
-  api.admin.ping().then(r=>setAiReady(!!r.ai)).catch(()=>setAiReady(null));
+  api.admin.ping().then(r=>{setAiReady(!!r.ai);setYtReady(!!r.yt)}).catch(()=>setAiReady(null));
   api.session().then(s=>{setSession(s);if(!s){setBoot(false);setRoute("gate")}}).catch(()=>{setBoot(false);setRoute("gate")});
   const sub=api.onAuth((ev,s)=>{if(ev==="SIGNED_OUT"){setSession(null);setRoute("gate")}else if(s&&(ev==="TOKEN_REFRESHED"||ev==="SIGNED_IN"))setSession(x=>x&&x.user&&s.user&&x.user.id===s.user.id?s:x||s)});
   return()=>{try{sub.unsubscribe()}catch(e){}}
@@ -37,7 +37,7 @@ function App(){
    const ns=normState(s);setSt(ns);setItems(its);loaded.current=true;hydratePhotos(its);
    track("app_open",{day:cbtDay(p.joined_at),w:window.innerWidth});
    reloadSoc();loadInbox();
-   if(ns.analysis)setRoute("home");else{setRoute("welcome");setDraft(d=>({...d,sources:{youtube:ns.sources.youtube||"",calendar:ns.sources.calendar||"",story:ns.sources.story||""},answers:ns.answers}))}
+   if(ns.analysis)setRoute("home");else{setRoute("welcome");setDraft(d=>({...d,sources:{youtube:ns.sources.youtube||"",youtubeChannel:ns.sources.youtubeChannel||null,calendar:ns.sources.calendar||"",story:ns.sources.story||""},answers:ns.answers}))}
    if(pendingHash.current){const n=pendingHash.current;pendingHash.current=null;try{const t=await api.profileByNickname(n);if(t&&ns.analysis){setSheet("user:"+t.id);if(t.id!==uid)track("open_shared_link")}else if(t)toast(`${n}님의 카드는 첫 발견을 마친 뒤 볼 수 있어요.`)}catch(e){}try{history.replaceState(null,"",location.pathname+location.search)}catch(e){}}
   }catch(e){toast("기록을 불러오지 못했습니다. 연결을 확인한 뒤 새로고침해 주세요.")}
   finally{if(alive)setBoot(false)}
@@ -86,7 +86,7 @@ function App(){
    const images=[];for(const f of draft.photos.slice(0,4))images.push(await imageForAI(f));
    const j=await api.aiJSON({task:"read",prompt,images,signal:ctl.current.signal});
    const an=normAnalysis(j);
-   setSt(s=>{const n=clone(s);if(n.analysis){n.axesHistory=[...(n.axesHistory||[]),{at:n.analysis.at,axes:n.analysis.axes.map(x=>({name:x.name,level:x.level}))}].slice(-4)}if(!n.first)n.first={at:Date.now(),gem:{...an.gem},sentence:an.sentence,keywords:an.keywords,axes:an.axes.map(x=>({name:x.name,level:x.level}))};n.analysis=an;n.analyses=(n.analyses||0)+1;n.sources={youtube:draft.sources.youtube,calendar:draft.sources.calendar,story:draft.sources.story,photos:draft.photos.length,at:Date.now()};n.answers=draft.answers;n.steps.current=an.firstStep;n.steps.ideaIdx=0;n.gemOverride={};return n});
+   setSt(s=>{const n=clone(s);if(n.analysis){n.axesHistory=[...(n.axesHistory||[]),{at:n.analysis.at,axes:n.analysis.axes.map(x=>({name:x.name,level:x.level}))}].slice(-4)}if(!n.first)n.first={at:Date.now(),gem:{...an.gem},sentence:an.sentence,keywords:an.keywords,axes:an.axes.map(x=>({name:x.name,level:x.level}))};n.analysis=an;n.analyses=(n.analyses||0)+1;n.sources={youtube:draft.sources.youtube,youtubeChannel:draft.sources.youtube.trim()?(draft.sources.youtubeChannel||null):null,calendar:draft.sources.calendar,story:draft.sources.story,photos:draft.photos.length,at:Date.now()};n.answers=draft.answers;n.steps.current=an.firstStep;n.steps.ideaIdx=0;n.gemOverride={};return n});
    api.postFeed(prev?"reread":"discover",{gemName:gemName(an.gem)});track("analysis_done",{re:!!prev,ms:Date.now()-t0});
    setDraft(d=>({...d,photos:[]}));setReading({status:"done",chars:0,error:null});setRoute("reveal");
   }catch(e){const err=e&&e.code?e:{code:"upstream_error"};track("analysis_fail",{code:err.code});setReading({status:"error",chars:0,error:err})}
@@ -102,7 +102,7 @@ function App(){
  async function deleteItem(id){const it=items.find(i=>i.id===id);try{await api.deleteItem(uid,it||{id});setItems(list=>list.filter(i=>i.id!==id));update(s=>{s.featured=(s.featured||[]).filter(x=>x!==id)});track("item_delete");toast("선반에서 뺐습니다.");setSheet("shelf")}catch(e){toast("지우지 못했습니다.")}}
  async function wipe(){try{await tracker.flush();await api.deleteMe();await api.logout();setSt(null);setItems([]);setProfile(null);setSession(null);setSheet(null);setRoute("gate");setGateMsg("계정과 모든 기록을 지웠습니다. 함께해 주셔서 고맙습니다.")}catch(e){toast("일부를 지우지 못했습니다. 다시 시도해 주세요.")}}
  async function logout(){await tracker.flush();await api.logout();setSheet(null);setSt(null);setProfile(null);setSession(null);setRoute("gate");tracker.uid=null}
- function reread(){setDraft(d=>({...d,sources:{youtube:st.sources.youtube||"",calendar:st.sources.calendar||"",story:st.sources.story||""},answers:st.answers||["","",""]}));setSheet(null);setRoute("connect");track("reread_open")}
+ function reread(){setDraft(d=>({...d,sources:{youtube:st.sources.youtube||"",youtubeChannel:st.sources.youtubeChannel||null,calendar:st.sources.calendar||"",story:st.sources.story||""},answers:st.answers||["","",""]}));setSheet(null);setRoute("connect");track("reread_open")}
  async function setQuiet(v){try{await api.setQuiet(uid,v);setProfile(p=>({...p,quiet_view:v}));track("quiet",{on:v});toast(v?"조용히 보기를 켰어요.":"조용히 보기를 껐어요.")}catch(e){toast("바꾸지 못했습니다.")}}
 
  function openSheet(k){
@@ -129,7 +129,7 @@ function App(){
   ${route==="home"&&html`<button className="iconbtn" aria-label="연결 지도와 내 데이터" onClick=${()=>setSheet("data")}><${Ico} n="data"/></button>`}
  </div></header>`;
  const demoBar=demo&&html`<div className="demo-bar wrap"><span>예시 인물 '서윤'으로 둘러보는 중 · 저장되지 않음</span><button onClick=${endDemo}>${real&&real.st&&real.st.analysis?"내 카드로 돌아가기":"나의 결 찾기"}</button></div>`;
- const rt={aiReady};
+ const rt={aiReady,ytReady};
 
  const top=!demo&&html`<div className="stack">
   ${newAnn&&html`<button className="panel ann" onClick=${()=>setSheet("inbox")}><span className="eyebrow">운영 공지</span><b>${anns[0].title}</b></button>`}

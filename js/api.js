@@ -84,6 +84,7 @@ const api={
  async cohort(){return Q(sb.rpc("cohort_summary"))},
  // ── CBT ops
  async feedback(row){return Q(sb.from("feedback").insert(row))},
+ async youtube(channel){return this.call("youtube",{channel})},
  async ai({task,prompt,images,signal}){const r=await this.call("ai",{task,prompt,images:images||[]},{signal});return r},
  async aiJSON(o){const r=await this.ai(o);return parseJSON(r.text)},
  async deleteMe(){return this.call("delete_me",{})},

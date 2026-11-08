@@ -1,5 +1,5 @@
 // MIB CBT API — join (invite-gated sign-up), ai (Claude proxy with daily cap),
-// delete_me (full account erase), admin_reset_password.
+// youtube (official Data API), delete_me (full account erase), admin_reset_password.
 // verify_jwt is off: join is public; every other action checks the caller's JWT here.
 import { createClient } from "npm:@supabase/supabase-js@2.117.3";
 
@@ -159,6 +159,103 @@ async function ai(req: Request, b: any) {
   return json({ text, truncated: out.stop_reason === "max_tokens", remaining: Math.max(0, limit - used - 1) });
 }
 
+// ───────── youtube: public channel → upload titles & dates ─────────
+// Official YouTube Data API v3 only (YOUTUBE_API_KEY). No page scraping.
+// Returns titles, dates and durations; views/subscribers are never returned.
+type ChRef = { id?: string; handle?: string; user?: string; custom?: string; video?: string };
+function parseChannelRef(raw: string): ChRef | null {
+  let s = String(raw || "").trim();
+  if (!s) return null;
+  if (/^UC[\w-]{22}$/.test(s)) return { id: s };
+  if (/^@[\w.\-가-힣]{2,100}$/.test(s)) return { handle: s.slice(1) };
+  if (!/^https?:\/\//i.test(s)) s = "https://" + s;
+  let u: URL;
+  try { u = new URL(s); } catch (_) { return null; }
+  const host = u.hostname.toLowerCase();
+  if (host === "youtu.be") { const v = u.pathname.slice(1).split("/")[0]; return /^[\w-]{11}$/.test(v) ? { video: v } : null; }
+  if (!/(^|\.)youtube\.com$/.test(host)) return null;
+  const parts = decodeURIComponent(u.pathname).split("/").filter(Boolean);
+  if (parts[0] === "watch" || (!parts.length && u.searchParams.get("v"))) { const v = u.searchParams.get("v") || ""; return /^[\w-]{11}$/.test(v) ? { video: v } : null; }
+  if (parts[0] === "shorts" && /^[\w-]{11}$/.test(parts[1] || "")) return { video: parts[1] };
+  if (!parts.length) return null;
+  if (parts[0].startsWith("@")) return { handle: parts[0].slice(1) };
+  if (parts[0] === "channel" && /^UC[\w-]{22}$/.test(parts[1] || "")) return { id: parts[1] };
+  if (parts[0] === "user" && parts[1]) return { user: parts[1] };
+  if (parts[0] === "c" && parts[1]) return { custom: parts[1] };
+  return null;
+}
+const isoDur = (d: string) => { const m = /PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/.exec(d || ""); return m ? (+(m[1] || 0)) * 3600 + (+(m[2] || 0)) * 60 + (+(m[3] || 0)) : null; };
+async function youtube(req: Request, b: any) {
+  const user = await caller(req);
+  if (!user) return fail("unauthorized", 401);
+  const { data: member } = await admin.from("profiles").select("id").eq("id", user.id).maybeSingle();
+  if (!member) return fail("forbidden", 403);
+  const ref = parseChannelRef(b.channel);
+  if (!ref) return fail("yt_invalid");
+  const key = Deno.env.get("YOUTUBE_API_KEY");
+  if (!key) return fail("yt_not_configured", 503);
+  const api = async (path: string, params: Record<string, string>) => {
+    const u = new URL("https://www.googleapis.com/youtube/v3/" + path);
+    for (const [k, v] of Object.entries(params)) u.searchParams.set(k, v);
+    u.searchParams.set("key", key);
+    const r = await fetch(u);
+    const j = await r.json().catch(() => null);
+    if (!r.ok || !j) {
+      console.error("yt api", path, r.status, j?.error?.message);
+      const reason = j?.error?.errors?.[0]?.reason || "";
+      throw new Error(r.status === 403 && /quota/i.test(reason) ? "yt_quota" : r.status === 400 || r.status === 403 ? "yt_key" : "yt_unavailable");
+    }
+    return j;
+  };
+  try {
+    const q: Record<string, string> = { part: "snippet,contentDetails,statistics" };
+    if (ref.id) q.id = ref.id;
+    else if (ref.handle) q.forHandle = "@" + ref.handle;
+    else if (ref.user) q.forUsername = ref.user;
+    else if (ref.video) {
+      const v = await api("videos", { part: "snippet", id: ref.video });
+      const cid = v.items?.[0]?.snippet?.channelId;
+      if (!cid) return fail("yt_not_found", 404);
+      q.id = cid;
+    } else {
+      const sr = await api("search", { part: "snippet", type: "channel", q: ref.custom || "", maxResults: "1" });
+      const cid = sr.items?.[0]?.snippet?.channelId || sr.items?.[0]?.id?.channelId;
+      if (!cid) return fail("yt_not_found", 404);
+      q.id = cid;
+    }
+    const ch = await api("channels", q);
+    const c = ch.items?.[0];
+    if (!c) return fail("yt_not_found", 404);
+    const uploads = c.contentDetails?.relatedPlaylists?.uploads;
+    const vids: any[] = [];
+    let token = "";
+    for (let i = 0; i < 4 && uploads; i++) {
+      const pl = await api("playlistItems", { part: "snippet,contentDetails", playlistId: uploads, maxResults: "50", ...(token ? { pageToken: token } : {}) });
+      for (const it of pl.items || []) vids.push({ id: it.contentDetails?.videoId, t: it.snippet?.title || "", d: (it.contentDetails?.videoPublishedAt || it.snippet?.publishedAt || "").slice(0, 10) });
+      token = pl.nextPageToken || "";
+      if (!token) break;
+    }
+    for (let i = 0; i < vids.length; i += 50) {
+      const ids = vids.slice(i, i + 50).map((v) => v.id).filter(Boolean).join(",");
+      if (!ids) continue;
+      const vd = await api("videos", { part: "contentDetails", id: ids });
+      const dur: Record<string, number | null> = {};
+      for (const it of vd.items || []) dur[it.id] = isoDur(it.contentDetails?.duration);
+      vids.slice(i, i + 50).forEach((v) => { v.sec = dur[v.id] ?? null; });
+    }
+    return json({
+      source: "api",
+      channel: { id: c.id, title: c.snippet?.title || "", description: String(c.snippet?.description || "").slice(0, 400), since: (c.snippet?.publishedAt || "").slice(0, 10), total: Number(c.statistics?.videoCount || vids.length) },
+      videos: vids.filter((v) => v.t && v.t !== "Private video" && v.t !== "Deleted video").map((v) => ({ t: v.t.slice(0, 120), d: v.d, sec: v.sec ?? null })),
+    });
+  } catch (e) {
+    const code = String((e as Error)?.message || "");
+    if (code === "yt_quota") return fail("yt_quota", 429);
+    if (code === "yt_key") return fail("yt_not_configured", 503);
+    return fail("yt_unavailable", 502);
+  }
+}
+
 // ───────── delete_me ─────────
 async function deleteMe(req: Request) {
   const user = await caller(req);
@@ -196,7 +293,8 @@ Deno.serve(async (req) => {
   try { b = await req.json(); } catch (_) { return fail("bad_json"); }
   try {
     switch (b.action) {
-      case "ping": return json({ ok: true, ai: !!Deno.env.get("ANTHROPIC_API_KEY") });
+      case "ping": return json({ ok: true, ai: !!Deno.env.get("ANTHROPIC_API_KEY"), yt: !!Deno.env.get("YOUTUBE_API_KEY") });
+      case "youtube": return await youtube(req, b);
       case "join": return await join(b);
       case "ai": return await ai(req, b);
       case "delete_me": return await deleteMe(req);
