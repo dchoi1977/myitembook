@@ -60,7 +60,7 @@ const MISSIONS=[
  {d:1,t:"첫 발견",desc:"해석을 확인하거나 내 말로 다듬기",test:s=>s.confirmed,go:"home"},
  {d:2,t:"나의 선반",desc:"나와 함께한 아이템 하나 담기",test:s=>s.items>=1,go:"shelf"},
  {d:3,t:"첫 친구",desc:"1기 참여자 한 명과 친구 맺기",test:s=>s.connections>=1,go:"tab:friends"},
- {d:4,t:"중간 다시 읽기",desc:"사흘의 한 줄을 더해 나를 다시 읽기",test:s=>s.analyses>=2,go:"reread"},
+ {d:4,t:"중간 다시 읽기",desc:"알아가기 답과 한 줄을 더해 나를 다시 읽기",test:s=>s.analyses>=2,go:"reread"},
  {d:5,t:"결을 건네기",desc:"친구 카드에 공감이나 한 단어 남기기",test:s=>s.reactionsGiven>=1||s.wordsGiven>=1,go:"tab:friends"},
  {d:6,t:"문을 열다",desc:"공개할 모습을 골라 카드 공개하기",test:s=>s.isPublic,go:"publish"},
  {d:7,t:"일주일의 변화",desc:"7일 비교 카드를 보고 마무리 설문 남기기",test:s=>s.exitDone,go:"week"}

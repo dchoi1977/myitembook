@@ -5,17 +5,17 @@ function Welcome({onStart,onDemo,rt,nickname}){
  return html`<div className="welcome wrap">
   <div className="eyebrow">MyItemBook · ${MIB_CONFIG.cohort}</div>
   <h1 className="h1">${nickname?html`${nickname}님,<br/>`:null}나다운 결을<br/>발견하다.</h1>
-  <p className="lead">기록을 건네면 AI가 당신이 살아온 결을 읽어, 세상에 하나뿐인 젬과 한 장의 카드로 보여 줍니다. 꾸밀 필요는 없습니다.</p>
+  <p className="lead">고민 없이 몇 가지를 고르기만 하면, AI가 당신의 결을 읽어 세상에 하나뿐인 젬과 한 장의 카드로 보여 줍니다. 쓰면서 조금씩 더 알아 갈수록 젬은 선명해집니다.</p>
   <${GemView} g=${g} seed="welcome" size=${220} className="float"/>
   <p className="serif" style=${{textAlign:"center",color:"var(--accent)",fontSize:"17px"}}>누구나 원석으로 태어난다. 살아가는 만큼, 보석이 된다.</p>
   <div className="promises">
-   <div className="promise"><b>5분, 첫 발견</b><span>기록 하나로 근거 있는 한 문장을 만납니다</span></div>
+   <div className="promise"><b>1분, 탭 몇 번</b><span>고민 없이 고르기만 하면 첫 젬이 나옵니다</span></div>
    <div className="promise"><b>기본값은 나만 보기</b><span>공개는 항목별로, 내가 고릅니다</span></div>
    <div className="promise"><b>근거가 보이는 AI</b><span>모든 해석을 누르면 이유가 나옵니다</span></div>
    <div className="promise"><b>팔지 않는다</b><span>내 기록은 광고나 판매에 쓰지 않습니다</span></div>
   </div>
   <div className="stack">
-   <button className="btn block" onClick=${onStart}>나의 결 찾기 시작</button>
+   <button className="btn block" onClick=${onStart}>1분 만에 나의 젬 만들기</button>
    <button className="btn ghost block" onClick=${onDemo}>예시 인물 '서윤'으로 둘러보기</button>
   </div>
   <p className="note">기록은 내 계정에만 보이는 저장소에 보관됩니다. 공개는 내가 고른 항목만, 고른 사람에게만 보입니다.${rt.aiReady===false?" 지금은 AI 해석을 준비 중이라, 먼저 예시 인물로 흐름을 둘러볼 수 있습니다.":""}</p>
@@ -25,7 +25,7 @@ function Progress({n}){return html`<div className="progress" aria-label=${`3단�
 function SourceCard({icon,title,desc,open,onToggle,filled,children}){
  return html`<div className="source"><button className="source-head" onClick=${onToggle} aria-expanded=${open}><span className="source-ico"><${Ico} n=${icon}/></span><span className="grow"><b>${title}</b><br/><span className="small faint">${desc}</span></span>${filled?html`<span className="chip">담김</span>`:html`<span className="faint">${open?"접기":"열기"}</span>`}</button>${open&&html`<div className="source-body">${children}</div>`}</div>`;
 }
-function Connect({draft,setDraft,rt,onNext,onBack,hasItems}){
+function Connect({draft,setDraft,rt,onNext,onBack,hasItems,allowEmpty,nextLabel}){
  const [open,setOpen]=useState("story");const s=draft.sources;const set=(k,v)=>setDraft(d=>({...d,sources:{...d.sources,[k]:v}}));
  const maxPhotos=4;
  const canPhotos=true;
@@ -55,7 +55,7 @@ function Connect({draft,setDraft,rt,onNext,onBack,hasItems}){
   </div>
   ${hasItems&&html`<p className="small muted">선반에 담은 아이템도 함께 읽습니다.</p>`}
   <div className="panel tint small"><b>이렇게 다룹니다</b><br/>건네준 글과 사진만 읽고, 사람을 이름으로 찾거나 건강·종교·정치를 추정하지 않습니다. 해석 결과와 내가 적은 글은 나만 보기로 저장됩니다. AI 해석은 Anthropic의 Claude가 처리하며, MIB는 내 기록을 광고나 판매에 쓰지 않습니다.</div>
-  <div className="row"><button className="btn ghost" onClick=${onBack}>이전</button><button className="btn grow" disabled=${!any} onClick=${onNext}>다음 — 질문 3개</button></div>
+  <div className="row"><button className="btn ghost" onClick=${onBack}>이전</button><button className="btn grow" disabled=${!any&&!allowEmpty} onClick=${onNext}>${nextLabel||"다음"}</button></div>
  </div>`;
 }
 /* ───────── YouTube: channel URL → upload titles & dates (via mib-api) ───────── */
@@ -262,13 +262,13 @@ function buildPublicCard(st,items,stats){
   axes:fl.hexagon?visibleAxes(a).map(x=>({name:x.name,level:x.level})):visibleAxes(a).map(x=>({name:x.name})),
   showHex:!!fl.hexagon,badges:fl.badges?BADGES.filter(b=>b.test(stats)).map(b=>b.id):[],
   items:fl.items?items.filter(i=>(st.featured||[]).includes(i.id)).slice(0,3).map(i=>({name:i.name,category:i.category,since:i.since||"",story:i.story||"",verify:i.verify||""})):[],
-  acceptWords:!!fl.words};
+  acceptWords:!!fl.words,tags:fl.tags&&st.quick&&st.quick.answers?[st.quick.answers.mbti,st.quick.answers.blood].filter(Boolean):[]};
  return card;
 }
 function PublicCardView({card,name,compact}){
  return html`<div className="person"><div className="person-head"><${GemView} g=${card.gem} seed=${card.gemName} size=${compact?64:84}/><div className="grow"><b className="serif" style=${{color:"var(--accent)",fontSize:"17px"}}>${card.gemName}</b><br/><span className="small faint">${name||"MIB 사용자"} · 연마 ${card.stage||1}단계</span></div></div>
   ${card.sentence&&html`<p className="serif" style=${{fontSize:"15.5px",lineHeight:1.6}}>${card.sentence}</p>`}
-  ${(card.keywords||[]).length>0&&html`<div className="row">${card.keywords.map(k=>html`<span className="chip" key=${k}>${k}</span>`)}</div>`}
+  ${(card.keywords||[]).length>0&&html`<div className="row">${card.keywords.map(k=>html`<span className="chip" key=${k}>${k}</span>`)}${(card.tags||[]).map(t=>html`<span className="chip plain" key=${"t"+t}>${t}</span>`)}</div>`}
   ${card.showHex&&!compact&&html`<${Hexagon} axes=${card.axes} size=${240}/>`}
   ${(card.items||[]).length>0&&!compact&&html`<div className="row">${card.items.map((i,k)=>html`<span className="chip plain" key=${k}>${i.category} · ${i.name}${i.since?" · "+sinceText(i.since).replace("함께한 지 ",""):""}</span>`)}</div>`}
   ${(card.badges||[]).length>0&&!compact&&html`<div className="minibadges">${card.badges.slice(0,6).map(id=>{const b=BADGES.find(x=>x.id===id);return b?html`<${Medal} key=${id} b=${b} earned=${true} size=${30}/>`:null})}</div>`}
@@ -279,7 +279,7 @@ function PublishSheet({st,items,stats,update,onClose,toast,demo,meName,uid}){
  const card=buildPublicCard(st,items,stats);const can=!demo;const aud=st.visibility.audience||"all";
  const setF=(k,v)=>update(s=>{s.visibility.fields[k]=v});
  async function publish(on){setBusy(true);try{if(on){await api.publishCard(uid,card,aud)}else{await api.unpublishCard(uid)}const first=on&&!st.visibility.public;update(s=>{s.visibility.public=on});track(on?"publish":"unpublish",{aud});if(first)api.postFeed("publish",{aud});toast(on?"카드를 공개했습니다.":"공개를 멈췄습니다. 이제 나만 봅니다.")}catch(e){toast("공개 상태를 바꾸지 못했습니다. 잠시 후 다시 시도해 주세요.")}finally{setBusy(false)}}
- const OPTS=[["sentence","한 문장","AI 해석 문장, 또는 내가 다듬은 문장"],["keywords","키워드","세 단어"],["hexagon","육각형 눈금","축 이름은 늘 보이고, 눈금은 고를 때만"],["badges","배지","받은 배지 목록"],["items","대표 아이템","사진 없이 이름·기간·사연만"],["words","한 단어 추천사 받기","사람들이 나에게 한 단어를 남길 수 있음"]];
+ const OPTS=[["sentence","한 문장","AI 해석 문장, 또는 내가 다듬은 문장"],["keywords","키워드","세 단어"],["hexagon","육각형 눈금","축 이름은 늘 보이고, 눈금은 고를 때만"],["badges","배지","받은 배지 목록"],["items","대표 아이템","사진 없이 이름·기간·사연만"],["words","한 단어 추천사 받기","사람들이 나에게 한 단어를 남길 수 있음"],["tags","MBTI·혈액형 태그","빠른 시작에서 고른 답을 카드에 작은 태그로 (재미로)"]];
  return html`<${Sheet} title="공개할 모습" onClose=${onClose}>
   <p className="muted small">처음엔 모두 비공개입니다. 젬과 보석 이름은 공개 카드의 기본이고, 나머지는 항목별로 고릅니다. 원본 기록과 근거는 공개되지 않습니다.</p>
   <div className="field"><span className="lbl">누구에게 보일까요?</span><div className="segs" role="group" aria-label="공개 범위">${[["all","CBT 1기 전체"],["friends","친구만"]].map(([k,t])=>html`<button key=${k} aria-pressed=${aud===k} onClick=${()=>update(s=>{s.visibility.audience=k})}>${t}</button>`)}</div><span className="hint">${aud==="all"?"함께 테스트하는 1기 참여자 누구나 볼 수 있어요.":"서로 친구를 맺은 사람만 볼 수 있어요."}</span></div>

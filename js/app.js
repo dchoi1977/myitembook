@@ -7,7 +7,7 @@ function App(){
  const [demo,setDemo]=useState(false);const [real,setReal]=useState(null);
  const [route,setRoute]=useState("loading");const [tab,setTab]=useState("me");const [sheet,setSheet]=useState(null);const [fbOpen,setFbOpen]=useState(false);
  const [toastMsg,setToastMsg]=useState("");const toastT=useRef(null);
- const [draft,setDraft]=useState({sources:{youtube:"",calendar:"",story:""},answers:["","",""],photos:[]});
+ const [draft,setDraft]=useState({sources:{youtube:"",calendar:"",story:""},answers:["","",""],photos:[],quick:null});
  const [reading,setReading]=useState({status:"idle",chars:0,error:null});const ctl=useRef(null);
  const [soc,setSoc]=useState(EMPTY_SOC);const [names,setNames]=useState({});const namesRef=useRef({});
  const [notes,setNotes]=useState([]);const [anns,setAnns]=useState([]);const [aiReady,setAiReady]=useState(null);const [ytReady,setYtReady]=useState(null);
@@ -37,7 +37,7 @@ function App(){
    const ns=normState(s);setSt(ns);setItems(its);loaded.current=true;hydratePhotos(its);
    track("app_open",{day:cbtDay(p.joined_at),w:window.innerWidth});
    reloadSoc();loadInbox();
-   if(ns.analysis)setRoute("home");else{setRoute("welcome");setDraft(d=>({...d,sources:{youtube:ns.sources.youtube||"",youtubeChannel:ns.sources.youtubeChannel||null,calendar:ns.sources.calendar||"",story:ns.sources.story||""},answers:ns.answers}))}
+   if(ns.analysis)setRoute("home");else{setRoute("welcome");setDraft(d=>({...d,quick:ns.quick||null,sources:{youtube:ns.sources.youtube||"",youtubeChannel:ns.sources.youtubeChannel||null,calendar:ns.sources.calendar||"",story:ns.sources.story||""},answers:ns.answers}))}
    if(pendingHash.current){const n=pendingHash.current;pendingHash.current=null;try{const t=await api.profileByNickname(n);if(t&&ns.analysis){setSheet("user:"+t.id);if(t.id!==uid)track("open_shared_link")}else if(t)toast(`${n}님의 카드는 첫 발견을 마친 뒤 볼 수 있어요.`)}catch(e){}try{history.replaceState(null,"",location.pathname+location.search)}catch(e){}}
   }catch(e){toast("기록을 불러오지 못했습니다. 연결을 확인한 뒤 새로고침해 주세요.")}
   finally{if(alive)setBoot(false)}
@@ -75,18 +75,18 @@ function App(){
 
  function startDemo(){setReal({st,items,route});setSt(normState(demoState()));setItems(DEMO_ITEMS);setDemo(true);setRoute("home");setTab("me");setSheet(null);track("demo_start")}
  function endDemo(){if(real){setSt(real.st);setItems(real.items)}setDemo(false);setSheet(null);setRoute(real&&real.st&&real.st.analysis?"home":"welcome");setReal(null)}
- function startFlow(){setRoute("connect");setSheet(null);track("flow_start")}
+ function startFlow(){setSheet(null);setRoute(draft.quick&&draft.quick.done?"quickdone":"quick");track("flow_start")}
 
  async function runAnalysis(feedback){
   ctl.current=new AbortController();setReading({status:"waiting",chars:0,error:null});setRoute("reading");
   const prev=st.analysis;const t0=Date.now();
-  const prompt=buildPrompt({sources:draft.sources,answers:draft.answers,photoCount:draft.photos.length,items,feedback,prev,logs:prev?st.logs:null,stepsDone:prev?(st.steps.done.length?[(st.steps.current||prev.firstStep).title]:[]):null,reflections:prev?st.reflections:null});
+  const quick=draft.quick||st.quick||null;const prompt=buildPrompt({quick,know:st.know,sources:draft.sources,answers:draft.answers,photoCount:draft.photos.length,items,feedback,prev,logs:prev?st.logs:null,stepsDone:prev?(st.steps.done.length?[(st.steps.current||prev.firstStep).title]:[]):null,reflections:prev?st.reflections:null});
   track("analysis_start",{re:!!prev,fb:!!feedback,photos:draft.photos.length,len:prompt.length});
   try{
    const images=[];for(const f of draft.photos.slice(0,4))images.push(await imageForAI(f));
    const j=await api.aiJSON({task:"read",prompt,images,signal:ctl.current.signal});
-   const an=normAnalysis(j);
-   setSt(s=>{const n=clone(s);if(n.analysis){n.axesHistory=[...(n.axesHistory||[]),{at:n.analysis.at,axes:n.analysis.axes.map(x=>({name:x.name,level:x.level}))}].slice(-4)}if(!n.first)n.first={at:Date.now(),gem:{...an.gem},sentence:an.sentence,keywords:an.keywords,axes:an.axes.map(x=>({name:x.name,level:x.level}))};n.analysis=an;n.analyses=(n.analyses||0)+1;n.sources={youtube:draft.sources.youtube,youtubeChannel:draft.sources.youtube.trim()?(draft.sources.youtubeChannel||null):null,calendar:draft.sources.calendar,story:draft.sources.story,photos:draft.photos.length,at:Date.now()};n.answers=draft.answers;n.steps.current=an.firstStep;n.steps.ideaIdx=0;n.gemOverride={};return n});
+   const an=normAnalysis(j,{quick,know:st.know});
+   setSt(s=>{const n=clone(s);if(n.analysis){n.axesHistory=[...(n.axesHistory||[]),{at:n.analysis.at,axes:n.analysis.axes.map(x=>({name:x.name,level:x.level}))}].slice(-4)}if(!n.first)n.first={at:Date.now(),gem:{...an.gem},sentence:an.sentence,keywords:an.keywords,axes:an.axes.map(x=>({name:x.name,level:x.level}))};if(quick)n.quick=quick;n.analysis=an;n.analyses=(n.analyses||0)+1;n.sources={youtube:draft.sources.youtube,youtubeChannel:draft.sources.youtube.trim()?(draft.sources.youtubeChannel||null):null,calendar:draft.sources.calendar,story:draft.sources.story,photos:draft.photos.length,at:Date.now()};n.answers=draft.answers;n.steps.current=an.firstStep;n.steps.ideaIdx=0;n.gemOverride={};return n});
    api.postFeed(prev?"reread":"discover",{gemName:gemName(an.gem)});track("analysis_done",{re:!!prev,ms:Date.now()-t0});
    setDraft(d=>({...d,photos:[]}));setReading({status:"done",chars:0,error:null});setRoute("reveal");
   }catch(e){const err=e&&e.code?e:{code:"upstream_error"};track("analysis_fail",{code:err.code});setReading({status:"error",chars:0,error:err})}
@@ -102,7 +102,7 @@ function App(){
  async function deleteItem(id){const it=items.find(i=>i.id===id);try{await api.deleteItem(uid,it||{id});setItems(list=>list.filter(i=>i.id!==id));update(s=>{s.featured=(s.featured||[]).filter(x=>x!==id)});track("item_delete");toast("선반에서 뺐습니다.");setSheet("shelf")}catch(e){toast("지우지 못했습니다.")}}
  async function wipe(){try{await tracker.flush();await api.deleteMe();await api.logout();setSt(null);setItems([]);setProfile(null);setSession(null);setSheet(null);setRoute("gate");setGateMsg("계정과 모든 기록을 지웠습니다. 함께해 주셔서 고맙습니다.")}catch(e){toast("일부를 지우지 못했습니다. 다시 시도해 주세요.")}}
  async function logout(){await tracker.flush();await api.logout();setSheet(null);setSt(null);setProfile(null);setSession(null);setRoute("gate");tracker.uid=null}
- function reread(){setDraft(d=>({...d,sources:{youtube:st.sources.youtube||"",youtubeChannel:st.sources.youtubeChannel||null,calendar:st.sources.calendar||"",story:st.sources.story||""},answers:st.answers||["","",""]}));setSheet(null);setRoute("connect");track("reread_open")}
+ function reread(){setDraft(d=>({...d,quick:st.quick||d.quick||null,sources:{youtube:st.sources.youtube||"",youtubeChannel:st.sources.youtubeChannel||null,calendar:st.sources.calendar||"",story:st.sources.story||""},answers:st.answers||["","",""]}));setSheet(null);setRoute("connect");track("reread_open")}
  async function setQuiet(v){try{await api.setQuiet(uid,v);setProfile(p=>({...p,quiet_view:v}));track("quiet",{on:v});toast(v?"조용히 보기를 켰어요.":"조용히 보기를 껐어요.")}catch(e){toast("바꾸지 못했습니다.")}}
 
  function openSheet(k){
@@ -136,6 +136,7 @@ function App(){
   <${DailyQuestion} key=${"dq"+day} day=${day} answered=${dailyAnswered} toast=${toast} onDone=${reloadSoc}/>
 </div>`;
  const mid=!demo&&html`<div className="stack">
+  <${KnowCard} st=${st} update=${update} toast=${toast} demo=${demo} onReread=${()=>openSheet("reread")}/>
   <${Missions} day=${day} stats=${stats} onOpen=${openSheet}/>
   ${day>=4&&stats.analyses<2&&html`<div className="panel tint stack"><b>중간 다시 읽기 · Day 4</b><span className="small muted">사흘 동안 남긴 한 줄과 한 걸음을 더해 나를 다시 읽어 보세요. 육각형에 지난 모습이 점선으로 겹쳐 보입니다.</span><button className="btn sm" onClick=${()=>openSheet("reread")}>새 기록 더해 다시 읽기</button></div>`}
   ${day>=7&&html`<div className="panel stack weekcard"><b className="serif" style=${{color:"var(--accent)",fontSize:"18px"}}>일주일 전 vs 지금</b><span className="small muted">Day 1의 젬과 오늘의 젬을 한 장에 담았어요.</span><div className="row"><button className="btn sm grow" onClick=${()=>{openSheet("week");api.postFeed("week",{})}}>7일 비교 카드 보기</button>${!stats.exitDone&&html`<button className="btn ghost sm grow" onClick=${()=>setSheet("exit")}>마무리 설문</button>`}</div></div>`}
@@ -143,9 +144,11 @@ function App(){
 
  let body=null;
  if(route==="welcome")body=html`<${Welcome} onStart=${startFlow} onDemo=${startDemo} rt=${rt} nickname=${profile.nickname}/>`;
- else if(route==="connect")body=html`<${Connect} draft=${draft} setDraft=${setDraft} rt=${rt} hasItems=${items.length>0} onBack=${()=>setRoute(st.analysis?"home":"welcome")} onNext=${()=>setRoute("questions")}/>`;
+ else if(route==="quick")body=html`<${QuickStart} draft=${draft} setDraft=${setDraft} onExit=${()=>setRoute("welcome")} onDone=${()=>setRoute("quickdone")}/>`;
+ else if(route==="quickdone")body=html`<${QuickDone} draft=${draft} setDraft=${setDraft} aiReady=${aiReady} onMore=${()=>setRoute("connect")} onGo=${()=>runAnalysis()}/>`;
+ else if(route==="connect")body=html`<${Connect} draft=${draft} setDraft=${setDraft} rt=${rt} hasItems=${items.length>0} allowEmpty=${!!(draft.quick&&draft.quick.done)||!!st.analysis} nextLabel=${st.analysis?"새 기록으로 다시 읽기":draft.quick&&draft.quick.done?"자료 담고 돌아가기":"다음"} onBack=${()=>setRoute(st.analysis?"home":draft.quick&&draft.quick.done?"quickdone":"welcome")} onNext=${()=>st.analysis?runAnalysis():draft.quick&&draft.quick.done?setRoute("quickdone"):setRoute("quick")}/>`;
  else if(route==="questions")body=html`<${Questions} draft=${draft} setDraft=${setDraft} onBack=${()=>setRoute("connect")} onNext=${()=>runAnalysis()}/>`;
- else if(route==="reading")body=html`<${Reading} status=${reading.status} chars=${reading.chars} error=${reading.error} onStop=${stopAnalysis} onRetry=${()=>runAnalysis()} onBack=${()=>setRoute("connect")} onDemo=${startDemo}/>`;
+ else if(route==="reading")body=html`<${Reading} status=${reading.status} chars=${reading.chars} error=${reading.error} onStop=${stopAnalysis} onRetry=${()=>runAnalysis()} onBack=${()=>setRoute(st.analysis?"connect":"quickdone")} onDemo=${startDemo}/>`;
  else if(route==="reveal"&&st.analysis)body=html`<${Reveal} st=${st} onOpen=${openSheet} onConfirm=${()=>{update(s=>{s.analysis.status="yes"});track("reveal_yes")}} onEdit=${(sent,kw)=>{update(s=>{s.analysis.editSentence=sent||s.analysis.sentence;s.analysis.editKeywords=kw.length?kw:s.analysis.keywords;s.analysis.status="edited";s.flags.edited=true});track("reveal_edit")}} onDiffer=${fb=>{track("reveal_differ");runAnalysis(fb)}}/>`;
  else if(st.analysis){
   if(tab==="me")body=html`<${MeTab} st=${st} items=${items} soc=${demo?EMPTY_SOC:soc} stats=${stats} onOpen=${openSheet} names=${names} top=${top} mid=${mid}/>`;
