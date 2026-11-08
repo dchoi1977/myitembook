@@ -7,7 +7,7 @@ function Gate({onSession,initialCode}){
  const [mode,setMode]=useState(initialCode?"join":"start");const [f,setF]=useState({code:initialCode||"",nickname:"",email:"",password:"",terms:false,privacy:false,ai:false,research:false});
  const [busy,setBusy]=useState(false);const [err,setErr]=useState("");
  const set=(k,v)=>setF(x=>({...x,[k]:v}));
- async function join(e){e.preventDefault();setErr("");setBusy(true);try{await api.join({code:f.code,nickname:f.nickname,email:f.email,password:f.password,agree:{terms:f.terms,privacy:f.privacy,ai:f.ai,research:f.research}});const s=await api.login(f.email,f.password);onSession(s,true)}catch(x){setErr(JOIN_ERR[x.code]||"가입을 마치지 못했습니다. 잠시 후 다시 시도해 주세요.")}finally{setBusy(false)}}
+ async function join(e){e.preventDefault();setErr("");setBusy(true);try{await api.join({code:f.code,nickname:f.nickname,email:f.email,password:f.password,agree:{terms:f.terms,privacy:f.privacy,ai:f.ai,research:f.research,version:"cbt-2"}});const s=await api.login(f.email,f.password);onSession(s,true)}catch(x){setErr(JOIN_ERR[x.code]||"가입을 마치지 못했습니다. 잠시 후 다시 시도해 주세요.")}finally{setBusy(false)}}
  async function login(e){e.preventDefault();setErr("");setBusy(true);try{const s=await api.login(f.email,f.password);onSession(s,false)}catch(x){setErr(x.code==="network"?JOIN_ERR.network:"이메일 또는 비밀번호가 맞지 않습니다.")}finally{setBusy(false)}}
  const g={stone:"오팔",lightName:"새벽빛",light:"번짐",form:"결정",texture:"유백",hardness:3,grain:3,facets:9,symbol:"카메라"};
  const canJoin=f.code.trim()&&f.nickname.trim().length>=2&&f.email.includes("@")&&f.password.length>=8&&f.terms&&f.privacy&&f.ai;
@@ -34,9 +34,9 @@ function Gate({onSession,initialCode}){
    <div className="field"><label htmlFor="g-pw">비밀번호</label><input type="password" id="g-pw" value=${f.password} onChange=${e=>set("password",e.target.value)} autoComplete="new-password" placeholder="8자 이상"/></div>
    <div className="consents">
     <label className="checkline"><input type="checkbox" checked=${f.terms&&f.privacy&&f.ai&&f.research} onChange=${e=>setF(x=>({...x,terms:e.target.checked,privacy:e.target.checked,ai:e.target.checked,research:e.target.checked}))}/><span><b>모두 동의</b></span></label>
-    <label className="checkline"><input type="checkbox" checked=${f.terms} onChange=${e=>set("terms",e.target.checked)}/><span><b>(필수) CBT 참여 안내</b><br/><span className="small muted">테스트 기간 중 기능이 바뀌거나 멈출 수 있고, 종료 후 데이터는 안내에 따라 지워집니다.</span></span></label>
-    <label className="checkline"><input type="checkbox" checked=${f.privacy} onChange=${e=>set("privacy",e.target.checked)}/><span><b>(필수) 개인정보 수집·이용</b><br/><span className="small muted">이메일·닉네임, 내가 건넨 기록과 그 해석, 앱 사용 기록을 테스트 운영에만 씁니다. 언제든 계정째 지울 수 있어요.</span></span></label>
-    <label className="checkline"><input type="checkbox" checked=${f.ai} onChange=${e=>set("ai",e.target.checked)}/><span><b>(필수) AI 처리</b><br/><span className="small muted">해석을 위해 내가 건넨 글과 사진이 Anthropic의 Claude API로 전송됩니다. 사진은 해석에만 쓰고 저장하지 않습니다.</span></span></label>
+    <label className="checkline"><input type="checkbox" checked=${f.terms} onChange=${e=>set("terms",e.target.checked)}/><span><b>(필수) CBT 참여 안내</b><br/><span className="small muted">7일 테스트 기간 중 기능이 바뀌거나 잠시 멈출 수 있어요. 앱 오류 정보(화면·기기·브라우저)는 문제 해결을 위해 자동으로 운영자에게 전달됩니다.</span></span></label>
+    <label className="checkline"><input type="checkbox" checked=${f.privacy} onChange=${e=>set("privacy",e.target.checked)}/><span><b>(필수) 개인정보 수집·이용</b><br/><span className="small muted"><b>항목</b> 이메일·닉네임, 프로필 사진(선택), 내가 남긴 기록(글·선반 사진·고른 답)과 그 해석, 앱 사용·오류 기록, 의견과 함께 보낸 화면 캡처(선택) · <b>목적</b> CBT 운영과 개선 · <b>보관</b> CBT 종료 후 30일 안에 모두 삭제(이름 없는 통계만 남음) · 언제든 앱에서 계정째 바로 지울 수 있어요. 기록은 서울 리전 서버(Supabase)에 저장됩니다.</span></span></label>
+    <label className="checkline"><input type="checkbox" checked=${f.ai} onChange=${e=>set("ai",e.target.checked)}/><span><b>(필수) AI 처리를 위한 개인정보 국외 이전</b><br/><span className="small muted"><b>받는 곳</b> Anthropic PBC(미국) Claude API · <b>항목</b> 해석·다듬기를 요청할 때 건넨 글, 고른 답(혈액형 제외), 해석용 사진 · <b>시점·방법</b> AI 기능을 쓸 때마다 암호화 통신으로 전송 · <b>목적</b> 해석 생성 · <b>보관</b> Anthropic의 API 데이터 정책에 따름(모델 학습에 쓰이지 않음). 해석용으로만 건넨 사진은 MIB 서버에 저장하지 않아요. 동의하지 않으면 CBT에 참여할 수 없어요.</span></span></label>
     <label className="checkline"><input type="checkbox" checked=${f.research} onChange=${e=>set("research",e.target.checked)}/><span><b>(선택) 서비스 개선 연구</b><br/><span className="small muted">설문 응답과 사용 통계를 이름 없이 정식 서비스 설계에 활용합니다.</span></span></label>
    </div>
    ${err&&html`<p className="err" role="alert">${err}</p>`}
@@ -118,14 +118,18 @@ function ExitSurvey({onClose,onDone,toast,stats}){
 
 /* ───────── feedback on any screen ───────── */
 const FB_KIND=["좋았어요","헷갈려요","불편해요","오류","제안"];
-function FeedbackSheet({screen,onClose,toast}){
- const [k,setK]=useState(null);const [txt,setTxt]=useState("");const [busy,setBusy]=useState(false);
- async function send(){setBusy(true);try{await api.feedback({kind:"screen",screen:String(screen).slice(0,60),body:txt.trim(),payload:{type:k,ua:navigator.userAgent.slice(0,160),w:window.innerWidth}});track("feedback",{type:k,screen});toast("의견을 보냈어요. 고맙습니다!");onClose()}catch(e){toast("의견을 보내지 못했습니다.")}finally{setBusy(false)}}
+function FeedbackSheet({screen,onClose,toast,shot,onHelp}){
+ const [k,setK]=useState(null);const [txt,setTxt]=useState("");const [busy,setBusy]=useState(false);const [withShot,setWithShot]=useState(!!shot);const [big,setBig]=useState(false);
+ async function send(){setBusy(true);try{let path=null;if(shot&&withShot&&tracker.uid){try{path=await api.uploadShot(tracker.uid,shot)}catch(e){}}
+  await api.feedback({kind:"screen",screen:String(screen).slice(0,60),body:txt.trim(),shot:path,payload:{type:k,ua:navigator.userAgent.slice(0,160),w:window.innerWidth,h:window.innerHeight,ver:APP_VER}});track("feedback",{type:k,screen,shot:!!path});toast(k==="오류"?"운영자에게 바로 전달했어요. 확인 후 알려 드릴게요!":"의견을 보냈어요. 고맙습니다!");onClose()}catch(e){toast("의견을 보내지 못했습니다. 연결을 확인해 주세요.")}finally{setBusy(false)}}
  return html`<${Sheet} title="의견 보내기" onClose=${onClose}>
-  <p className="small muted">지금 보고 있는 화면(<b>${screenLabel(screen)}</b>)과 함께 운영자에게 전달됩니다.</p>
+  <p className="small muted">지금 보고 있는 화면(<b>${screenLabel(screen)}</b>)과 함께 운영자에게 바로 전달됩니다.</p>
   <div className="segs" role="group" aria-label="의견 종류">${FB_KIND.map(x=>html`<button key=${x} aria-pressed=${k===x} onClick=${()=>setK(x)}>${x}</button>`)}</div>
   <div className="field"><label htmlFor="fb">자세히 (선택)</label><textarea id="fb" value=${txt} maxLength="2000" onChange=${e=>setTxt(e.target.value)} placeholder=${k==="오류"?"무엇을 하다가 어떤 일이 생겼나요?":"자유롭게 적어 주세요"}></textarea></div>
+  ${shot&&html`<div className="shot-row"><button className=${"shot-thumb"+(withShot?"":" off")} onClick=${()=>setBig(true)} aria-label="첨부할 화면 크게 보기"><img src=${shot} alt="지금 화면 캡처"/></button><label className="check grow"><input type="checkbox" checked=${withShot} onChange=${e=>setWithShot(e.target.checked)}/><span><b>지금 화면 캡처 함께 보내기</b><br/><span className="small muted">운영자만 봅니다. 가리고 싶은 내용이 있으면 끄세요.</span></span></label></div>`}
   <button className="btn block" disabled=${!k||busy} onClick=${send}>${busy?"보내는 중…":"보내기"}</button>
+  ${onHelp&&html`<button className="linkbtn small" onClick=${onHelp}>자주 묻는 질문 보기</button>`}
+  ${big&&html`<div className="shot-big" onClick=${()=>setBig(false)} role="dialog" aria-label="화면 캡처"><img src=${shot} alt="지금 화면 캡처"/></div>`}
  <//>`;
 }
 const SCREEN_LABEL={welcome:"시작",connect:"기록 건네기",questions:"질문 3개",reading:"읽는 중",reveal:"첫 발견",me:"나",step:"한 걸음",feed:"소식",friends:"친구",evidence:"이렇게 읽은 이유",attrs:"젬 속성",shelf:"선반",publish:"공개할 모습",data:"내 데이터",inbox:"알림",mine:"받은 공감",week:"7일 비교",cardimg:"카드 이미지",user:"친구 카드",item:"아이템",exit:"마무리 설문"};
@@ -183,9 +187,9 @@ function ShareImageSheet({kind,st,stats,profile,onClose,toast,onExit,exitDone}){
 function csv(rows){if(!rows.length)return "";const keys=[...new Set(rows.flatMap(r=>Object.keys(r)))];const esc=v=>{if(v==null)return "";const s=typeof v==="object"?JSON.stringify(v):String(v);return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s};return "﻿"+keys.join(",")+"\n"+rows.map(r=>keys.map(k=>esc(r[k])).join(",")).join("\n")}
 function download(name,text,type){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([text],{type:type||"text/csv"}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},800)}
 function AdminScreen({onExit,toast,uid,onPreviewEvo,onPreviewAway,onPreviewBadges}){
- const [tab,setTab]=useState("kpi");const [ov,setOv]=useState(null);const [fb,setFb]=useState(null);const [reps,setReps]=useState(null);const [anns,setAnns]=useState([]);const [aiOk,setAiOk]=useState(null);const [ytOk,setYtOk]=useState(null);
+ const [tab,setTab]=useState("kpi");const [ov,setOv]=useState(null);const [fb,setFb]=useState(null);const [reps,setReps]=useState(null);const [anns,setAnns]=useState([]);const [aiOk,setAiOk]=useState(null);const [ytOk,setYtOk]=useState(null);const [mailOk,setMailOk]=useState(null);const [errs,setErrs]=useState(null);
  const [busy,setBusy]=useState(false);const [avs,setAvs]=useState({});
- async function load(){try{const [o,a,av]=await Promise.all([api.admin.overview(),api.announcements(),api.admin.avatars().catch(()=>[])]);setOv(o);setAnns(a||[]);const m={};(av||[]).forEach(x=>m[x.id]=x.avatar);setAvs(m)}catch(e){toast("운영 데이터를 불러오지 못했습니다.")}api.admin.ping().then(r=>{setAiOk(!!r.ai);setYtOk(!!r.yt)}).catch(()=>setAiOk(null))}
+ async function load(){try{const [o,a,av]=await Promise.all([api.admin.overview(),api.announcements(),api.admin.avatars().catch(()=>[])]);setOv(o);setAnns(a||[]);const m={};(av||[]).forEach(x=>m[x.id]=x.avatar);setAvs(m)}catch(e){toast("운영 데이터를 불러오지 못했습니다.")}api.admin.ping().then(r=>{setAiOk(!!r.ai);setYtOk(!!r.yt);setMailOk(!!r.mail)}).catch(()=>setAiOk(null));api.admin.errors().then(setErrs).catch(()=>setErrs([]))}
  useEffect(()=>{load()},[]);
  useEffect(()=>{if(tab==="fb"&&!fb)api.admin.feedback().then(setFb).catch(()=>setFb([]));if(tab==="rep"&&!reps)api.admin.reports().then(setReps).catch(()=>setReps([]))},[tab]);
  if(!ov)return html`<div className="main wrap"><p className="faint">운영 데이터를 불러오는 중…</p><button className="btn ghost" onClick=${onExit}>앱으로 돌아가기</button></div>`;
@@ -196,7 +200,7 @@ function AdminScreen({onExit,toast,uid,onPreviewEvo,onPreviewAway,onPreviewBadge
  const kpis=[["참여자",`${testers.length} / ${(ov.settings||{}).tester_cap||30}`],["오늘 활성",todayRow?todayRow.users:0],["첫 발견 완료",pct(disc.length/n)],["해석 수용률",disc.length?pct(agree.length/disc.length):"—"],["평균 활동일",(testers.reduce((s,p)=>s+p.active_days,0)/n).toFixed(1)],["3일+ 활동",pct(testers.filter(p=>p.active_days>=3).length/n)],["5일+ 활동",pct(testers.filter(p=>p.active_days>=5).length/n)],["카드 공개",pct(testers.filter(p=>p.public).length/n)],["친구 연결",Math.round(people.reduce((s,p)=>s+p.friends,0)/2)],["공감·응원",people.reduce((s,p)=>s+p.reactions_given,0)],["마무리 설문",testers.filter(p=>p.exit_done).length],["AI 호출",people.reduce((s,p)=>s+Number(p.ai_calls||0),0)]];
  const maxU=Math.max(1,...daily.map(d=>d.users));
  async function act(fn,msg){setBusy(true);try{await fn();toast(msg);await load()}catch(e){toast("처리하지 못했습니다: "+(e.message||e.code||""))}finally{setBusy(false)}}
- const TABS=[["kpi","현황"],["people","참여자"],["fb","의견·설문"],["inv","초대 코드"],["ann","공지"],["rep","신고"],["set","설정"]];
+ const TABS=[["kpi","현황"],["people","참여자"],["fb","의견·설문"],["err",`오류${errs&&errs.length?" "+errs.length:""}`],["inv","초대 코드"],["ann","공지"],["rep","신고"],["set","설정"]];
  return html`<div className="main wrap admin">
   <div className="row between"><div><div className="eyebrow">운영 콘솔</div><h1 className="h2">${MIB_CONFIG.cohort} 운영</h1></div><button className="btn ghost sm" onClick=${onExit}>앱으로</button></div>
   <div className="segs scrollx" role="tablist">${TABS.map(([k,t])=>html`<button key=${k} role="tab" aria-pressed=${tab===k} aria-selected=${tab===k} onClick=${()=>setTab(k)}>${t}</button>`)}</div>
@@ -213,14 +217,16 @@ function AdminScreen({onExit,toast,uid,onPreviewEvo,onPreviewAway,onPreviewBadge
     <td className="nowrap">${p.public&&html`<button className="linkbtn small" disabled=${busy} onClick=${()=>act(()=>api.admin.hideCard(p.id,!p.card_hidden),p.card_hidden?"카드를 다시 보이게 했어요.":"카드를 숨겼어요.")}>${p.card_hidden?"숨김 해제":"카드 숨김"}</button>`} ${avs[p.id]==="photo"&&html`<button className="linkbtn small" disabled=${busy} onClick=${()=>act(()=>api.admin.clearAvatar(p.id),"프로필 사진을 내렸어요. 기본 원석으로 보입니다.")}>사진 내리기</button>`} <button className="linkbtn small" disabled=${busy} onClick=${()=>{const pw=prompt(p.nickname+"님의 임시 비밀번호 (8자 이상)");if(pw&&pw.length>=8)act(()=>api.admin.resetPassword(p.id,pw),"임시 비밀번호를 설정했어요. 본인에게 따로 전달해 주세요.")}}>비번 재설정</button></td></tr>`)}
    </tbody></table></div></div>`}
   ${tab==="fb"&&html`<${AdminFeedback} fb=${fb} byId=${byId} today=${today}/>`}
+  ${tab==="err"&&html`<${AdminErrors} errs=${errs} reload=${()=>api.admin.errors().then(setErrs).catch(()=>{})}/>`}
   ${tab==="inv"&&html`<${AdminInvites} invites=${ov.invites||[]} act=${act} busy=${busy} toast=${toast}/>`}
   ${tab==="ann"&&html`<${AdminAnn} anns=${anns} act=${act} busy=${busy}/>`}
   ${tab==="rep"&&html`<div className="stack">${reps===null?html`<p className="faint small">불러오는 중…</p>`:reps.length?reps.map(r=>html`<div key=${r.id} className="panel stack small"><div className="row between"><b>${(byId[r.target_id]||{}).nickname||"(탈퇴)"} 신고</b><span className="faint">${ago(r.created_at)} · ${(byId[r.reporter]||{}).nickname||""}</span></div><span className="prewrap">${r.reason}</span><div className="row">${!r.resolved?html`<button className="btn ghost sm" onClick=${()=>act(async()=>{await api.admin.resolveReport(r.id);setReps(null);api.admin.reports().then(setReps)},"처리 완료로 표시했어요.")}>처리 완료</button>`:html`<span className="chip">처리됨</span>`}<button className="btn ghost sm" onClick=${()=>act(()=>api.admin.hideCard(r.target_id,true),"카드를 숨겼어요.")}>카드 숨기기</button></div></div>`):html`<p className="small muted">들어온 신고가 없습니다.</p>`}</div>`}
-  ${tab==="set"&&html`<${AdminSettings} settings=${ov.settings||{}} act=${act} busy=${busy} aiOk=${aiOk} ytOk=${ytOk} onPreviewEvo=${onPreviewEvo} onPreviewAway=${onPreviewAway} onPreviewBadges=${onPreviewBadges}/>`}
+  ${tab==="set"&&html`<${AdminSettings} settings=${ov.settings||{}} act=${act} busy=${busy} aiOk=${aiOk} ytOk=${ytOk} onPreviewEvo=${onPreviewEvo} onPreviewAway=${onPreviewAway} onPreviewBadges=${onPreviewBadges} mailOk=${mailOk} toast=${toast}/>`}
  </div>`;
 }
 function AdminFeedback({fb,byId,today}){
- const [kind,setKind]=useState("screen");
+ const [kind,setKind]=useState("screen");const [shots,setShots]=useState({});const [big,setBig]=useState(null);
+ useEffect(()=>{const ps=(fb||[]).map(f=>f.shot).filter(Boolean);if(ps.length)api.admin.shotUrls(ps).then(setShots).catch(()=>{})},[fb]);
  if(fb===null)return html`<p className="faint small">불러오는 중…</p>`;
  const rows=fb.filter(f=>f.kind===kind);const nick=id=>(byId[id]||{}).nickname||"(탈퇴)";
  let summary=null;
@@ -234,7 +240,10 @@ function AdminFeedback({fb,byId,today}){
   ${rows.map(r=>html`<div key=${r.id} className="panel stack small"><div className="row between"><b>${nick(r.user_id)}</b><span className="faint">${new Date(r.created_at).toLocaleString("ko-KR")}</span></div>
    <span>${kind==="screen"?html`<span className="tag">${(r.payload||{}).type||""}</span><span className="tag">${screenLabel(r.screen)}</span>`:kind==="daily"?html`<span className="tag">Day ${(r.payload||{}).day}</span>${r.rating!=null?`★${r.rating} `:""}${(r.payload||{}).choice||""}`:html`<span className="tag">추천 ${r.rating}</span><span className="tag">${(r.payload||{}).intent||""}</span>`}</span>
    ${kind==="exit"&&html`<span><b>좋았던 순간</b> ${(r.payload||{}).best||"—"}</span><span><b>아쉬운 점</b> ${(r.payload||{}).worst||"—"}</span>`}
-   ${r.body&&html`<span className="prewrap">${r.body}</span>`}</div>`)}
+   ${r.body&&html`<span className="prewrap">${r.body}</span>`}
+   ${kind==="screen"&&html`<span className="faint">${uaShort((r.payload||{}).ua)}${(r.payload||{}).w?` · ${(r.payload||{}).w}×${(r.payload||{}).h||"?"}`:""}${(r.payload||{}).ver?` · v${(r.payload||{}).ver}`:""}</span>`}
+   ${r.shot&&shots[r.shot]&&html`<button className="shot-thumb" onClick=${()=>setBig(shots[r.shot])} aria-label="화면 캡처 크게 보기"><img src=${shots[r.shot]} alt="참여자 화면 캡처"/></button>`}</div>`)}
+  ${big&&html`<div className="shot-big" onClick=${()=>setBig(null)} role="dialog" aria-label="화면 캡처"><img src=${big} alt="참여자 화면 캡처"/></div>`}
   ${!rows.length&&html`<p className="small muted">아직 없습니다.</p>`}
  </div>`;
 }
@@ -254,13 +263,37 @@ function AdminAnn({anns,act,busy}){
   ${anns.map(a=>html`<div key=${a.id} className="panel stack small"><div className="row between"><b>${a.title}</b><span className="faint">${ago(a.created_at)}</span></div>${a.body&&html`<span className="prewrap muted">${a.body}</span>`}<button className="linkbtn small" onClick=${()=>act(()=>api.admin.delAnnouncement(a.id),"공지를 내렸어요.")}>내리기</button></div>`)}
  </div>`;
 }
-function AdminSettings({settings,act,busy,aiOk,ytOk,onPreviewEvo,onPreviewAway,onPreviewBadges}){
+function AdminSettings({settings,act,busy,aiOk,ytOk,onPreviewEvo,onPreviewAway,onPreviewBadges,mailOk,toast}){
  const [cap,setCap]=useState(Number(settings.tester_cap||30));const [lim,setLim]=useState(Number(settings.ai_daily_limit||40));
+ const [ac,setAc]=useState(null);const [mail,setMail]=useState("");const [sup,setSup]=useState(typeof settings.support_url==="string"?settings.support_url:"");const [testing,setTesting]=useState(false);
+ useEffect(()=>{api.admin.alertConfig().then(c=>{setAc(c||{});setMail((c&&c.email)||"")}).catch(()=>setAc({}))},[]);
+ async function test(){setTesting(true);try{const r=await api.admin.alertTest();toast(`테스트 메일을 보냈어요 → ${r.to}`)}catch(e){toast(e.code==="mail_not_configured"?"Gmail 앱 비밀번호가 아직 등록되지 않았어요.":e.code==="mail_auth"?"Gmail이 로그인을 거절했어요. GMAIL_USER와 앱 비밀번호를 확인해 주세요.":"메일을 보내지 못했어요.")}finally{setTesting(false)}}
  return html`<div className="stack">
+  <div className="panel stack small"><b>운영자 알림 (Gmail)</b>
+   <span>${mailOk===null?"확인 중…":mailOk?"Gmail 발송이 연결되어 있습니다. 새 의견·마무리 설문·앱 오류가 생기면 바로 메일이 옵니다. 같은 오류는 6시간에 한 번만 알려요.":"아직 연결 전입니다. Supabase › Edge Functions › Secrets에 GMAIL_USER(보내는 Gmail 주소)와 GMAIL_APP_PASSWORD(앱 비밀번호 16자리)를 추가하세요."}</span>
+   <div className="field" style=${{margin:0}}><label htmlFor="s-mail">받는 주소 (비우면 보내는 Gmail로)</label><div className="row"><input type="email" id="s-mail" value=${mail} onChange=${e=>setMail(e.target.value)} placeholder="you@gmail.com" className="grow"/><button className="btn ghost sm" disabled=${busy||ac===null} onClick=${()=>act(()=>api.admin.setAlert(mail.trim(),true),"알림 주소를 저장했어요.")}>저장</button></div></div>
+   <div className="row"><button className="btn sm grow" disabled=${!mailOk||testing} onClick=${test}>${testing?"보내는 중…":"테스트 메일 보내기"}</button>${ac&&html`<button className="btn ghost sm grow" disabled=${busy} onClick=${()=>act(()=>api.admin.setAlert(mail.trim(),!ac.enabled).then(()=>setAc({...ac,enabled:!ac.enabled})),ac.enabled?"알림을 껐어요.":"알림을 켰어요.")}>${ac.enabled?"알림 잠시 끄기":"알림 켜기"}</button>`}</div>
+  </div>
+  <div className="field"><label htmlFor="s-sup">운영 채팅방 주소 (도움말에 표시, 예: 카카오톡 오픈채팅)</label><div className="row"><input type="url" id="s-sup" value=${sup} onChange=${e=>setSup(e.target.value)} placeholder="https://open.kakao.com/o/..." className="grow"/><button className="btn ghost sm" disabled=${busy} onClick=${()=>act(()=>api.admin.setSetting("support_url",sup.trim()),"채팅방 주소를 저장했어요.")}>저장</button></div></div>
   <div className="panel stack small"><b>AI 연결</b><span>${aiOk===null?"확인 중…":aiOk?"ANTHROPIC_API_KEY가 등록되어 AI 해석이 켜져 있습니다.":"키가 없습니다. Supabase › Edge Functions › Secrets에서 ANTHROPIC_API_KEY를 추가하세요."}</span><span className="muted">모델은 기본값(해석: claude-sonnet-5-5, 짧은 작업: claude-haiku-5-5)을 씁니다. 바꾸려면 같은 곳에 ANTHROPIC_MODEL, ANTHROPIC_MODEL_QUICK를 추가하세요.</span></div>
   <div className="panel stack small"><b>유튜브 채널 읽기</b><span>${ytOk===null?"확인 중…":ytOk?"YOUTUBE_API_KEY가 등록되어, 참여자가 채널 주소만 넣으면 최근 업로드 최대 200편의 제목·날짜·길이를 읽어옵니다.":"키가 없습니다. 참여자는 업로드 목록을 직접 붙여 넣어야 합니다. 같은 Secrets에 YOUTUBE_API_KEY를 추가하면 채널 자동 읽기가 켜집니다."}</span></div>
   <div className="panel stack small"><b>젬 변신 연출</b><span className="muted">단계가 오르거나 강·결·각·형이 바뀌는 순간, 배지를 받는 순간, 그리고 받침·인연석·광채·별자리 같은 표식이 오르는 순간에 재생됩니다. 6시간 넘게 자리를 비웠다 돌아오면 그사이 쌓인 공감·친구·방문을 먼저 보여 준 뒤 이어서 재생됩니다.</span><div className="row"><button className="btn quiet sm grow" onClick=${onPreviewEvo}>변신 연출 미리보기</button><button className="btn quiet sm grow" onClick=${onPreviewAway}>돌아왔을 때 연출 미리보기</button></div><button className="btn quiet sm" onClick=${onPreviewBadges}>배지 획득 연출 미리보기 (일반 → 희귀 → 영웅 → 전설)</button></div>
   <div className="field"><label htmlFor="s-cap">테스터 정원</label><div className="row"><input type="number" id="s-cap" min="1" max="200" value=${cap} onChange=${e=>setCap(+e.target.value)} style=${{width:"110px"}}/><button className="btn ghost sm" disabled=${busy} onClick=${()=>act(()=>api.admin.setSetting("tester_cap",cap),"정원을 바꿨어요.")}>저장</button></div></div>
   <div className="field"><label htmlFor="s-lim">1인당 하루 AI 호출 한도</label><div className="row"><input type="number" id="s-lim" min="1" max="500" value=${lim} onChange=${e=>setLim(+e.target.value)} style=${{width:"110px"}}/><button className="btn ghost sm" disabled=${busy} onClick=${()=>act(()=>api.admin.setSetting("ai_daily_limit",lim),"한도를 바꿨어요.")}>저장</button></div><span className="hint">첫 해석 1회는 긴 작업, 나머지(새 걸음·회고 정리·아이템 알아보기)는 짧은 작업입니다.</span></div>
+ </div>`;
+}
+
+const uaShort=ua=>{ua=ua||"";const os=/iPhone|iPad/.test(ua)?"iOS":/Android/.test(ua)?"Android":/Mac OS/.test(ua)?"Mac":/Windows/.test(ua)?"Windows":"기타";const br=/KAKAOTALK/i.test(ua)?"카카오톡":/NAVER/i.test(ua)?"네이버앱":/Instagram/i.test(ua)?"인스타그램":/SamsungBrowser/.test(ua)?"삼성인터넷":/CriOS|Chrome/.test(ua)?"Chrome":/Safari/.test(ua)?"Safari":/Firefox/.test(ua)?"Firefox":"브라우저";return `${os} · ${br}`};
+function AdminErrors({errs,reload}){
+ const [open,setOpen]=useState(null);
+ if(errs===null)return html`<p className="faint small">불러오는 중…</p>`;
+ return html`<div className="stack">
+  <div className="row between"><p className="small muted" style=${{margin:0}}>참여자 화면에서 난 오류가 자동으로 모입니다. 같은 오류는 한 줄로 묶어 보여요.</p><button className="btn ghost sm" onClick=${reload}>새로고침</button></div>
+  ${errs.length?errs.map((e,i)=>html`<div key=${e.sig} className="panel stack small">
+   <div className="row between"><b className="err-msg">${e.message}</b><span className="chip plain">${e.n}회 · ${e.users}명</span></div>
+   <span className="faint">${screenLabel(e.screen)} · ${uaShort(e.ua)} · v${e.ver||"-"} · 처음 ${new Date(e.first_at).toLocaleString("ko-KR")} · 최근 ${new Date(e.last_at).toLocaleString("ko-KR")}</span>
+   ${e.stack&&html`<button className="linkbtn small" onClick=${()=>setOpen(open===i?null:i)}>${open===i?"자세히 닫기":"자세히 (기술 정보)"}</button>`}
+   ${open===i&&html`<pre className="err-stack">${e.stack}</pre>`}
+  </div>`):html`<p className="small muted">아직 오류가 없어요. 좋은 소식입니다.</p>`}
  </div>`;
 }

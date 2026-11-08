@@ -2,6 +2,7 @@
 // youtube (official Data API), delete_me (full account erase), admin_reset_password.
 // verify_jwt is off: join is public; every other action checks the caller's JWT here.
 import { createClient } from "npm:@supabase/supabase-js@2.117.3";
+import nodemailer from "npm:nodemailer@6.9.16";
 
 const URL_ = Deno.env.get("SUPABASE_URL")!;
 function secretKey(): string {
@@ -80,7 +81,7 @@ async function join(b: any) {
     return fail("signup_failed", 500);
   }
   const uid = created.user.id;
-  const consent = { terms: true, privacy: true, ai: true, research: !!agree.research, at: new Date().toISOString(), version: "cbt-1" };
+  const consent = { terms: true, privacy: true, ai: true, research: !!agree.research, at: new Date().toISOString(), version: String(agree.version || "cbt-1").slice(0, 12) };
   const { error: pErr } = await admin.from("profiles").insert({ id: uid, nickname, role: inv.role, consent });
   if (pErr) {
     await admin.auth.admin.deleteUser(uid);
@@ -260,12 +261,14 @@ async function youtube(req: Request, b: any) {
 async function deleteMe(req: Request) {
   const user = await caller(req);
   if (!user) return fail("unauthorized", 401);
-  const bucket = admin.storage.from("item-photos");
-  for (let i = 0; i < 20; i++) {
-    const { data: files } = await bucket.list(user.id, { limit: 100 });
-    if (!files || !files.length) break;
-    await bucket.remove(files.map((f) => `${user.id}/${f.name}`));
-    if (files.length < 100) break;
+  for (const name of ["item-photos", "avatars", "feedback-shots"]) {
+    const bucket = admin.storage.from(name);
+    for (let i = 0; i < 20; i++) {
+      const { data: files } = await bucket.list(user.id, { limit: 100 });
+      if (!files || !files.length) break;
+      await bucket.remove(files.map((f) => `${user.id}/${f.name}`));
+      if (files.length < 100) break;
+    }
   }
   const { error } = await admin.auth.admin.deleteUser(user.id);
   if (error) return fail("delete_failed", 500);
@@ -286,6 +289,109 @@ async function adminReset(req: Request, b: any) {
   return json({ ok: true });
 }
 
+
+// ───────── operator alerts (Gmail SMTP, port 465 — 25/587 are blocked on Edge) ─────────
+const esc = (t: unknown) => String(t ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]!));
+const shortUA = (ua: string) => {
+  ua = ua || "";
+  const os = /iPhone|iPad/.test(ua) ? "iOS" : /Android/.test(ua) ? "Android" : /Mac OS/.test(ua) ? "Mac" : /Windows/.test(ua) ? "Windows" : "기타";
+  const br = /KAKAOTALK/i.test(ua) ? "카카오톡" : /NAVER/i.test(ua) ? "네이버앱" : /Instagram/i.test(ua) ? "인스타그램" : /SamsungBrowser/.test(ua) ? "삼성인터넷" : /CriOS|Chrome/.test(ua) ? "Chrome" : /Safari/.test(ua) ? "Safari" : /Firefox/.test(ua) ? "Firefox" : "브라우저";
+  return `${os} · ${br}`;
+};
+function mailer() {
+  const user = Deno.env.get("GMAIL_USER"), pass = (Deno.env.get("GMAIL_APP_PASSWORD") || "").replace(/\s+/g, "");
+  if (!user || !pass) return null;
+  return { user, t: nodemailer.createTransport({ host: "smtp.gmail.com", port: 465, secure: true, auth: { user, pass } }) };
+}
+const APP_URL = "https://dchoi1977.github.io/myitembook/";
+function frame(title: string, inner: string) {
+  return `<div style="font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;max-width:620px;margin:0 auto;color:#1F2A28">
+  <div style="background:#173D3B;color:#F4F1E9;padding:14px 18px;border-radius:12px 12px 0 0"><b style="font-size:16px">MIB CBT 1기 · 운영 알림</b><br><span style="font-size:13px;opacity:.85">${esc(title)}</span></div>
+  <div style="border:1px solid #D6DACF;border-top:0;border-radius:0 0 12px 12px;padding:14px 18px">${inner}
+  <p style="font-size:12px;color:#6B7570;margin-top:18px">운영 콘솔에서 전체 내용을 볼 수 있어요 → <a href="${APP_URL}">${APP_URL}</a></p></div></div>`;
+}
+async function alerts() {
+  const m = mailer();
+  const { data: cfg } = await admin.rpc("alert_cfg_internal");
+  if (!m || !cfg?.enabled) return json({ ok: true, skipped: true });
+  const { data: claimed } = await admin.rpc("alert_claim");
+  const rows = (claimed || []) as { kind: string; ref: number }[];
+  if (!rows.length) return json({ ok: true, sent: 0 });
+  const fbIds = rows.filter((r) => r.kind === "feedback").map((r) => r.ref);
+  const erIds = rows.filter((r) => r.kind === "app_errors").map((r) => r.ref);
+  const fbs = fbIds.length ? ((await admin.from("feedback").select("*").in("id", fbIds)).data || []) : [];
+  const ers = erIds.length ? ((await admin.from("app_errors").select("*").in("id", erIds).order("id")).data || []) : [];
+  const uids = [...new Set([...fbs.map((f: any) => f.user_id), ...ers.map((e: any) => e.user_id)].filter(Boolean))];
+  const { data: profs } = uids.length ? await admin.from("profiles").select("id,nickname").in("id", uids) : { data: [] };
+  const nick = (id: string) => (profs || []).find((p: any) => p.id === id)?.nickname || (id ? "(탈퇴)" : "로그인 전");
+  // the same error is mailed once per 6 hours
+  const groups: Record<string, any[]> = {};
+  for (const e of ers) (groups[e.sig] ||= []).push(e);
+  const freshErr: any[][] = [];
+  for (const [sig, list] of Object.entries(groups)) {
+    const { data: seen } = await admin.rpc("alert_seen_recent", { p_sig: sig, p_before: list[0].created_at });
+    if (!seen) freshErr.push(list);
+  }
+  if (!fbs.length && !freshErr.length) return json({ ok: true, sent: 0 });
+  const attachments: any[] = [];
+  let html = "";
+  for (const f of fbs as any[]) {
+    const p = f.payload || {};
+    const label = f.kind === "exit" ? `마무리 설문 · 추천 ${f.rating ?? "-"}점` : `${p.type || "의견"} · ${esc(f.screen || "")}`;
+    let shot = "";
+    if (f.shot) {
+      const { data: blob } = await admin.storage.from("feedback-shots").download(f.shot);
+      if (blob) { const cid = `shot${f.id}@mib`; attachments.push({ filename: `screen-${f.id}.jpg`, content: new Uint8Array(await blob.arrayBuffer()), cid }); shot = `<br><img src="cid:${cid}" style="max-width:260px;border:1px solid #D6DACF;border-radius:8px;margin-top:6px">`; }
+    }
+    const extra = f.kind === "exit" ? `<br><b>좋았던 순간</b> ${esc(p.best || "—")}<br><b>아쉬운 점</b> ${esc(p.worst || "—")}` : "";
+    html += `<div style="padding:10px 0;border-bottom:1px solid #EEE"><b>💬 ${esc(nick(f.user_id))}</b> <span style="color:#A87B2A">${label}</span><br>
+      <span style="font-size:12px;color:#6B7570">${new Date(f.created_at).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })} · ${esc(shortUA(p.ua || ""))}${p.w ? ` · 폭 ${p.w}px` : ""}</span>
+      ${f.body ? `<p style="white-space:pre-wrap;margin:6px 0">${esc(f.body)}</p>` : ""}${extra}${shot}</div>`;
+  }
+  for (const list of freshErr) {
+    const e = list[list.length - 1];
+    html += `<div style="padding:10px 0;border-bottom:1px solid #EEE"><b>⚠️ 앱 오류</b> <span style="color:#9A3B2E">${esc(e.message)}</span><br>
+      <span style="font-size:12px;color:#6B7570">${esc(nick(e.user_id))} · 화면 ${esc(e.screen || "-")} · ${esc(shortUA(e.ua || ""))} · 버전 ${esc(e.ver || "-")}${list.length > 1 ? ` · ${list.length}회` : ""}</span>
+      ${e.stack ? `<pre style="font-size:11px;background:#F6F4EE;padding:8px;border-radius:6px;white-space:pre-wrap;max-height:180px;overflow:hidden">${esc(String(e.stack).slice(0, 900))}</pre>` : ""}</div>`;
+  }
+  const parts = [fbs.length ? `의견 ${fbs.length}` : "", freshErr.length ? `오류 ${freshErr.length}` : ""].filter(Boolean).join(" · ");
+  const first = fbs[0] as any;
+  const subj = `[MIB CBT] ${parts}${first ? ` — ${nick(first.user_id)}: ${String(first.body || (first.payload || {}).type || "").slice(0, 30)}` : ""}`;
+  try {
+    await m.t.sendMail({ from: `MIB CBT 알림 <${m.user}>`, to: cfg.email || m.user, subject: subj, html: frame(parts, html), attachments });
+  } catch (e) {
+    console.error("mail", (e as Error)?.message);
+    // put them back so the next event retries
+    await admin.from("alert_queue").update({ sent_at: null }).in("ref", [...fbIds, ...erIds]).gte("created_at", new Date(Date.now() - 3600e3).toISOString());
+    return fail("mail_failed", 502);
+  }
+  return json({ ok: true, sent: 1 });
+}
+async function alertTest(req: Request) {
+  const user = await caller(req);
+  if (!user) return fail("unauthorized", 401);
+  const { data: me } = await admin.from("profiles").select("role,nickname").eq("id", user.id).maybeSingle();
+  if (me?.role !== "admin") return fail("forbidden", 403);
+  const m = mailer();
+  if (!m) return fail("mail_not_configured", 503);
+  const { data: cfg } = await admin.rpc("alert_cfg_internal");
+  try {
+    await m.t.sendMail({ from: `MIB CBT 알림 <${m.user}>`, to: cfg?.email || m.user, subject: "[MIB CBT] 알림 연결 확인", html: frame("테스트 메일", `<p>${esc(me.nickname)}님, 운영 알림이 이 주소로 잘 연결되었습니다.</p><p style="font-size:13px;color:#6B7570">새 의견·마무리 설문·앱 오류가 생기면 바로 메일이 옵니다. 같은 오류는 6시간에 한 번만 알려 드려요.</p>`) });
+  } catch (e) {
+    const msg = String((e as Error)?.message || "");
+    console.error("mail test", msg);
+    return fail(/535|Username and Password|BadCredentials/i.test(msg) ? "mail_auth" : "mail_failed", 502);
+  }
+  return json({ ok: true, to: cfg?.email || m.user });
+}
+// errors from people who are not signed in yet (gate screen)
+async function clientError(b: any) {
+  const msg = String(b.message || "").slice(0, 600);
+  if (!msg) return fail("empty");
+  await admin.from("app_errors").insert({ user_id: null, sig: String(b.sig || msg).slice(0, 200), message: msg, stack: String(b.stack || "").slice(0, 3000), screen: String(b.screen || "").slice(0, 60), ua: String(b.ua || "").slice(0, 200), ver: String(b.ver || "").slice(0, 20) });
+  return json({ ok: true });
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (req.method !== "POST") return fail("method_not_allowed", 405);
@@ -293,7 +399,10 @@ Deno.serve(async (req) => {
   try { b = await req.json(); } catch (_) { return fail("bad_json"); }
   try {
     switch (b.action) {
-      case "ping": return json({ ok: true, ai: !!Deno.env.get("ANTHROPIC_API_KEY"), yt: !!Deno.env.get("YOUTUBE_API_KEY") });
+      case "ping": return json({ ok: true, ai: !!Deno.env.get("ANTHROPIC_API_KEY"), yt: !!Deno.env.get("YOUTUBE_API_KEY"), mail: !!(Deno.env.get("GMAIL_USER") && Deno.env.get("GMAIL_APP_PASSWORD")) });
+      case "alerts": return await alerts();
+      case "alert_test": return await alertTest(req);
+      case "client_error": return await clientError(b);
       case "youtube": return await youtube(req, b);
       case "join": return await join(b);
       case "ai": return await ai(req, b);

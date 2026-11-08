@@ -5,7 +5,7 @@ function App(){
  const [boot,setBoot]=useState(true);const [session,setSession]=useState(null);const [profile,setProfile]=useState(null);const [gateMsg,setGateMsg]=useState("");
  const [st,setSt]=useState(null);const [items,setItems]=useState([]);
  const [demo,setDemo]=useState(false);const [real,setReal]=useState(null);
- const [route,setRoute]=useState("loading");const [tab,setTab]=useState("me");const [sheet,setSheet]=useState(null);const [fbOpen,setFbOpen]=useState(false);
+ const [route,setRoute]=useState("loading");const [tab,setTab]=useState("me");const [sheet,setSheet]=useState(null);const [fbOpen,setFbOpen]=useState(false);const [fbShot,setFbShot]=useState(null);const [supportUrl,setSupportUrl]=useState("");
  const [toastMsg,setToastMsg]=useState("");const toastT=useRef(null);
  const [draft,setDraft]=useState({sources:{youtube:"",calendar:"",story:""},answers:["","",""],photos:[],quick:null});
  const [reading,setReading]=useState({status:"idle",chars:0,error:null});const ctl=useRef(null);
@@ -33,7 +33,7 @@ function App(){
   try{
    const p=await api.me(uid);if(!alive)return;
    if(!p){await api.logout();setGateMsg("초대 등록이 확인되지 않은 계정입니다. 초대 코드로 다시 등록해 주세요.");setSession(null);setRoute("gate");setBoot(false);return}
-   setProfile(p);tracker.uid=uid;namesRef.current={...namesRef.current,[uid]:p};setNames(namesRef.current);
+   setProfile(p);tracker.uid=uid;errReporter.uid=uid;api.supportUrl().then(setSupportUrl);namesRef.current={...namesRef.current,[uid]:p};setNames(namesRef.current);
    const [s,its]=await Promise.all([api.loadState(uid),api.loadItems(uid)]);if(!alive)return;
    const ns=normState(s);setSt(ns);setItems(its);loaded.current=true;hydratePhotos(its);
    track("app_open",{day:cbtDay(p.joined_at),w:window.innerWidth});
@@ -104,7 +104,8 @@ function App(){
 
  const update=useCallback(fn=>setSt(s=>{const n=clone(s);fn(n);return n}),[]);
  useEffect(()=>{try{window.scrollTo(0,0)}catch(e){}},[route,tab]);
- const screen=sheet||(route==="home"?tab:route);
+ const screen=sheet||(route==="home"?tab:route);curScreen.v=screen;
+ async function openFeedback(){let shot=null;try{toast("화면을 담는 중…");shot=await Promise.race([captureScreen(),new Promise((_,rej)=>setTimeout(()=>rej(new Error("timeout")),5000))])}catch(e){}setToastMsg("");setFbShot(shot);setFbOpen(true)}
  useEffect(()=>{if(uid&&route!=="loading"&&route!=="gate")track("view",{s:String(screen).split(":")[0]})},[screen]);
  const canAI=aiReady!==false&&!demo;
 
@@ -160,6 +161,7 @@ function App(){
  const newAnn=anns.length&&anns[0].id>annSeen;
  const header=html`<header className="top wrap"><div className="logo">mib<small>${MIB_CONFIG.cohort}</small></div><div className="row" style=${{gap:"8px",flexWrap:"nowrap"}}>
   <span className="chip gold" title="CBT 날짜">D${Math.min(day,99)}</span>
+  <button className="iconbtn" aria-label="도움말" onClick=${()=>setSheet("help")}><${Ico} n="help"/></button>
   ${profile.role==="admin"&&html`<button className="iconbtn" aria-label="운영 콘솔" onClick=${()=>{setRoute("admin");setSheet(null)}}><${Ico} n="cog"/></button>`}
   <button className="iconbtn badged" aria-label=${"알림"+(unread+(newAnn?1:0)?` ${unread+(newAnn?1:0)}개`:"")} onClick=${()=>setSheet("inbox")}><${Ico} n="bell"/>${(unread>0||newAnn)&&html`<span className="count">${unread+(newAnn?1:0)}</span>`}</button>
   ${route==="home"&&html`<button className="iconbtn" aria-label="연결 지도와 내 데이터" onClick=${()=>setSheet("data")}><${Ico} n="data"/></button>`}
@@ -195,7 +197,8 @@ function App(){
  } else body=html`<${Welcome} onStart=${startFlow} onDemo=${startDemo} rt=${rt} nickname=${profile.nickname}/>`;
 
  let sheetEl=null;const close=()=>setSheet(null);
- if(sheet==="avatar")sheetEl=html`<${AvatarSheet} profile=${profile} uid=${uid} onClose=${close} onSaved=${onAvatarSaved} toast=${toast}/>`;
+ if(sheet==="help")sheetEl=html`<${HelpSheet} supportUrl=${supportUrl} onClose=${close} onFeedback=${()=>{setSheet(null);openFeedback()}}/>`;
+ else if(sheet==="avatar")sheetEl=html`<${AvatarSheet} profile=${profile} uid=${uid} onClose=${close} onSaved=${onAvatarSaved} toast=${toast}/>`;
  else if(sheet==="inbox")sheetEl=html`<${InboxSheet} uid=${uid} notes=${notes} anns=${anns} names=${names} soc=${soc} onClose=${()=>{close();loadInbox()}} openUser=${openUser} reloadSoc=${reloadSoc} toast=${toast}/>`;
  else if(sheet==="data")sheetEl=html`<${DataSheet} st=${st} items=${items} profile=${profile} onClose=${close} onWipe=${wipe} onReread=${()=>openSheet("reread")} onLogout=${logout} toast=${toast} demo=${demo} setQuiet=${setQuiet}/>`;
  else if(sheet&&sheet.startsWith("user:"))sheetEl=html`<${ProfileSheet} key=${sheet} id=${sheet.slice(5)} uid=${uid} st=${st} soc=${soc} names=${names} onClose=${close} openUser=${openUser} reloadSoc=${reloadSoc} toast=${toast} demo=${demo} ensureNames=${ensureNames}/>`;
@@ -211,7 +214,8 @@ function App(){
   else if(sheet==="exit")sheetEl=html`<${ExitSurvey} onClose=${close} stats=${stats} toast=${toast} onDone=${()=>{close();reloadSoc()}}/>`;
  }
  const tabs=route==="home"&&st.analysis&&html`<nav className="tabbar" aria-label="메인">${[["me","나","me"],["step","한 걸음","step"],["feed","소식","feed"],["friends","친구","people"]].map(([k,t,ic])=>html`<button key=${k} className="tab" aria-current=${tab===k?"page":undefined} onClick=${()=>{setTab(k);setSheet(null);window.scrollTo(0,0)}}><${Ico} n=${ic}/>${t}${k==="friends"&&soc.friendships.some(f=>f.status==="pending"&&f.addressee===uid)?html`<i className="tabdot" aria-label="새 친구 요청"></i>`:null}</button>`)}</nav>`;
- const fab=!demo&&!fbOpen&&route!=="reading"&&html`<button className=${"fab"+(tabs?" up":"")} onClick=${()=>setFbOpen(true)} aria-label="이 화면에 대한 의견 보내기"><${Ico} n="chat"/>의견</button>`;
- return html`<div className="app">${header}${demoBar}${body}${tabs}${sheetEl}${fab}${(route==="home"||route==="reveal")&&fxEl}${fbOpen&&html`<${FeedbackSheet} screen=${screen} onClose=${()=>setFbOpen(false)} toast=${toast}/>`}<${Toast} msg=${toastMsg}/></div>`;
+ const fab=!demo&&!fbOpen&&route!=="reading"&&html`<button className=${"fab"+(tabs?" up":"")} onClick=${openFeedback} aria-label="이 화면에 대한 의견 보내기"><${Ico} n="chat"/>의견</button>`;
+ return html`<div className="app">${header}${demoBar}${body}${tabs}${sheetEl}${fab}${(route==="home"||route==="reveal")&&fxEl}${fbOpen&&html`<${FeedbackSheet} screen=${screen} shot=${fbShot} onClose=${()=>{setFbOpen(false);setFbShot(null)}} onHelp=${()=>{setFbOpen(false);setFbShot(null);setSheet("help")}} toast=${toast}/>`}<${Toast} msg=${toastMsg}/></div>`;
 }
-ReactDOM.createRoot(document.getElementById("root")).render(html`<${App}/>`);
+function TopNotes(){const nv=useNewVersion();return html`${nv&&html`<${NewVersionBar}/>`}<${InAppBar}/>`}
+ReactDOM.createRoot(document.getElementById("root")).render(html`<${ErrorBoundary}><${TopNotes}/><${App}/><//>`);

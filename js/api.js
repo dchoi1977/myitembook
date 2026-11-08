@@ -89,6 +89,8 @@ const api={
  async cohort(){return Q(sb.rpc("cohort_summary"))},
  // ── CBT ops
  async feedback(row){return Q(sb.from("feedback").insert(row))},
+ async uploadShot(uid,dataUrl){const p=`${uid}/${Date.now()}.jpg`;await Q(sb.storage.from("feedback-shots").upload(p,dataUrlToBlob(dataUrl),{contentType:"image/jpeg"}));return p},
+ async supportUrl(){try{const r=await Q(sb.from("settings").select("value").eq("key","support_url").maybeSingle());return (r&&typeof r.value==="string")?r.value:""}catch(e){return ""}},
  async youtube(channel){return this.call("youtube",{channel})},
  async ai({task,prompt,images,signal}){const r=await this.call("ai",{task,prompt,images:images||[]},{signal});return r},
  async aiJSON(o){const r=await this.ai(o);return parseJSON(r.text)},
@@ -108,6 +110,11 @@ const api={
   avatars:()=>Q(sb.from("profiles").select("id,avatar")),
   resetPassword:(uid,pw)=>api.call("admin_reset_password",{user_id:uid,password:pw}),
   setSetting:(key,value)=>Q(sb.from("settings").update({value}).eq("key",key)),
+  errors:()=>Q(sb.rpc("admin_errors")),
+  alertConfig:()=>Q(sb.rpc("admin_alert_config")),
+  setAlert:(email,enabled)=>Q(sb.rpc("admin_set_alert",{p_email:email,p_enabled:enabled})),
+  alertTest:()=>api.call("alert_test",{}),
+  shotUrls:async paths=>{paths=paths.filter(Boolean);if(!paths.length)return {};const r=await Q(sb.storage.from("feedback-shots").createSignedUrls(paths,3600));const m={};(r||[]).forEach(x=>{if(x.signedUrl)m[x.path]=x.signedUrl});return m},
   events:()=>Q(sb.from("events").select("user_id,name,props,day,created_at").order("id",{ascending:true}).limit(20000)),
   ping:()=>api.call("ping",{},{auth:false})
  }
