@@ -11,7 +11,7 @@ function App(){
  const [reading,setReading]=useState({status:"idle",chars:0,error:null});const ctl=useRef(null);
  const [soc,setSoc]=useState(EMPTY_SOC);const [names,setNames]=useState({});const namesRef=useRef({});
  const [notes,setNotes]=useState([]);const [anns,setAnns]=useState([]);const [aiReady,setAiReady]=useState(null);const [ytReady,setYtReady]=useState(null);
- const saveT=useRef(null);const loaded=useRef(false);const pendingHash=useRef(null);
+ const [avTick,setAvTick]=useState(0);const saveT=useRef(null);const loaded=useRef(false);const pendingHash=useRef(null);
  const toast=useCallback(m=>{setToastMsg(m);clearTimeout(toastT.current);toastT.current=setTimeout(()=>setToastMsg(""),3400)},[]);
  const uid=session&&session.user&&session.user.id;
  const initialCode=useMemo(()=>{try{return (new URLSearchParams(location.search).get("code")||"").toUpperCase()}catch(e){return ""}},[]);
@@ -48,6 +48,9 @@ function App(){
  const loadInbox=useCallback(async()=>{if(!uid)return;try{const [n,a]=await Promise.all([api.notifications(),api.announcements()]);setNotes(n||[]);setAnns(a||[]);ensureNames((n||[]).map(x=>x.actor_id))}catch(e){}},[uid]);
  useEffect(()=>{if(!uid)return;const t=setInterval(()=>{if(document.visibilityState==="visible"){loadInbox();reloadSoc()}},60000);const v=()=>{if(document.visibilityState==="visible"){loadInbox();reloadSoc()}};document.addEventListener("visibilitychange",v);return()=>{clearInterval(t);document.removeEventListener("visibilitychange",v)}},[uid]);
 
+ // signed urls for photo avatars this viewer may see (others fall back to the default stone)
+ useEffect(()=>{const need=Object.values(names).filter(p=>p&&p.avatar==="photo"&&!(avKey(p) in AVCACHE));if(!need.length)return;need.forEach(p=>{AVCACHE[avKey(p)]=null});api.avatarUrls(need.map(p=>p.id)).then(m=>{need.forEach(p=>{AVCACHE[avKey(p)]=m[p.id]||null});setAvTick(t=>t+1)}).catch(()=>{})},[names]);
+ function onAvatarSaved(next){setProfile(p=>({...p,...next}));namesRef.current={...namesRef.current,[uid]:{...(namesRef.current[uid]||{}),...next}};setNames(namesRef.current)}
  // ── persist (debounced)
  useEffect(()=>{if(!loaded.current||!st||demo||!uid)return;clearTimeout(saveT.current);saveT.current=setTimeout(()=>{api.saveState(uid,st).catch(()=>toast("저장하지 못했습니다. 연결을 확인해 주세요."))},800);return()=>clearTimeout(saveT.current)},[st]);
 
@@ -100,7 +103,7 @@ function App(){
   try{const body=await api.saveItem(uid,item);const view={...body,id:item.id,thumbUrl:item.thumb||(items.find(i=>i.id===item.id)||{}).thumbUrl,photoUrl:item.photo||(items.find(i=>i.id===item.id)||{}).photoUrl};setItems(list=>exists?list.map(i=>i.id===item.id?view:i):[view,...list]);track(exists?"item_edit":"item_add",{cat:item.category,photo:!!body.photoPath});toast(exists?"아이템을 저장했습니다.":"선반에 담았습니다.");setSheet("shelf")}catch(e){toast("저장하지 못했습니다. 사진이 너무 크면 다른 사진으로 시도해 주세요.")}
  }
  async function deleteItem(id){const it=items.find(i=>i.id===id);try{await api.deleteItem(uid,it||{id});setItems(list=>list.filter(i=>i.id!==id));update(s=>{s.featured=(s.featured||[]).filter(x=>x!==id)});track("item_delete");toast("선반에서 뺐습니다.");setSheet("shelf")}catch(e){toast("지우지 못했습니다.")}}
- async function wipe(){try{await tracker.flush();await api.deleteMe();await api.logout();setSt(null);setItems([]);setProfile(null);setSession(null);setSheet(null);setRoute("gate");setGateMsg("계정과 모든 기록을 지웠습니다. 함께해 주셔서 고맙습니다.")}catch(e){toast("일부를 지우지 못했습니다. 다시 시도해 주세요.")}}
+ async function wipe(){try{await tracker.flush();if(profile&&profile.avatar==="photo")await api.removeAvatarPhoto(uid).catch(()=>{});await api.deleteMe();await api.logout();setSt(null);setItems([]);setProfile(null);setSession(null);setSheet(null);setRoute("gate");setGateMsg("계정과 모든 기록을 지웠습니다. 함께해 주셔서 고맙습니다.")}catch(e){toast("일부를 지우지 못했습니다. 다시 시도해 주세요.")}}
  async function logout(){await tracker.flush();await api.logout();setSheet(null);setSt(null);setProfile(null);setSession(null);setRoute("gate");tracker.uid=null}
  function reread(){setDraft(d=>({...d,quick:st.quick||d.quick||null,sources:{youtube:st.sources.youtube||"",youtubeChannel:st.sources.youtubeChannel||null,calendar:st.sources.calendar||"",story:st.sources.story||""},answers:st.answers||["","",""]}));setSheet(null);setRoute("connect");track("reread_open")}
  async function setQuiet(v){try{await api.setQuiet(uid,v);setProfile(p=>({...p,quiet_view:v}));track("quiet",{on:v});toast(v?"조용히 보기를 켰어요.":"조용히 보기를 껐어요.")}catch(e){toast("바꾸지 못했습니다.")}}
@@ -132,6 +135,7 @@ function App(){
  const rt={aiReady,ytReady};
 
  const top=!demo&&html`<div className="stack">
+  <button className="merow" onClick=${()=>setSheet("avatar")}><${Avatar} p=${profile} size=${46}/><span className="grow"><b>${profile.nickname}</b><br/><span className="small faint">${profile.avatar?"프로필 이미지 바꾸기":"프로필 이미지 고르기 · 캐릭터 16종 또는 내 사진"}</span></span><span className="chev">›</span></button>
   ${newAnn&&html`<button className="panel ann" onClick=${()=>setSheet("inbox")}><span className="eyebrow">운영 공지</span><b>${anns[0].title}</b></button>`}
   <${DailyQuestion} key=${"dq"+day} day=${day} answered=${dailyAnswered} toast=${toast} onDone=${reloadSoc}/>
 </div>`;
@@ -158,7 +162,8 @@ function App(){
  } else body=html`<${Welcome} onStart=${startFlow} onDemo=${startDemo} rt=${rt} nickname=${profile.nickname}/>`;
 
  let sheetEl=null;const close=()=>setSheet(null);
- if(sheet==="inbox")sheetEl=html`<${InboxSheet} uid=${uid} notes=${notes} anns=${anns} names=${names} soc=${soc} onClose=${()=>{close();loadInbox()}} openUser=${openUser} reloadSoc=${reloadSoc} toast=${toast}/>`;
+ if(sheet==="avatar")sheetEl=html`<${AvatarSheet} profile=${profile} uid=${uid} onClose=${close} onSaved=${onAvatarSaved} toast=${toast}/>`;
+ else if(sheet==="inbox")sheetEl=html`<${InboxSheet} uid=${uid} notes=${notes} anns=${anns} names=${names} soc=${soc} onClose=${()=>{close();loadInbox()}} openUser=${openUser} reloadSoc=${reloadSoc} toast=${toast}/>`;
  else if(sheet==="data")sheetEl=html`<${DataSheet} st=${st} items=${items} profile=${profile} onClose=${close} onWipe=${wipe} onReread=${()=>openSheet("reread")} onLogout=${logout} toast=${toast} demo=${demo} setQuiet=${setQuiet}/>`;
  else if(sheet&&sheet.startsWith("user:"))sheetEl=html`<${ProfileSheet} key=${sheet} id=${sheet.slice(5)} uid=${uid} st=${st} soc=${soc} names=${names} onClose=${close} openUser=${openUser} reloadSoc=${reloadSoc} toast=${toast} demo=${demo} ensureNames=${ensureNames}/>`;
  else if(sheet&&st.analysis){
@@ -166,7 +171,7 @@ function App(){
   else if(sheet==="attrs")sheetEl=html`<${AttrsSheet} st=${st} update=${update} onClose=${close}/>`;
   else if(sheet==="shelf")sheetEl=html`<${ShelfSheet} st=${st} items=${items} onOpen=${openSheet} onClose=${close}/>`;
   else if(sheet.startsWith("item:")){const id=sheet.slice(5);const it=id==="new"?null:items.find(i=>i.id===id);sheetEl=html`<${ItemEditor} key=${sheet} item=${it} st=${st} canAI=${canAI} demo=${demo} toast=${toast} onSave=${saveItem} onDelete=${deleteItem} onClose=${()=>setSheet("shelf")}/>`}
-  else if(sheet==="publish")sheetEl=html`<${PublishSheet} st=${st} items=${items} stats=${stats} update=${update} onClose=${close} toast=${toast} demo=${demo} meName=${profile.nickname} uid=${uid}/>`;
+  else if(sheet==="publish")sheetEl=html`<${PublishSheet} st=${st} items=${items} stats=${stats} update=${update} onClose=${close} toast=${toast} demo=${demo} meName=${profile.nickname} uid=${uid} me=${profile}/>`;
   else if(sheet==="mine")sheetEl=demo?null:html`<${MineSheet} uid=${uid} soc=${soc} names=${names} profile=${profile} onClose=${close} openUser=${openUser} ensureNames=${ensureNames}/>`;
   else if(sheet==="cardimg"||sheet==="week")sheetEl=html`<${ShareImageSheet} kind=${sheet==="week"?"week":"card"} st=${st} stats=${stats} profile=${profile} onClose=${close} toast=${toast} exitDone=${stats.exitDone} onExit=${()=>setSheet("exit")}/>`;
   else if(sheet==="exit")sheetEl=html`<${ExitSurvey} onClose=${close} stats=${stats} toast=${toast} onDone=${()=>{close();reloadSoc()}}/>`;

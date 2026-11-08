@@ -25,7 +25,11 @@ const api={
  async login(email,password){const {data,error}=await sb.auth.signInWithPassword({email:String(email).trim().toLowerCase(),password});if(error)throw Err(error.code||"invalid_credentials",{message:error.message});return data.session},
  async logout(){try{await sb.auth.signOut()}catch(e){}},
  async changePassword(pw){const {error}=await sb.auth.updateUser({password:pw});if(error)throw Err(error.code||"weak_password",{message:error.message})},
- async me(uid){return Q(sb.from("profiles").select("id,nickname,role,quiet_view,joined_at").eq("id",uid).maybeSingle())},
+ async me(uid){return Q(sb.from("profiles").select("id,nickname,role,quiet_view,joined_at,avatar,avatar_scope,avatar_v").eq("id",uid).maybeSingle())},
+ async setAvatar(uid,patch){return Q(sb.from("profiles").update(patch).eq("id",uid).select("id,nickname,role,quiet_view,joined_at,avatar,avatar_scope,avatar_v").single())},
+ async uploadAvatar(uid,dataUrl){return Q(sb.storage.from("avatars").upload(`${uid}/avatar.jpg`,dataUrlToBlob(dataUrl),{upsert:true,contentType:"image/jpeg"}))},
+ async removeAvatarPhoto(uid){return Q(sb.storage.from("avatars").remove([`${uid}/avatar.jpg`]))},
+ async avatarUrls(ids){ids=[...new Set(ids)];if(!ids.length)return {};const {data}=await sb.storage.from("avatars").createSignedUrls(ids.map(i=>`${i}/avatar.jpg`),3600);const m={};(data||[]).forEach(x=>{const id=(x.path||"").split("/")[0];if(id)m[id]=x.signedUrl||null});return m},
  async setQuiet(uid,v){return Q(sb.from("profiles").update({quiet_view:v}).eq("id",uid))},
  // ── private state
  async loadState(uid){const r=await Q(sb.from("app_state").select("data").eq("user_id",uid).maybeSingle());return r?r.data:null},
@@ -51,9 +55,9 @@ const api={
  async listCards(){return Q(sb.from("cards").select("user_id,data,visibility,updated_at").order("updated_at",{ascending:false}).limit(80))},
  async getCard(id){return Q(sb.from("cards").select("user_id,data,visibility,updated_at,hidden").eq("user_id",id).maybeSingle())},
  // ── people
- async profiles(ids){ids=[...new Set(ids.filter(Boolean))];if(!ids.length)return {};const r=await Q(sb.from("profiles").select("id,nickname,joined_at,role").in("id",ids));const m={};r.forEach(p=>m[p.id]=p);return m},
- async searchProfiles(q){q=String(q||"").trim().replace(/[%_,()]/g,"");if(!q)return [];return Q(sb.from("profiles").select("id,nickname,joined_at,role").ilike("nickname",`%${q}%`).limit(12))},
- async profileByNickname(n){return Q(sb.from("profiles").select("id,nickname,joined_at,role").eq("nickname",n).maybeSingle())},
+ async profiles(ids){ids=[...new Set(ids.filter(Boolean))];if(!ids.length)return {};const r=await Q(sb.from("profiles").select("id,nickname,joined_at,role,avatar,avatar_scope,avatar_v").in("id",ids));const m={};r.forEach(p=>m[p.id]=p);return m},
+ async searchProfiles(q){q=String(q||"").trim().replace(/[%_,()]/g,"");if(!q)return [];return Q(sb.from("profiles").select("id,nickname,joined_at,role,avatar,avatar_scope,avatar_v").ilike("nickname",`%${q}%`).limit(12))},
+ async profileByNickname(n){return Q(sb.from("profiles").select("id,nickname,joined_at,role,avatar,avatar_scope,avatar_v").eq("nickname",n).maybeSingle())},
  async social(uid){
   const [fr,wTo,wFrom,rTo,rFrom,fb]=await Promise.all([
    Q(sb.from("friendships").select("*").or(`requester.eq.${uid},addressee.eq.${uid}`)),
@@ -99,6 +103,8 @@ const api={
   reports:()=>Q(sb.from("reports").select("*").order("created_at",{ascending:false}).limit(200)),
   resolveReport:id=>Q(sb.from("reports").update({resolved:true}).eq("id",id)),
   hideCard:(uid,flag)=>Q(sb.rpc("admin_set_card_hidden",{target:uid,flag})),
+  clearAvatar:uid=>Q(sb.rpc("admin_clear_avatar",{target:uid})),
+  avatars:()=>Q(sb.from("profiles").select("id,avatar")),
   resetPassword:(uid,pw)=>api.call("admin_reset_password",{user_id:uid,password:pw}),
   setSetting:(key,value)=>Q(sb.from("settings").update({value}).eq("key",key)),
   events:()=>Q(sb.from("events").select("user_id,name,props,day,created_at").order("id",{ascending:true}).limit(20000)),

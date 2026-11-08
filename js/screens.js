@@ -265,8 +265,8 @@ function buildPublicCard(st,items,stats){
   acceptWords:!!fl.words,tags:fl.tags&&st.quick&&st.quick.answers?[st.quick.answers.mbti,st.quick.answers.blood].filter(Boolean):[]};
  return card;
 }
-function PublicCardView({card,name,compact}){
- return html`<div className="person"><div className="person-head"><${GemView} g=${card.gem} seed=${card.gemName} size=${compact?64:84}/><div className="grow"><b className="serif" style=${{color:"var(--accent)",fontSize:"17px"}}>${card.gemName}</b><br/><span className="small faint">${name||"MIB 사용자"} · 연마 ${card.stage||1}단계</span></div></div>
+function PublicCardView({card,name,compact,who}){
+ return html`<div className="person"><div className="person-head"><${GemView} g=${card.gem} seed=${card.gemName} size=${compact?64:84}/><div className="grow"><b className="serif" style=${{color:"var(--accent)",fontSize:"17px"}}>${card.gemName}</b><br/><span className="small faint whoname">${who?html`<${Avatar} p=${who} size=${22}/>`:null}${name||"MIB 사용자"} · 연마 ${card.stage||1}단계</span></div></div>
   ${card.sentence&&html`<p className="serif" style=${{fontSize:"15.5px",lineHeight:1.6}}>${card.sentence}</p>`}
   ${(card.keywords||[]).length>0&&html`<div className="row">${card.keywords.map(k=>html`<span className="chip" key=${k}>${k}</span>`)}${(card.tags||[]).map(t=>html`<span className="chip plain" key=${"t"+t}>${t}</span>`)}</div>`}
   ${card.showHex&&!compact&&html`<${Hexagon} axes=${card.axes} size=${240}/>`}
@@ -274,7 +274,7 @@ function PublicCardView({card,name,compact}){
   ${(card.badges||[]).length>0&&!compact&&html`<div className="minibadges">${card.badges.slice(0,6).map(id=>{const b=BADGES.find(x=>x.id===id);return b?html`<${Medal} key=${id} b=${b} earned=${true} size=${30}/>`:null})}</div>`}
  </div>`;
 }
-function PublishSheet({st,items,stats,update,onClose,toast,demo,meName,uid}){
+function PublishSheet({st,items,stats,update,onClose,toast,demo,meName,uid,me}){
  const fl=st.visibility.fields;const [seen,setSeen]=useState(false);const [busy,setBusy]=useState(false);
  const card=buildPublicCard(st,items,stats);const can=!demo;const aud=st.visibility.audience||"all";
  const setF=(k,v)=>update(s=>{s.visibility.fields[k]=v});
@@ -284,7 +284,7 @@ function PublishSheet({st,items,stats,update,onClose,toast,demo,meName,uid}){
   <p className="muted small">처음엔 모두 비공개입니다. 젬과 보석 이름은 공개 카드의 기본이고, 나머지는 항목별로 고릅니다. 원본 기록과 근거는 공개되지 않습니다.</p>
   <div className="field"><span className="lbl">누구에게 보일까요?</span><div className="segs" role="group" aria-label="공개 범위">${[["all","CBT 1기 전체"],["friends","친구만"]].map(([k,t])=>html`<button key=${k} aria-pressed=${aud===k} onClick=${()=>update(s=>{s.visibility.audience=k})}>${t}</button>`)}</div><span className="hint">${aud==="all"?"함께 테스트하는 1기 참여자 누구나 볼 수 있어요.":"서로 친구를 맺은 사람만 볼 수 있어요."}</span></div>
   <div>${OPTS.map(([k,t,d])=>html`<label className="checkline" key=${k}><input type="checkbox" id=${"pub-"+k} checked=${!!fl[k]} onChange=${e=>setF(k,e.target.checked)}/><span><b>${t}</b><br/><span className="small muted">${d}</span></span></label>`)}</div>
-  <div className="stack"><div className="eyebrow">공개 미리보기 — 다른 사람에게 이렇게 보입니다</div><${PublicCardView} card=${card} name=${meName}/></div>
+  <div className="stack"><div className="eyebrow">공개 미리보기 — 다른 사람에게 이렇게 보입니다</div><${PublicCardView} card=${card} name=${meName} who=${me}/></div>
   ${!can?html`<div className="panel tint small">예시 모드에서는 공개하지 않습니다.</div>`:st.visibility.public?html`<div className="stack"><button className="btn block" disabled=${busy} onClick=${()=>publish(true)}>공개 카드 새로 고치기</button><button className="btn ghost block" disabled=${busy} onClick=${()=>publish(false)}>공개 멈추기</button></div>`:html`<div className="stack"><label className="checkline"><input type="checkbox" id="pub-seen" checked=${seen} onChange=${e=>setSeen(e.target.checked)}/><span>미리보기를 확인했어요</span></label><button className="btn block" disabled=${!seen||busy} onClick=${()=>publish(true)}>공개하기</button></div>`}
  <//>`;
 }

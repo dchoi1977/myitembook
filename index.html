@@ -330,6 +330,19 @@ textarea{min-height:110px;resize:vertical}
 .meter{height:6px;border-radius:3px;background:var(--line);overflow:hidden}
 .meter i{display:block;height:100%;background:var(--gold);border-radius:3px;transition:width .4s ease}
 .know{border-color:var(--sage)}
+/* avatars */
+.avatar{display:inline-block;border-radius:50%;overflow:hidden;flex:none;background:var(--sage-soft);vertical-align:middle}
+.avatar svg{width:100%;height:100%;display:block}
+.whoname{display:inline-flex;align-items:center;gap:6px}
+.merow{display:flex;align-items:center;gap:12px;width:100%;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:10px 14px;font:inherit;color:inherit;text-align:left;cursor:pointer}
+.merow .chev{color:var(--ink-3);font-size:18px}
+.avgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.avpick{display:flex;flex-direction:column;align-items:center;gap:4px;background:none;border:0;padding:2px;font:inherit;cursor:pointer;color:var(--ink-2)}
+.avpick span{display:block;width:64px;height:64px;border-radius:50%;overflow:hidden;transition:transform .12s ease}
+.avpick span svg{width:100%;height:100%;display:block}
+.avpick small{font-size:11.5px}
+.avpick[aria-pressed=true] span{box-shadow:0 0 0 3px var(--paper),0 0 0 5px var(--accent);transform:scale(1.04)}
+.avpick[aria-pressed=true] small{color:var(--accent);font-weight:700}
 .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.04em}
 </style>
 </head>
@@ -340,13 +353,14 @@ textarea{min-height:110px;resize:vertical}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/htm@3.1.1/dist/htm.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
-<script src="js/config.js?v=6"></script>
-<script src="js/core.js?v=6"></script>
-<script src="js/api.js?v=6"></script>
-<script src="js/screens.js?v=6"></script>
-<script src="js/social.js?v=6"></script>
-<script src="js/ops.js?v=6"></script>
-<script src="js/quick.js?v=6"></script>
-<script src="js/app.js?v=6"></script>
+<script src="js/config.js?v=7"></script>
+<script src="js/core.js?v=7"></script>
+<script src="js/api.js?v=7"></script>
+<script src="js/avatars.js?v=7"></script>
+<script src="js/screens.js?v=7"></script>
+<script src="js/social.js?v=7"></script>
+<script src="js/ops.js?v=7"></script>
+<script src="js/quick.js?v=7"></script>
+<script src="js/app.js?v=7"></script>
 </body>
 </html>
