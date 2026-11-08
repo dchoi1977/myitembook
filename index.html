@@ -466,6 +466,50 @@ textarea{min-height:110px;resize:vertical}
 @keyframes bdgHalo{0%{opacity:0;transform:scale(.6)}60%{opacity:.6}100%{opacity:0;transform:scale(1.3)}}
 @keyframes bdgBurst{0%{transform:translate(0,0) scale(var(--s));opacity:1}100%{transform:translate(var(--x),var(--y)) scale(calc(var(--s)*.4)) rotate(160deg);opacity:0}}
 @media (prefers-reduced-motion: reduce){.bdg,.bdg-medal,.bdg.p2 .bdg-medal,.bdg-halo,.bdg.p2 .bdg-rays,.bdg-part{animation:none!important}}
+/* ── desktop (≥1024px) ── */
+.flowcol{display:contents}
+@media (min-width:1024px){
+ body{background:var(--paper-2)}
+ .app.desk{max-width:1360px;width:calc(100% - 48px);margin:24px auto;min-height:calc(100vh - 48px);border-radius:24px;box-shadow:0 0 0 1px var(--line),0 40px 80px -40px rgba(10,30,28,.35);overflow:clip}
+ .app.desk>.top{padding-inline:24px}
+ .shell{flex:1;display:grid;grid-template-columns:232px minmax(0,1fr) 340px;align-items:start}
+ .side{position:sticky;top:65px;align-self:start;height:calc(100vh - 113px);display:flex;flex-direction:column;gap:2px;padding:16px 12px;border-right:1px solid var(--line);overflow-y:auto}
+ .side-me{display:flex;align-items:center;gap:10px;width:100%;padding:8px;margin-bottom:10px;border:1px solid var(--line);border-radius:14px;background:var(--card);font:inherit;color:inherit;text-align:left;cursor:pointer}
+ .side-nav{display:flex;flex-direction:column;gap:2px}
+ .side-item{display:flex;align-items:center;gap:12px;width:100%;min-height:42px;padding:0 12px;border:0;border-radius:12px;background:none;font:inherit;font-size:15px;color:var(--ink-2);text-align:left;cursor:pointer}
+ .side-item svg{width:20px;height:20px}
+ .side-item:hover{background:var(--card)}
+ .side-item[aria-current=page]{background:var(--accent-bg);color:var(--on-accent);font-weight:700}
+ .side-item.sub{font-size:14px;min-height:38px}
+ .side-dot{width:8px;height:8px;border-radius:50%;background:var(--danger)}
+ .side-sep{height:1px;background:var(--line);margin:10px 6px}
+ .side-foot{margin-top:auto;display:flex;flex-direction:column;gap:8px;align-items:stretch;padding-top:12px}
+ .side-foot .btn svg{width:16px;height:16px}
+ .content{min-width:0}
+ .content>.main{max-width:760px;margin:0 auto;width:100%;padding-inline:28px}
+ .rail{position:sticky;top:65px;align-self:start;max-height:calc(100vh - 113px);overflow-y:auto;display:flex;flex-direction:column;gap:16px;padding:18px 18px 28px;border-left:1px solid var(--line)}
+ .rail .wrap{padding-inline:0}
+ .rail-gem{display:flex;gap:12px;align-items:center;width:100%;padding:12px;border:1px solid var(--line);border-radius:18px;background:var(--card);font:inherit;color:inherit;cursor:pointer}
+ .rail-gem .gem{flex:none}
+ .app.desk .fab{display:none}
+ .app.flow .gate>.eyebrow,.app.flow .gate>.h1,.app.flow .gate>.gem{display:none}
+ .app.flow .gate{padding-top:40px}
+ .sheet{justify-content:flex-end}
+ .sheet-inner{max-width:580px;box-shadow:-24px 0 60px -20px rgba(0,0,0,.35);animation:deskIn .22s ease both}
+ @keyframes deskIn{from{transform:translateX(24px);opacity:.6}to{transform:none;opacity:1}}
+ .shelf{grid-template-columns:repeat(3,minmax(0,1fr))}
+ /* onboarding & sign-in: brand on the left, the flow on the right */
+ .app.flow{max-width:1180px;width:calc(100% - 48px);margin:24px auto;min-height:calc(100vh - 48px);display:grid;grid-template-columns:minmax(0,1fr) 500px;border-radius:24px;box-shadow:0 0 0 1px var(--line),0 40px 80px -40px rgba(10,30,28,.35);overflow:clip}
+ .app.flow .flowcol{display:flex;flex-direction:column;min-width:0;border-left:1px solid var(--line);background:var(--paper);position:relative}
+ .app.flow .fab{right:calc(50% - 590px + 28px);right:max(28px,calc((100vw - 1180px)/2 + 28px));bottom:28px}
+ .brand{background:radial-gradient(circle at 60% 40%,var(--sage-soft),var(--paper-2) 70%);display:grid;place-items:center;padding:48px}
+ .brand-in{max-width:440px;display:flex;flex-direction:column;gap:18px}
+ .brand-h{font-family:var(--serif);font-size:44px;line-height:1.2;color:var(--accent);margin:0}
+ .brand-gem{align-self:center}
+ .brand-list{margin:0;padding-left:18px;color:var(--ink-2);line-height:1.9;font-size:15.5px}
+}
+@media (min-width:1024px) and (max-width:1180px){.shell{grid-template-columns:200px minmax(0,1fr) 300px}.content>.main{padding-inline:20px}}
+@media (prefers-reduced-motion: reduce){.sheet-inner{animation:none!important}}
 /* tester support */
 .topbar-note{position:sticky;top:0;z-index:35;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;width:100%;padding:9px 16px;border:0;border-bottom:1px solid var(--line);background:var(--accent-bg);color:var(--on-accent);font:inherit;font-size:13.5px;text-align:left;cursor:pointer}
 .topbar-note.warn{background:var(--gold-soft);color:var(--ink);cursor:default}
@@ -498,17 +542,17 @@ textarea{min-height:110px;resize:vertical}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/htm@3.1.1/dist/htm.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
-<script src="js/config.js?v=11"></script>
-<script src="js/core.js?v=11"></script>
-<script src="js/api.js?v=11"></script>
-<script src="js/support.js?v=11"></script>
-<script src="js/avatars.js?v=11"></script>
-<script src="js/screens.js?v=11"></script>
-<script src="js/social.js?v=11"></script>
-<script src="js/ops.js?v=11"></script>
-<script src="js/quick.js?v=11"></script>
-<script src="js/evolve.js?v=11"></script>
-<script src="js/achieve.js?v=11"></script>
-<script src="js/app.js?v=11"></script>
+<script src="js/config.js?v=12"></script>
+<script src="js/core.js?v=12"></script>
+<script src="js/api.js?v=12"></script>
+<script src="js/support.js?v=12"></script>
+<script src="js/avatars.js?v=12"></script>
+<script src="js/screens.js?v=12"></script>
+<script src="js/social.js?v=12"></script>
+<script src="js/ops.js?v=12"></script>
+<script src="js/quick.js?v=12"></script>
+<script src="js/evolve.js?v=12"></script>
+<script src="js/achieve.js?v=12"></script>
+<script src="js/app.js?v=12"></script>
 </body>
 </html>

@@ -4,7 +4,7 @@ const EMPTY_SOC={friendships:[],wordsTo:[],wordsFrom:[],reactTo:[],reactFrom:[],
 function App(){
  const [boot,setBoot]=useState(true);const [session,setSession]=useState(null);const [profile,setProfile]=useState(null);const [gateMsg,setGateMsg]=useState("");
  const [st,setSt]=useState(null);const [items,setItems]=useState([]);
- const [demo,setDemo]=useState(false);const [real,setReal]=useState(null);
+ const [demo,setDemo]=useState(false);const [real,setReal]=useState(null);const desk=useDesktop();
  const [route,setRoute]=useState("loading");const [tab,setTab]=useState("me");const [sheet,setSheet]=useState(null);const [fbOpen,setFbOpen]=useState(false);const [fbShot,setFbShot]=useState(null);const [supportUrl,setSupportUrl]=useState("");
  const [toastMsg,setToastMsg]=useState("");const toastT=useRef(null);
  const [draft,setDraft]=useState({sources:{youtube:"",calendar:"",story:""},answers:["","",""],photos:[],quick:null});
@@ -152,7 +152,7 @@ function App(){
 
  // ── render
  if(boot||route==="loading")return html`<div className="app"><div className="splash wrap"><div className="stack" style=${{alignItems:"center"}}><div className="pulse"><${GemView} g=${{stone:"오팔",form:"결정",texture:"유백",light:"번짐",hardness:2,grain:1,facets:8}} seed="splash" size=${120}/></div><p className="faint small">MyItemBook을 여는 중</p></div></div></div>`;
- if(route==="gate"||!session||!profile||!st)return html`<div className="app">${gateMsg&&html`<div className="demo-bar wrap"><span>${gateMsg}</span><button onClick=${()=>setGateMsg("")}>닫기</button></div>`}<${Gate} initialCode=${initialCode} onSession=${(s,isNew)=>{setGateMsg("");setSession(s);if(isNew)setTimeout(()=>track("signup"),1500)}}/><${Toast} msg=${toastMsg}/></div>`;
+ if(route==="gate"||!session||!profile||!st)return html`<div className=${desk?"app flow":"app"}>${desk&&html`<${BrandPanel}/>`}<div className="flowcol">${gateMsg&&html`<div className="demo-bar wrap"><span>${gateMsg}</span><button onClick=${()=>setGateMsg("")}>닫기</button></div>`}<${Gate} initialCode=${initialCode} onSession=${(s,isNew)=>{setGateMsg("");setSession(s);if(isNew)setTimeout(()=>track("signup"),1500)}}/><${Toast} msg=${toastMsg}/></div></div>`;
  const fxEl=evo&&(evo.type==="badge"?html`<${BadgeOverlay} key=${evo.ids.join(",")} ids=${evo.ids} replay=${!!evo.replay} equippedTitle=${st&&st.flags.title} onClose=${nextFx} onEquip=${id=>{setSt(s=>({...s,flags:{...s.flags,title:id}}));toast(`칭호 '${badgeById(id).title}'를 달았어요.`)}} onBook=${route==="admin"?null:id=>{setFx([]);setRoute("home");setSheet("achieve")}}/>`:html`<${EvolveOverlay} evt=${evo} seed=${st.createdAt} onClose=${nextFx} onShare=${route==="admin"?null:()=>{setFx([]);setRoute("home");setSheet("cardimg")}}/>`);
  if(route==="admin"&&profile.role==="admin")return html`<div className="app wide"><${AdminScreen} uid=${uid} toast=${toast} onPreviewEvo=${previewEvo} onPreviewAway=${previewAway} onPreviewBadges=${previewBadges} onExit=${()=>setRoute(st.analysis?"home":"welcome")}/>${fxEl}<${Toast} msg=${toastMsg}/></div>`;
 
@@ -170,7 +170,7 @@ function App(){
  const rt={aiReady,ytReady};
 
  const top=!demo&&html`<div className="stack">
-  <button className="merow" onClick=${()=>setSheet("avatar")}><${Avatar} p=${profile} size=${46}/><span className="grow"><b>${profile.nickname}</b><br/><span className="small faint">${profile.avatar?"프로필 이미지 바꾸기":"프로필 이미지 고르기 · 캐릭터 16종 또는 내 사진"}</span></span><span className="chev">›</span></button>
+  ${!desk&&html`<button className="merow" onClick=${()=>setSheet("avatar")}><${Avatar} p=${profile} size=${46}/><span className="grow"><b>${profile.nickname}</b><br/><span className="small faint">${profile.avatar?"프로필 이미지 바꾸기":"프로필 이미지 고르기 · 캐릭터 16종 또는 내 사진"}</span></span><span className="chev">›</span></button>`}
   ${newAnn&&html`<button className="panel ann" onClick=${()=>setSheet("inbox")}><span className="eyebrow">운영 공지</span><b>${anns[0].title}</b></button>`}
   <${DailyQuestion} key=${"dq"+day} day=${day} answered=${dailyAnswered} toast=${toast} onDone=${reloadSoc}/>
 </div>`;
@@ -190,7 +190,7 @@ function App(){
  else if(route==="reading")body=html`<${Reading} status=${reading.status} chars=${reading.chars} error=${reading.error} onStop=${stopAnalysis} onRetry=${()=>runAnalysis()} onBack=${()=>setRoute(st.analysis?"connect":"quickdone")} onDemo=${startDemo}/>`;
  else if(route==="reveal"&&st.analysis)body=html`<${Reveal} st=${st} onOpen=${openSheet} onConfirm=${()=>{update(s=>{s.analysis.status="yes"});track("reveal_yes")}} onEdit=${(sent,kw)=>{update(s=>{s.analysis.editSentence=sent||s.analysis.sentence;s.analysis.editKeywords=kw.length?kw:s.analysis.keywords;s.analysis.status="edited";s.flags.edited=true});track("reveal_edit")}} onDiffer=${fb=>{track("reveal_differ");runAnalysis(fb)}}/>`;
  else if(st.analysis){
-  if(tab==="me")body=html`<${MeTab} st=${st} items=${items} soc=${demo?EMPTY_SOC:soc} stats=${stats} onOpen=${openSheet} names=${names} top=${top} mid=${mid}/>`;
+  if(tab==="me")body=html`<${MeTab} st=${st} items=${items} soc=${demo?EMPTY_SOC:soc} stats=${stats} onOpen=${openSheet} names=${names} top=${desk?null:top} mid=${desk?null:mid}/>`;
   else if(tab==="step")body=html`<${StepTab} st=${st} update=${update} stats=${stats} canAI=${canAI} toast=${toast} onOpen=${openSheet} demo=${demo}/>`;
   else if(tab==="feed")body=html`<${FeedTab} uid=${uid} soc=${soc} names=${names} openUser=${openUser} toast=${toast} demo=${demo} reloadSoc=${reloadSoc} ensureNames=${ensureNames}/>`;
   else body=html`<${FriendsTab} uid=${uid} st=${st} soc=${soc} names=${names} reloadSoc=${reloadSoc} openUser=${openUser} toast=${toast} profile=${profile} demo=${demo} ensureNames=${ensureNames}/>`;
@@ -215,6 +215,9 @@ function App(){
  }
  const tabs=route==="home"&&st.analysis&&html`<nav className="tabbar" aria-label="메인">${[["me","나","me"],["step","한 걸음","step"],["feed","소식","feed"],["friends","친구","people"]].map(([k,t,ic])=>html`<button key=${k} className="tab" aria-current=${tab===k?"page":undefined} onClick=${()=>{setTab(k);setSheet(null);window.scrollTo(0,0)}}><${Ico} n=${ic}/>${t}${k==="friends"&&soc.friendships.some(f=>f.status==="pending"&&f.addressee===uid)?html`<i className="tabdot" aria-label="새 친구 요청"></i>`:null}</button>`)}</nav>`;
  const fab=!demo&&!fbOpen&&route!=="reading"&&html`<button className=${"fab"+(tabs?" up":"")} onClick=${openFeedback} aria-label="이 화면에 대한 의견 보내기"><${Ico} n="chat"/>의견</button>`;
+ const pending=soc.friendships.some(f=>f.status==="pending"&&f.addressee===uid);
+ if(desk&&route==="home"&&st.analysis)return html`<div className="app desk">${header}${demoBar}<div className="shell"><${DeskSide} tab=${tab} setTab=${setTab} setSheet=${setSheet} openSheet=${openSheet} profile=${profile} day=${day} pending=${pending} unread=${unread} onFeedback=${openFeedback} onAdmin=${profile.role==="admin"?()=>{setRoute("admin");setSheet(null)}:null}/><div className="content">${body}</div><${DeskRail} tab=${tab} st=${st} stats=${stats} openSheet=${openSheet} setTab=${setTab} top=${demo?null:top} mid=${demo?null:mid}/></div>${sheetEl}${fab}${(route==="home"||route==="reveal")&&fxEl}${fbOpen&&html`<${FeedbackSheet} screen=${screen} shot=${fbShot} onClose=${()=>{setFbOpen(false);setFbShot(null)}} onHelp=${()=>{setFbOpen(false);setFbShot(null);setSheet("help")}} toast=${toast}/>`}<${Toast} msg=${toastMsg}/></div>`;
+ if(desk)return html`<div className="app flow"><${BrandPanel}/><div className="flowcol">${header}${demoBar}${body}${tabs}${sheetEl}${fab}${(route==="home"||route==="reveal")&&fxEl}${fbOpen&&html`<${FeedbackSheet} screen=${screen} shot=${fbShot} onClose=${()=>{setFbOpen(false);setFbShot(null)}} onHelp=${()=>{setFbOpen(false);setFbShot(null);setSheet("help")}} toast=${toast}/>`}<${Toast} msg=${toastMsg}/></div></div>`;
  return html`<div className="app">${header}${demoBar}${body}${tabs}${sheetEl}${fab}${(route==="home"||route==="reveal")&&fxEl}${fbOpen&&html`<${FeedbackSheet} screen=${screen} shot=${fbShot} onClose=${()=>{setFbOpen(false);setFbShot(null)}} onHelp=${()=>{setFbOpen(false);setFbShot(null);setSheet("help")}} toast=${toast}/>`}<${Toast} msg=${toastMsg}/></div>`;
 }
 function TopNotes(){const nv=useNewVersion();return html`${nv&&html`<${NewVersionBar}/>`}<${InAppBar}/>`}

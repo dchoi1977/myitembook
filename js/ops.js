@@ -11,7 +11,7 @@ function Gate({onSession,initialCode}){
  async function login(e){e.preventDefault();setErr("");setBusy(true);try{const s=await api.login(f.email,f.password);onSession(s,false)}catch(x){setErr(x.code==="network"?JOIN_ERR.network:"이메일 또는 비밀번호가 맞지 않습니다.")}finally{setBusy(false)}}
  const g={stone:"오팔",lightName:"새벽빛",light:"번짐",form:"결정",texture:"유백",hardness:3,grain:3,facets:9,symbol:"카메라"};
  const canJoin=f.code.trim()&&f.nickname.trim().length>=2&&f.email.includes("@")&&f.password.length>=8&&f.terms&&f.privacy&&f.ai;
- return html`<div className="welcome wrap">
+ return html`<div className="welcome wrap gate">
   <div className="eyebrow">MyItemBook · ${MIB_CONFIG.cohort}</div>
   <h1 className="h1">나다운 결을<br/>발견하다.</h1>
   <${GemView} g=${g} seed="gate" size=${mode==="start"?200:120} className="float"/>

@@ -91,3 +91,47 @@ async function captureScreen(){
  const max=900;const s=Math.min(1,max/Math.max(c.width,c.height));const o=document.createElement("canvas");o.width=Math.round(c.width*s);o.height=Math.round(c.height*s);o.getContext("2d").drawImage(c,0,0,o.width,o.height);
  return o.toDataURL("image/jpeg",.78);
 }
+
+/* ── desktop layout ── */
+const DESK_Q="(min-width:1024px)";
+function useDesktop(){const [d,setD]=useState(()=>{try{return matchMedia(DESK_Q).matches}catch(e){return false}});
+ useEffect(()=>{let m;try{m=matchMedia(DESK_Q)}catch(e){return}const f=()=>setD(m.matches);m.addEventListener?m.addEventListener("change",f):m.addListener(f);return()=>{m.removeEventListener?m.removeEventListener("change",f):m.removeListener(f)}},[]);return d}
+const DESK_NAV=[["me","나","me"],["step","한 걸음","step"],["feed","소식","feed"],["friends","친구","people"]];
+function DeskSide({tab,setTab,openSheet,profile,day,pending,unread,onFeedback,onAdmin,setSheet}){
+ const go=k=>{setTab(k);setSheet(null);window.scrollTo(0,0)};
+ const more=[["achieve","별","업적 도감"],["shelf","선반","나의 선반"],["publish","문","공개할 모습"],["inbox","말풍선","알림"+(unread?` ${unread}`:"")],["help","눈","도움말"]];
+ return html`<aside className="side" aria-label="메뉴">
+  <button className="side-me" onClick=${()=>setSheet("avatar")}><${Avatar} p=${profile} size=${40}/><span className="grow"><b>${profile.nickname}</b><br/><span className="small faint">${MIB_CONFIG.cohort} · Day ${Math.min(day,99)}</span></span></button>
+  <nav className="side-nav" aria-label="메인">${DESK_NAV.map(([k,t,ic])=>html`<button key=${k} className="side-item" aria-current=${tab===k?"page":undefined} onClick=${()=>go(k)}><${Ico} n=${ic}/><span className="grow">${t}</span>${k==="friends"&&pending?html`<i className="side-dot" aria-label="새 친구 요청"></i>`:null}</button>`)}</nav>
+  <div className="side-sep"></div>
+  ${more.map(([k,gl,t])=>html`<button key=${k} className="side-item sub" onClick=${()=>openSheet(k)}><${Glyph} name=${gl} size=${18}/><span className="grow">${t}</span></button>`)}
+  <div className="side-foot">
+   <button className="btn quiet sm block" onClick=${onFeedback}><${Ico} n="chat"/>의견 보내기</button>
+   ${onAdmin&&html`<button className="linkbtn small" onClick=${onAdmin}>운영 콘솔</button>`}
+  </div>
+ </aside>`;
+}
+function DeskRail({tab,st,stats,openSheet,setTab,top,mid}){
+ const g=livingGem(st);const stage=stageOf(st,stats);const ns=nextStage(st,stats);
+ const near=BADGES.filter(b=>!isEarned(st,stats,b)&&!b.secret).map(b=>({b,p:badgeProg(b,stats)})).sort((x,y)=>y.p.pct-x.p.pct).slice(0,2);
+ return html`<aside className="rail" aria-label="요약">
+  ${tab==="me"?html`${top}${mid}`:html`
+   <button className="rail-gem" onClick=${()=>{setTab("me");window.scrollTo(0,0)}} aria-label="내 카드로">
+    <${GemView} g=${g} seed=${st.createdAt} size=${120}/>
+    <span className="stack" style=${{gap:"2px",alignItems:"flex-start",textAlign:"left"}}><b className="serif" style=${{color:"var(--accent)",fontSize:"17px"}}>${gemName(g)}</b><span className="chip gold">연마 ${stage}단계 · ${STAGES[stage]}</span>${ns&&html`<span className="small muted">다음 ${ns.name} · ${ns.need}</span>`}</span>
+   </button>
+   ${mid}
+  `}
+  ${near.length>0&&html`<div className="stack" style=${{gap:"6px"}}><div className="row between"><b>곧 받을 업적</b><button className="linkbtn small" onClick=${()=>openSheet("achieve")}>도감</button></div>${near.map(({b,p})=>html`<button key=${b.id} className="ach-row" onClick=${()=>openSheet("achieve")}><span className="ach-medal"><${Medal} b=${b} earned=${false} size=${36}/></span><span className="grow ach-body"><span className="row between"><b className="ach-name">${b.name}</b><span className="small faint">${p.cur}/${p.tgt}</span></span><${ProgressBar} pct=${p.pct} color=${RARITY[b.rar].color}/></span></button>`)}</div>`}
+ </aside>`;
+}
+function BrandPanel(){
+ return html`<aside className="brand" aria-hidden="true">
+  <div className="brand-in">
+   <div className="eyebrow">MYITEMBOOK · ${MIB_CONFIG.cohort}</div>
+   <h1 className="brand-h">나다운 결을<br/>발견하다.</h1>
+   <div className="float brand-gem"><${GemView} g=${{stone:"자수정",lightName:"새벽빛",light:"반짝임",form:"군집",texture:"결정질",hardness:3,grain:2,facets:10,symbol:"별",marks:{setting:2,sat:2,aura:2,stars:2}}} seed="brand" size=${260}/></div>
+   <ul className="brand-list"><li>내가 남긴 기록과 아끼는 물건을 AI가 읽어 <b>나만의 젬</b>으로</li><li>쓰는 만큼 젬이 <b>변신</b>하고 배지·칭호가 쌓여요</li><li>휴대폰과 PC에서 <b>같은 계정</b>으로 이어서 쓸 수 있어요</li></ul>
+  </div>
+ </aside>`;
+}
