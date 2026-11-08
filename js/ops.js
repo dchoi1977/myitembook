@@ -202,7 +202,7 @@ function AdminScreen({onExit,toast,uid,onPreviewEvo,onPreviewAway,onPreviewBadge
  async function act(fn,msg){setBusy(true);try{await fn();toast(msg);await load()}catch(e){toast("처리하지 못했습니다: "+(e.message||e.code||""))}finally{setBusy(false)}}
  const TABS=[["kpi","현황"],["people","참여자"],["fb","의견·설문"],["err",`오류${errs&&errs.length?" "+errs.length:""}`],["inv","초대 코드"],["ann","공지"],["rep","신고"],["set","설정"]];
  return html`<div className="main wrap admin">
-  <div className="row between"><div><div className="eyebrow">운영 콘솔</div><h1 className="h2">${MIB_CONFIG.cohort} 운영</h1></div><button className="btn ghost sm" onClick=${onExit}>앱으로</button></div>
+  <div className="row between"><div><div className="eyebrow">운영 콘솔</div><h1 className="h2">${MIB_CONFIG.cohort} 운영</h1></div><div className="row" style=${{gap:"6px"}}><a className="btn quiet sm" href="dashboard.html" target="_blank" rel="noopener">대시보드 열기</a><button className="btn ghost sm" onClick=${onExit}>앱으로</button></div></div>
   <div className="segs scrollx" role="tablist">${TABS.map(([k,t])=>html`<button key=${k} role="tab" aria-pressed=${tab===k} aria-selected=${tab===k} onClick=${()=>setTab(k)}>${t}</button>`)}</div>
   ${tab==="kpi"&&html`<div className="stack-lg">
    ${aiOk===false&&html`<div className="panel" style=${{borderColor:"var(--danger)"}}><b className="err">AI 키가 아직 등록되지 않았습니다.</b><p className="small muted">Supabase › Edge Functions › Secrets에 ANTHROPIC_API_KEY를 추가하면 바로 켜집니다. 재배포는 필요 없습니다.</p></div>`}

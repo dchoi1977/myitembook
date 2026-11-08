@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>MIB CBT 대시보드</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@600;700&display=swap">
+<style>
+:root{
+ --paper:#F4F1E9;--card:#FBFAF5;--card-2:#F1EEE6;--line:#DCDDD3;--ink:#1F2A28;--ink-2:#465250;--ink-3:#66706E;
+ --accent:#173D3B;--gold:#A87B2A;--gold-soft:#F3E7CC;
+ --s0:#E6E3DA;--s1:#B9D3CB;--s2:#6F9F94;--s3:#2F5D58;--s4:#173D3B;
+ --good:#2F7A4A;--warn:#9A6A12;--crit:#A33A2E;--good-bg:#E3F0E6;--warn-bg:#F6EBD3;--crit-bg:#F6DEDA;
+ --sans:"Noto Sans KR",-apple-system,"Apple SD Gothic Neo",sans-serif;--serif:"Noto Serif KR",serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+ --paper:#0F1C1B;--card:#162826;--card-2:#1C312F;--line:#2B4341;--ink:#ECE8DD;--ink-2:#BCC5C0;--ink-3:#93A09B;
+ --accent:#A9D2C6;--gold:#D8B465;--gold-soft:#3A3220;
+ --s0:#223936;--s1:#2F5A54;--s2:#4E8A7F;--s3:#7FB7AD;--s4:#BFE3D9;
+ --good:#7CC796;--warn:#E3B95C;--crit:#EE9585;--good-bg:#1D3A2A;--warn-bg:#3A3018;--crit-bg:#432420;}}
+:root[data-theme="dark"]{
+ --paper:#0F1C1B;--card:#162826;--card-2:#1C312F;--line:#2B4341;--ink:#ECE8DD;--ink-2:#BCC5C0;--ink-3:#93A09B;
+ --accent:#A9D2C6;--gold:#D8B465;--gold-soft:#3A3220;
+ --s0:#223936;--s1:#2F5A54;--s2:#4E8A7F;--s3:#7FB7AD;--s4:#BFE3D9;
+ --good:#7CC796;--warn:#E3B95C;--crit:#EE9585;--good-bg:#1D3A2A;--warn-bg:#3A3018;--crit-bg:#432420;}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased}
+button,input{font:inherit;color:inherit}
+.wrap{max-width:1280px;margin:0 auto;padding:20px 16px 48px}
+header.top{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;justify-content:space-between;margin-bottom:16px}
+.eyebrow{font-size:11px;letter-spacing:.24em;font-weight:700;color:var(--gold)}
+h1{font-family:var(--serif);font-size:26px;margin:2px 0 0;color:var(--accent);line-height:1.25}
+h2{font-size:15px;margin:0;font-weight:700}
+.sub{color:var(--ink-3);font-size:13px}
+.tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:7px 12px;cursor:pointer;font-size:13px;white-space:nowrap}
+a.btn{text-decoration:none;color:var(--ink)}
+.btn.primary{background:var(--accent);color:var(--paper);border-color:var(--accent)}
+.btn:focus-visible,.th:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.switch{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ink-2);cursor:pointer}
+.health{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;font-size:12.5px;font-weight:600;border:1px solid transparent}
+.pill.good{background:var(--good-bg);color:var(--good)}.pill.warn{background:var(--warn-bg);color:var(--warn)}.pill.crit{background:var(--crit-bg);color:var(--crit)}.pill.mute{background:var(--card-2);color:var(--ink-2)}
+.pill i{font-style:normal}
+.grid{display:grid;gap:12px}
+.kpis{grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:12px}
+@media (max-width:900px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px;min-width:0}
+.kpi .lbl{font-size:12.5px;color:var(--ink-3)}
+.kpi .val{font-size:28px;font-weight:700;line-height:1.2;font-variant-numeric:tabular-nums;color:var(--ink)}
+.kpi .val small{font-size:14px;color:var(--ink-3);font-weight:500;margin-left:3px}
+.kpi .note{font-size:12px;color:var(--ink-3)}
+.two{grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:12px}
+.three{grid-template-columns:2fr 1fr 1fr;margin-bottom:12px}
+@media (max-width:900px){.two,.three{grid-template-columns:minmax(0,1fr)}}
+.card-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:10px}
+.card-h .sub{font-size:12px}
+svg text{font-family:var(--sans)}
+.chart{width:100%;height:auto;display:block}
+.funnel .row{display:grid;grid-template-columns:120px 1fr 74px;gap:10px;align-items:center;padding:4px 0}
+.funnel .lab{font-size:13px;color:var(--ink-2)}
+.funnel .bar{height:18px;background:var(--s0);border-radius:4px;overflow:hidden}
+.funnel .bar i{display:block;height:100%;background:var(--s3);border-radius:0 4px 4px 0}
+.funnel .num{font-size:13px;text-align:right;font-variant-numeric:tabular-nums}
+.funnel .num b{font-weight:700}.funnel .num span{color:var(--ink-3);margin-left:4px}
+.heat{width:100%;border-collapse:separate;border-spacing:3px;font-size:12px}
+.heat th{font-weight:500;color:var(--ink-3);text-align:center;padding:0 2px}
+.heat th.nm{text-align:left;max-width:110px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink-2);font-weight:500}
+.heat td{height:22px;border-radius:4px;background:var(--s0);min-width:22px}
+.heat td.l1{background:var(--s1)}.heat td.l2{background:var(--s2)}.heat td.l3{background:var(--s4)}
+.heat td.fut{background:transparent;border:1px dashed var(--line)}
+.legend{display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-size:12px;color:var(--ink-3);margin-top:8px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin-right:4px}
+.list{display:flex;flex-direction:column}
+.li{display:flex;gap:10px;padding:9px 0;border-top:1px solid var(--line);align-items:flex-start}
+.li:first-child{border-top:0}
+.li .meta{font-size:12px;color:var(--ink-3)}
+.tag{display:inline-block;font-size:11.5px;padding:1px 8px;border-radius:999px;background:var(--card-2);color:var(--ink-2);margin-right:4px;white-space:nowrap}
+.tag.crit{background:var(--crit-bg);color:var(--crit)}.tag.warn{background:var(--warn-bg);color:var(--warn)}.tag.good{background:var(--good-bg);color:var(--good)}
+.dist .row{display:grid;grid-template-columns:70px 1fr 28px;gap:8px;align-items:center;padding:3px 0;font-size:13px}
+.dist .bar{height:14px;background:var(--s0);border-radius:4px;overflow:hidden}
+.dist .bar i{display:block;height:100%;border-radius:0 4px 4px 0;background:var(--s3)}
+.dist .sw{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px;border:1px solid rgba(0,0,0,.15)}
+.dist .n{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink-2)}
+.tablewrap{overflow-x:auto;margin:0 -4px}
+table.people{width:100%;border-collapse:collapse;font-size:13px;min-width:880px}
+table.people th,table.people td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+table.people td.num,table.people th.num{text-align:right;font-variant-numeric:tabular-nums}
+table.people th{font-size:12px;color:var(--ink-3);font-weight:600}
+.th{background:none;border:0;padding:0;cursor:pointer;color:inherit;font-weight:inherit}
+.th[aria-sort="descending"]::after{content:" ↓"}.th[aria-sort="ascending"]::after{content:" ↑"}
+.empty{color:var(--ink-3);font-size:13px;padding:8px 0}
+.tip{position:fixed;pointer-events:none;z-index:50;background:var(--ink);color:var(--paper);font-size:12.5px;padding:6px 9px;border-radius:8px;white-space:nowrap;transform:translate(-50%,calc(-100% - 10px));opacity:0;transition:opacity .08s}
+.tip b{font-weight:700}
+.gate{max-width:380px;margin:12vh auto;padding:24px;background:var(--card);border:1px solid var(--line);border-radius:18px}
+.gate label{display:block;font-size:13px;color:var(--ink-2);margin:12px 0 4px}
+.gate input{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--paper)}
+.err{color:var(--crit);font-size:13px;margin-top:10px}
+.prewrap{white-space:pre-wrap;word-break:break-word}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+</head>
+<body>
+<div id="app" class="wrap"><p class="sub">대시보드를 불러오는 중…</p></div>
+<div id="tip" class="tip" role="status" aria-live="polite"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
+<script src="js/config.js"></script>
+<script>
+"use strict";
+const sb=supabase.createClient(MIB_CONFIG.url,MIB_CONFIG.key);
+const $=s=>document.querySelector(s);
+const esc=t=>String(t??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const STONE_COLOR={"오팔":"#CDE2D8","호박":"#E39A36","청금석":"#2F4D9B","수정":"#D3E3EA","장미석":"#E8ADB7","비취":"#5B976F","자수정":"#8967B5","마노":"#D09A7C","흑요석":"#3B4147"};
+const STAGES=["","원석","초벌","연마","광택","명품"];
+const kstDay=(t=Date.now())=>new Date(+new Date(t)+9*3600e3).toISOString().slice(0,10);
+const addDays=(d,n)=>{const x=new Date(d+"T00:00:00Z");x.setUTCDate(x.getUTCDate()+n);return x.toISOString().slice(0,10)};
+const diffDays=(a,b)=>Math.round((new Date(b+"T00:00:00Z")-new Date(a+"T00:00:00Z"))/864e5);
+const pct=(a,b)=>b?Math.round(a/b*100):0;
+const ago=t=>{if(!t)return "기록 없음";const m=Math.round((Date.now()-new Date(t))/6e4);if(m<1)return "방금";if(m<60)return m+"분 전";const h=Math.round(m/60);if(h<24)return h+"시간 전";return Math.round(h/24)+"일 전"};
+const fmtT=t=>t?new Date(t).toLocaleString("ko-KR",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"}):"-";
+let auto=true,timer=null,sortKey="risk",sortDir=-1,last=null;
+try{auto=localStorage.getItem("mib_dash_auto")!=="0"}catch(e){}
+
+/* ── tooltip ── */
+const tip=$("#tip");
+document.addEventListener("pointermove",e=>{const el=e.target.closest("[data-tip]");if(!el){tip.style.opacity=0;return}tip.innerHTML=el.getAttribute("data-tip");tip.style.left=e.clientX+"px";tip.style.top=e.clientY+"px";tip.style.opacity=1});
+document.addEventListener("focusin",e=>{const el=e.target.closest("[data-tip]");if(!el)return;const r=el.getBoundingClientRect();tip.innerHTML=el.getAttribute("data-tip");tip.style.left=(r.left+r.width/2)+"px";tip.style.top=r.top+"px";tip.style.opacity=1});
+document.addEventListener("focusout",()=>{tip.style.opacity=0});
+
+/* ── auth ── */
+async function boot(){
+ const {data:{session}}=await sb.auth.getSession();
+ if(!session)return gate();
+ const {data:p}=await sb.from("profiles").select("role,nickname").eq("id",session.user.id).maybeSingle();
+ if(!p||p.role!=="admin")return gate("운영자 계정으로만 볼 수 있어요.");
+ await load();
+}
+function gate(msg){
+ $("#app").innerHTML=`<form class="gate" id="lg"><div class="eyebrow">MIB · ${esc(MIB_CONFIG.cohort)}</div><h1>운영 대시보드</h1><p class="sub">운영자 계정으로 로그인하세요. 앱에서 이미 로그인했다면 같은 브라우저에서 바로 열립니다.</p>
+ <label for="em">이메일</label><input id="em" type="email" autocomplete="email" required><label for="pw">비밀번호</label><input id="pw" type="password" autocomplete="current-password" required>
+ <button class="btn primary" style="width:100%;margin-top:16px;padding:10px">로그인</button>${msg?`<p class="err">${esc(msg)}</p>`:""}</form>`;
+ $("#lg").onsubmit=async e=>{e.preventDefault();const {error}=await sb.auth.signInWithPassword({email:$("#em").value.trim(),password:$("#pw").value});if(error)return gate("이메일이나 비밀번호를 확인해 주세요.");boot()};
+}
+
+/* ── data ── */
+async function load(){
+ try{
+  const [ov,db,ping,fb]=await Promise.all([
+   sb.rpc("admin_overview").then(r=>{if(r.error)throw r.error;return r.data}),
+   sb.rpc("admin_dashboard").then(r=>{if(r.error)throw r.error;return r.data}),
+   fetch(MIB_CONFIG.fn,{method:"POST",headers:{"Content-Type":"application/json",apikey:MIB_CONFIG.key},body:JSON.stringify({action:"ping"})}).then(r=>r.json()).catch(()=>({})),
+   sb.from("feedback").select("kind,rating,payload").eq("kind","exit").then(r=>r.data||[])
+  ]);
+  last={ov,db,ping,exit:fb,at:new Date()};render();
+ }catch(e){$("#app").innerHTML=`<div class="card"><b>대시보드를 불러오지 못했어요.</b><p class="sub">${esc(e.message||e.code||e)}</p><button class="btn" onclick="load()">다시 시도</button></div>`}
+ clearTimeout(timer);if(auto)timer=setTimeout(()=>{if(document.visibilityState==="visible")load();else timer=setTimeout(load,60000)},60000);
+}
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&auto&&last&&Date.now()-last.at>60000)load()});
+
+/* ── derive ── */
+function derive(){
+ const {ov,db}=last;const today=kstDay();
+ const testers=(ov.people||[]).filter(p=>p.role==="tester");
+ const byId={};(ov.people||[]).forEach(p=>byId[p.id]=p);
+ const gems={};(db.gems||[]).forEach(g=>gems[g.u]=g);
+ const act={};(db.activity||[]).forEach(a=>{(act[a.u]||(act[a.u]={}))[a.d]=a.n});
+ const startDay=testers.length?testers.map(p=>kstDay(p.joined_at)).sort()[0]:today;
+ const cbtDay=diffDays(startDay,today)+1;
+ const rows=testers.map(p=>{
+  const g=gems[p.id]||{};const days=act[p.id]||{};const jd=kstDay(p.joined_at);
+  const lastDay=p.last_active?kstDay(p.last_active):null;const idle=lastDay?diffDays(lastDay,today):diffDays(jd,today);
+  const flags=[];
+  if(!p.analyses)flags.push(["crit","첫 젬 없음"]);
+  if(idle>=2)flags.push([idle>=3?"crit":"warn",`${idle}일째 미접속`]);
+  if(p.analyses&&!(p.status==="yes"||p.status==="edited"))flags.push(["warn","해석 미확인"]);
+  if(p.card_hidden)flags.push(["crit","카드 숨김"]);
+  const risk=flags.reduce((s,[t])=>s+(t==="crit"?3:1),0);
+  return {...p,g,days,jd,idle,flags,risk,stage:g.stage||0,badges:g.badges||0,stone:g.stone||""};
+ });
+ return {today,testers,rows,byId,startDay,cbtDay};
+}
+
+/* ── charts (single-series bars: no legend; title names the series) ── */
+function barChart(points,{label,unit="명",h=180}){
+ if(!points.length)return `<p class="empty">아직 데이터가 없어요.</p>`;
+ const W=560,H=h,pl=34,pr=8,pt=12,pb=26;const max=Math.max(1,...points.map(p=>p.v));
+ const raw=max/4,mag=Math.pow(10,Math.floor(Math.log10(raw)));const stp=Math.max(1,[1,2,5,10].map(k=>k*mag).find(k=>k>=raw));const ticks=Math.ceil(max/stp);const nice=stp*ticks;const iw=W-pl-pr,ih=H-pt-pb;const bw=iw/points.length;const barW=Math.max(4,Math.min(28,bw-4));
+ let g="";for(let i=0;i<=ticks;i++){const v=stp*i,y=pt+ih-ih*i/ticks;g+=`<line x1="${pl}" x2="${W-pr}" y1="${y}" y2="${y}" stroke="var(--line)" stroke-width="1"/><text x="${pl-6}" y="${y+4}" text-anchor="end" font-size="11" fill="var(--ink-3)">${Number.isInteger(v)?v:v.toFixed(1)}</text>`}
+ const step=Math.ceil(points.length/10);
+ points.forEach((p,i)=>{const x=pl+bw*i+(bw-barW)/2;const bh=p.v?Math.max(2,ih*p.v/nice):0;const y=pt+ih-bh;
+  if(bh)g+=`<path d="M${x} ${pt+ih}V${y+Math.min(4,bh)}q0 -4 4 -4h${barW-8}q4 0 4 4V${pt+ih}Z" fill="${p.hi?"var(--s4)":"var(--s3)"}"/>`;
+  g+=`<rect x="${pl+bw*i}" y="${pt}" width="${bw}" height="${ih}" fill="transparent" data-tip="<b>${esc(p.label)}</b> · ${label} ${p.v}${unit}" tabindex="0" aria-label="${esc(p.label)} ${label} ${p.v}${unit}"/>`;
+  if(i%step===0||i===points.length-1)g+=`<text x="${pl+bw*i+bw/2}" y="${H-8}" text-anchor="middle" font-size="11" fill="var(--ink-3)">${esc(p.short||p.label)}</text>`});
+ return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(label)} 막대 그래프">${g}</svg>`;
+}
+
+/* ── render ── */
+function render(){
+ const {ov,db,ping,exit}=last;const D=derive();const {rows,today}=D;const n=rows.length||0;const cap=(ov.settings||{}).tester_cap||30;
+ const todayRow=(ov.daily||[]).find(d=>d.day===today);
+ const activeToday=rows.filter(r=>r.days[today]).length;
+ const gem=rows.filter(r=>r.analyses>0),agree=gem.filter(r=>r.status==="yes"||r.status==="edited");
+ const pub=rows.filter(r=>r.public),fr=rows.filter(r=>r.friends>0),acted=rows.filter(r=>r.steps+r.logs>0),ex=rows.filter(r=>r.exit_done);
+ const avgDays=n?(rows.reduce((s,r)=>s+r.active_days,0)/n):0;
+ const pairs=Math.round(rows.reduce((s,r)=>s+r.friends,0)/2);
+ const ratings=exit.filter(f=>f.rating!=null).map(f=>f.rating);const nps=ratings.length?Math.round((ratings.filter(x=>x>=9).length-ratings.filter(x=>x<=6).length)/ratings.length*100):null;
+ const aiToday=((db.ai_daily||[]).find(a=>a.d===today)||{}).n||0;const aiLim=(ov.settings||{}).ai_daily_limit||40;
+ const al=db.alert||{};
+ const health=[
+  ping.ai?["good","✓","AI 해석 켜짐"]:["crit","!","AI 키 없음"],
+  ping.yt?["good","✓","유튜브 읽기 켜짐"]:["warn","!","유튜브 키 없음"],
+  ping.mail&&al.enabled?["good","✓",`메일 알림 켜짐${al.pending?` · 대기 ${al.pending}`:""}`]:ping.mail?["warn","!","메일 알림 꺼둠"]:["warn","!","메일 알림 미연결"],
+  db.errors_24h?["crit","!",`24시간 오류 ${db.errors_24h}건`]:["good","✓","24시간 오류 없음"],
+  n>=cap?["warn","!",`정원 ${n}/${cap} 마감`]:["mute","·",`정원 ${n}/${cap}`]
+ ];
+ const kpis=[
+  ["참여자",`${n}<small>/ ${cap}명</small>`,`초대 코드 ${(ov.invites||[]).filter(i=>i.role==="tester").reduce((s,i)=>s+i.used,0)}개 사용`],
+  ["오늘 활성",`${activeToday}<small>명 · ${pct(activeToday,n)}%</small>`,`오늘 이벤트 ${todayRow?todayRow.events:0}건`],
+  ["첫 젬 완료",`${pct(gem.length,n)}<small>% · ${gem.length}명</small>`,`해석 수용 ${gem.length?pct(agree.length,gem.length):0}% (확인·다듬기)`],
+  ["평균 활동일",`${avgDays.toFixed(1)}<small>일</small>`,`CBT Day ${Math.max(1,D.cbtDay)} 기준`],
+  ["카드 공개",`${pct(pub.length,n)}<small>% · ${pub.length}명</small>`,`카드 조회 ${db.views}회`],
+  ["친구 연결",`${pairs}<small>쌍</small>`,`친구 있는 사람 ${fr.length}명`],
+  ["공감·한 단어",`${db.reactions+db.words}<small>건</small>`,`공감 ${db.reactions} · 한 단어 ${db.words}`],
+  ["마무리 설문",`${ex.length}<small>명</small>`,nps==null?"NPS 집계 전":`NPS ${nps} (${ratings.length}명)`]
+ ];
+ // daily active (last 14 days, from events)
+ const days=[];for(let i=13;i>=0;i--)days.push(addDays(today,-i));
+ const dau=days.map(d=>({label:d.slice(5).replace("-","/"),short:d.slice(8),v:rows.filter(r=>r.days[d]).length,hi:d===today}));
+ const ai=days.map(d=>({label:d.slice(5).replace("-","/"),short:d.slice(8),v:((db.ai_daily||[]).find(a=>a.d===d)||{}).n||0,hi:d===today}));
+ // funnel
+ const fun=[["가입",n],["첫 젬",gem.length],["해석 확인",agree.length],["한 걸음·한 줄",acted.length],["친구 1명+",fr.length],["카드 공개",pub.length],["마무리 설문",ex.length]];
+ // heatmap: each tester's own Day 1..7
+ const hm=[...rows].sort((a,b)=>a.jd<b.jd?-1:a.jd>b.jd?1:a.nickname.localeCompare(b.nickname));
+ const lvl=c=>!c?"":c>=12?"l3":c>=4?"l2":"l1";
+ // distributions
+ const stones={};gem.forEach(r=>{if(r.stone)stones[r.stone]=(stones[r.stone]||0)+1});const sMax=Math.max(1,...Object.values(stones));
+ const stg=[1,2,3,4,5].map(k=>[k,rows.filter(r=>r.stage===k).length]);const gMax=Math.max(1,...stg.map(x=>x[1]));
+ const attention=[...rows].filter(r=>r.flags.length).sort((a,b)=>b.risk-a.risk).slice(0,8);
+ const FB_T={screen:"화면 의견",exit:"마무리 설문"};
+ const nick=id=>(D.byId[id]||{}).nickname||"(탈퇴)";
+ // table
+ const cols=[["nickname","닉네임",0],["jd","가입",0],["last_active","마지막 활동",0],["active_days","활동일",1],["stage","단계",1],["badges","배지",1],["friends","친구",1],["reactions_got","받은 공감",1],["feedback","의견",1],["ai_calls","AI",1],["risk","상태",0]];
+ const sorted=[...rows].sort((a,b)=>{const x=a[sortKey],y=b[sortKey];return (x>y?1:x<y?-1:0)*sortDir});
+
+ $("#app").innerHTML=`
+ <header class="top"><div><div class="eyebrow">MIB · ${esc(MIB_CONFIG.cohort)} · 운영 대시보드</div><h1>CBT Day ${Math.max(1,Math.min(D.cbtDay,99))}${D.cbtDay>7?" · 기간 종료":""}</h1><div class="sub">시작 ${esc(D.startDay)} · 마지막 갱신 ${last.at.toLocaleTimeString("ko-KR")}</div></div>
+  <div class="tools"><label class="switch"><input type="checkbox" id="auto" ${auto?"checked":""}> 1분마다 자동 갱신</label><button class="btn" id="rf">새로고침</button><a class="btn" href="./">앱 운영 콘솔</a></div></header>
+ <div class="health" aria-label="서비스 상태">${health.map(([t,i,l])=>`<span class="pill ${t}"><i aria-hidden="true">${i}</i>${esc(l)}</span>`).join("")}</div>
+ <section class="grid kpis" aria-label="핵심 지표">${kpis.map(([l,v,s])=>`<div class="card kpi"><div class="lbl">${l}</div><div class="val">${v}</div><div class="note">${esc(s)}</div></div>`).join("")}</section>
+ <section class="grid two">
+  <div class="card"><div class="card-h"><h2>일별 활성 참여자</h2><span class="sub">최근 14일 · 앱에서 무엇이든 한 사람</span></div>${barChart(dau,{label:"활성",unit:"명"})}</div>
+  <div class="card"><div class="card-h"><h2>일별 AI 호출</h2><span class="sub">최근 14일 · 1인 하루 한도 ${aiLim}회 · 오늘 ${aiToday}회</span></div>${barChart(ai,{label:"AI 호출",unit:"회"})}</div>
+ </section>
+ <section class="grid two">
+  <div class="card"><div class="card-h"><h2>참여 퍼널</h2><span class="sub">가입자 대비</span></div><div class="funnel">${fun.map(([l,v])=>`<div class="row" data-tip="<b>${l}</b> · ${v}명 (${pct(v,n)}%)"><span class="lab">${l}</span><span class="bar"><i style="width:${pct(v,n)}%"></i></span><span class="num"><b>${v}</b><span>${pct(v,n)}%</span></span></div>`).join("")}</div></div>
+  <div class="card"><div class="card-h"><h2>주의가 필요한 참여자</h2><span class="sub">미접속·첫 젬 없음·해석 미확인</span></div>
+   ${attention.length?`<div class="list">${attention.map(r=>`<div class="li"><div style="flex:1;min-width:0"><b>${esc(r.nickname)}</b> <span class="meta">· 마지막 활동 ${ago(r.last_active)} · 활동 ${r.active_days}일</span><div>${r.flags.map(([t,l])=>`<span class="tag ${t}">${t==="crit"?"⚠ ":"• "}${esc(l)}</span>`).join("")}</div></div></div>`).join("")}</div>`:`<p class="empty">지금은 모두 순조로워요.</p>`}</div>
+ </section>
+ <section class="card" style="margin-bottom:12px"><div class="card-h"><h2>참여자별 7일 활동</h2><span class="sub">각자 가입한 날을 Day 1로 · 칸 색이 진할수록 많이 씀</span></div>
+  ${hm.length?`<div class="tablewrap"><table class="heat"><thead><tr><th class="nm">참여자</th>${[1,2,3,4,5,6,7].map(d=>`<th scope="col">D${d}</th>`).join("")}<th scope="col">활동일</th></tr></thead><tbody>
+  ${hm.map(r=>`<tr><th class="nm" scope="row" title="${esc(r.nickname)}">${esc(r.nickname)}</th>${[0,1,2,3,4,5,6].map(i=>{const d=addDays(r.jd,i);const c=r.days[d]||0;const fut=d>today;return `<td class="${fut?"fut":lvl(c)}" data-tip="<b>${esc(r.nickname)}</b> · Day ${i+1} (${d.slice(5)}) · ${fut?"아직":c?c+"번 사용":"쉼"}" tabindex="0" aria-label="${esc(r.nickname)} Day ${i+1} ${fut?"아직":c?c+"번 사용":"쉼"}"></td>`}).join("")}<td style="background:none;text-align:center;font-variant-numeric:tabular-nums">${Object.keys(r.days).length}</td></tr>`).join("")}</tbody></table></div>
+  <div class="legend"><span><i style="background:var(--s0)"></i>쉼</span><span><i style="background:var(--s1)"></i>1~3번</span><span><i style="background:var(--s2)"></i>4~11번</span><span><i style="background:var(--s4)"></i>12번 이상</span><span><i style="border:1px dashed var(--line)"></i>아직 오지 않은 날</span></div>`:`<p class="empty">아직 참여자가 없어요.</p>`}
+ </section>
+ <section class="grid three">
+  <div class="card"><div class="card-h"><h2>최근 의견</h2><span class="sub">화면 의견·마무리 설문 · 오늘의 질문 제외</span></div>
+   ${(db.recent_feedback||[]).length?`<div class="list">${db.recent_feedback.map(f=>`<div class="li"><div style="flex:1;min-width:0"><div><b>${esc(nick(f.user_id))}</b> <span class="tag ${f.type==="오류"?"crit":f.type==="불편해요"?"warn":f.type==="좋았어요"?"good":""}">${esc(f.kind==="exit"?`설문 · 추천 ${f.rating??"-"}`:f.type||FB_T[f.kind]||f.kind)}</span>${f.shot?`<span class="tag">캡처</span>`:""}<span class="meta">${esc(f.screen||"")} · ${ago(f.created_at)}</span></div>${f.body?`<div class="prewrap">${esc(f.body)}</div>`:""}</div></div>`).join("")}</div>`:`<p class="empty">아직 의견이 없어요.</p>`}</div>
+  <div class="card"><div class="card-h"><h2>최근 오류</h2><span class="sub">전체 ${db.errors_total}건</span></div>
+   ${(db.recent_errors||[]).length?`<div class="list">${db.recent_errors.map(e=>`<div class="li"><div style="flex:1;min-width:0"><div class="prewrap" style="font-size:13px"><b>${esc(e.message)}</b></div><div class="meta">${e.n}회 · ${e.users}명 · ${esc(e.screen||"-")} · ${ago(e.last)}</div></div></div>`).join("")}</div>`:`<p class="empty">오류가 없어요. 좋은 소식입니다.</p>`}</div>
+  <div class="card"><div class="card-h"><h2>젬 분포</h2><span class="sub">첫 젬 ${gem.length}명</span></div>
+   <div class="dist" aria-label="젬 색 분포">${Object.keys(stones).length?Object.entries(stones).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="row" data-tip="<b>${k}</b> · ${v}명"><span><i class="sw" style="background:${STONE_COLOR[k]||"#999"}"></i>${k}</span><span class="bar"><i style="width:${v/sMax*100}%"></i></span><span class="n">${v}</span></div>`).join(""):`<p class="empty">아직 없어요.</p>`}</div>
+   <h2 style="margin:14px 0 6px">연마 단계</h2>
+   <div class="dist">${stg.map(([k,v])=>`<div class="row" data-tip="<b>${k}단계 ${STAGES[k]}</b> · ${v}명"><span>${k} ${STAGES[k]}</span><span class="bar"><i style="width:${v/gMax*100}%"></i></span><span class="n">${v}</span></div>`).join("")}</div>
+   <p class="sub" style="margin:10px 0 0">평균 배지 ${gem.length?(gem.reduce((s,r)=>s+r.badges,0)/gem.length).toFixed(1):0}개 · 빠른 시작 ${(db.gems||[]).filter(g=>g.quick).length}명 · 유튜브 연결 ${(db.gems||[]).filter(g=>g.yt).length}명</p></div>
+ </section>
+ <section class="card"><div class="card-h"><h2>참여자 목록</h2><span class="sub">머리글을 누르면 정렬 · 기본은 주의 필요 순</span></div>
+  <div class="tablewrap"><table class="people"><thead><tr>${cols.map(([k,l,num])=>`<th class="${num?"num":""}" scope="col"><button class="th" data-k="${k}" aria-sort="${sortKey===k?(sortDir<0?"descending":"ascending"):"none"}">${l}</button></th>`).join("")}</tr></thead><tbody>
+  ${sorted.map(r=>`<tr><td><b>${esc(r.nickname)}</b>${r.g.title?`<span class="meta"> · ${esc(r.g.title)}</span>`:""}</td><td>${esc(r.jd.slice(5))}</td><td>${ago(r.last_active)}</td><td class="num">${r.active_days}</td><td class="num">${r.stage?r.stage+" "+STAGES[r.stage]:"-"}</td><td class="num">${r.badges}</td><td class="num">${r.friends}</td><td class="num">${r.reactions_got}</td><td class="num">${r.feedback}</td><td class="num">${r.ai_calls}</td><td>${r.flags.length?r.flags.map(([t,l])=>`<span class="tag ${t}">${esc(l)}</span>`).join(""):`<span class="tag good">✓ 순조</span>`}</td></tr>`).join("")||`<tr><td colspan="11" class="empty">아직 참여자가 없어요.</td></tr>`}
+  </tbody></table></div></section>`;
+ $("#rf").onclick=load;
+ $("#auto").onchange=e=>{auto=e.target.checked;try{localStorage.setItem("mib_dash_auto",auto?"1":"0")}catch(x){}clearTimeout(timer);if(auto)timer=setTimeout(load,60000)};
+ document.querySelectorAll(".th").forEach(b=>b.onclick=()=>{const k=b.dataset.k;if(sortKey===k)sortDir=-sortDir;else{sortKey=k;sortDir=["nickname","jd"].includes(k)?1:-1}render()});
+}
+boot();
+</script>
+</body>
+</html>
