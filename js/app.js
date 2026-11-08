@@ -65,7 +65,8 @@ function App(){
  const dailyAnswered=soc.feedback.some(f=>f.kind==="daily"&&(f.payload||{}).day===Math.min(day,7));
 
  // stage only rises; badges stay; a visible change of the gem plays the evolve ceremony
- const [evo,setEvo]=useState(null);
+ const [fx,setFx]=useState([]);const evo=fx[0]||null;const pushFx=list=>setFx(q=>[...q,...list.filter(Boolean)]);const nextFx=()=>setFx(q=>q.slice(1));
+ const fxOf=(evt,badges)=>{const out=[];if(evt&&(evt.changes.length||evt.away))out.push({type:"evo",...evt,badges:[],nb:badges.length});if(badges.length)out.push({type:"badge",ids:[...badges].sort((a,b)=>RARITY[badgeById(a).rar].n-RARITY[badgeById(b).rar].n)});return out};
  const AWAY_MS=6*3600000;const AWAY_ITEMS=[["friends","새 친구"],["cheers","받은 공감"],["words","받은 한 단어"],["visitors","새로 다녀간 사람"]];
  useEffect(()=>{const socReady=freshSoc.current==="fail"||(!!freshSoc.current&&soc===freshSoc.current);if(!st||!stats||!st.analysis||demo||!loaded.current||!socReady)return;
   const sg=Math.max(stageOf(st,stats),st.flags.maxStage||0);const earned=earnedIds(st,stats);const seen=st.flags.badgesSeen||[];const nw=earned.filter(id=>!seen.includes(id));
@@ -76,22 +77,26 @@ function App(){
   // first pass of a session: was the person away, and what piled up meanwhile?
   let away=null;const now=Date.now();const cur=seenCounts(stats);const ls=st.flags.lastSeen;
   if(awayRef.current===null){awayRef.current=true;if(ls&&now-ls.at>=AWAY_MS){const items=AWAY_ITEMS.map(([k,label])=>({k,label,n:Math.max(0,(cur[k]||0)-((ls.c||{})[k]||0))})).filter(x=>x.n>0);away={ms:now-ls.at,label:awayLabel(now-ls.at),items}}}
+  if(away&&away.ms>=3*86400000){setSt(s=>({...s,flags:{...s.flags,returns:(s.flags.returns||0)+1}}));away.back=true}
   const marksChanged=JSON.stringify(marks)!==JSON.stringify(st.flags.marks||{});
+  const atMissing=earned.some(id=>!(st.flags.badgeAt||{})[id]);
   const stampDue=!ls||JSON.stringify(ls.c)!==JSON.stringify(cur)||now-ls.at>10*60000;
-  if(prev&&!changes.length&&!nw.length&&sg===(st.flags.maxStage||0)&&!marksChanged){
+  if(prev&&!changes.length&&!nw.length&&sg===(st.flags.maxStage||0)&&!marksChanged&&!atMissing){
    if(away&&away.items.length)toast(`${away.label} 그사이 ${away.items.map(x=>`${x.label} ${x.n}`).join(", ")}`);
    if(stampDue)setSt(s=>({...s,flags:{...s.flags,lastSeen:{at:now,c:cur}}}));return}
   const silent=!prev||(ovChanged&&!st.flags.celebrate&&changes.every(c=>c.k==="stone"||c.k==="symbol"));
   const prevStage=st.flags.maxStage||0;
-  setSt(s=>({...s,flags:{...s.flags,maxStage:Math.max(sg,s.flags.maxStage||0),marks,badgesSeen:[...new Set([...(s.flags.badgesSeen||[]),...earned])],seenGem:{...snap,ov:ovKey},celebrate:false,lastSeen:{at:now,c:cur}}}));
+  setSt(s=>({...s,flags:{...s.flags,maxStage:Math.max(sg,s.flags.maxStage||0),marks,badgesSeen:[...new Set([...(s.flags.badgesSeen||[]),...earned])],badgeAt:(()=>{const m={...(s.flags.badgeAt||{})};earned.forEach(id=>{if(!m[id])m[id]=now});return m})(),seenGem:{...snap,ov:ovKey},celebrate:false,lastSeen:{at:now,c:cur}}}));
   if(sg>prevStage&&prevStage>0){api.postFeed("stage",{stage:sg});track("stage_up",{stage:sg})}
-  nw.forEach(id=>{if(["step1","step7","step30","shelf","comeback","refine"].includes(id))api.postFeed("badge",{id});track("badge",{id})});
+  nw.forEach(id=>{const b=badgeById(id);if(!silent&&b&&(b.rar!=="common"||["step1","shelf","refine"].includes(id)))api.postFeed("badge",{id});track("badge",{id})});
   if(!silent){const ups=changes.filter(c=>MARK_KEYS.includes(c.k)&&c.to>(c.from||0));ups.forEach(c=>track("mark",{k:c.k,lv:c.to}));if(ups.length)api.postFeed("mark",{k:ups[0].k,lv:ups[0].to})}
-  if(!silent&&(changes.length||nw.length))setEvo({from:prev,to:snap,changes,badges:nw,head:evoHeadline(changes,nw,stats),away:away&&(away.items.length||away.ms>=86400000)?away:null});
+  if(!silent&&(changes.length||nw.length))pushFx(fxOf({from:prev,to:snap,changes,head:evoHeadline(changes,nw,stats),away:away&&(away.items.length||away.ms>=86400000)?away:null},nw));
   else if(away&&away.items.length)toast(`${away.label} 그사이 ${away.items.map(x=>`${x.label} ${x.n}`).join(", ")}`);
  },[stats]);
- function previewAway(){const base=st&&st.analysis?livingGem(st):{stone:"비취",lightName:"새벽빛",light:"물결",form:"덩이",texture:"맑음",symbol:"산",hardness:2,grain:1,facets:8,marks:{}};const from=gemSnap({...base,marks:{setting:1,sat:1,aura:1,stars:0}},3);const to={...from,setting:2,sat:2,aura:2,stars:1,marks:{setting:2,sat:2,aura:2,stars:1}};const changes=evoDiff(from,to);setEvo({from,to,changes,badges:["linked"],head:evoHeadline(changes,["linked"],{mv:{setting:7,sat:3,aura:12,stars:6}}),away:{ms:3*86400000,label:"3일 만이에요",items:[{k:"friends",label:"새 친구",n:2},{k:"cheers",label:"받은 공감",n:9},{k:"words",label:"받은 한 단어",n:3},{k:"visitors",label:"새로 다녀간 사람",n:6}]}})}
- function previewEvo(){const base=st&&st.analysis?livingGem(st):{stone:"비취",lightName:"새벽빛",light:"물결",form:"덩이",texture:"맑음",symbol:"산",hardness:2,grain:1,facets:8};const from=gemSnap(base,2);const to={...from,stage:3,hardness:Math.min(5,(from.hardness||1)+1),facets:Math.min(14,(from.facets||8)+1),form:from.form==="군집"?"결정":"군집"};const changes=evoDiff(from,to);setEvo({from,to,changes,badges:["step7"],head:evoHeadline(changes,["step7"],{active:7})})}
+ function previewAway(){const base=st&&st.analysis?livingGem(st):{stone:"비취",lightName:"새벽빛",light:"물결",form:"덩이",texture:"맑음",symbol:"산",hardness:2,grain:1,facets:8,marks:{}};const from=gemSnap({...base,marks:{setting:1,sat:1,aura:1,stars:0}},3);const to={...from,setting:2,sat:2,aura:2,stars:1,marks:{setting:2,sat:2,aura:2,stars:1}};const changes=evoDiff(from,to);pushFx(fxOf({from,to,changes,head:evoHeadline(changes,["linked"],{mv:{setting:7,sat:3,aura:12,stars:6}}),away:{ms:3*86400000,label:"3일 만이에요",items:[{k:"friends",label:"새 친구",n:2},{k:"cheers",label:"받은 공감",n:9},{k:"words",label:"받은 한 단어",n:3},{k:"visitors",label:"새로 다녀간 사람",n:6}]}},["friend3","back"]))}
+ function previewBadges(){pushFx([{type:"badge",ids:["log1","friend3","loved10","allweek"]}])}
+ function replayBadge(id){pushFx([{type:"badge",ids:[id],replay:true}])}
+ function previewEvo(){const base=st&&st.analysis?livingGem(st):{stone:"비취",lightName:"새벽빛",light:"물결",form:"덩이",texture:"맑음",symbol:"산",hardness:2,grain:1,facets:8};const from=gemSnap(base,2);const to={...from,stage:3,hardness:Math.min(5,(from.hardness||1)+1),facets:Math.min(14,(from.facets||8)+1),form:from.form==="군집"?"결정":"군집"};const changes=evoDiff(from,to);pushFx(fxOf({from,to,changes,head:evoHeadline(changes,["step7"],{active:7})},["step7"]))}
 
  // keep the public card fresh
  const pubT=useRef(null);
@@ -147,7 +152,8 @@ function App(){
  // ── render
  if(boot||route==="loading")return html`<div className="app"><div className="splash wrap"><div className="stack" style=${{alignItems:"center"}}><div className="pulse"><${GemView} g=${{stone:"오팔",form:"결정",texture:"유백",light:"번짐",hardness:2,grain:1,facets:8}} seed="splash" size=${120}/></div><p className="faint small">MyItemBook을 여는 중</p></div></div></div>`;
  if(route==="gate"||!session||!profile||!st)return html`<div className="app">${gateMsg&&html`<div className="demo-bar wrap"><span>${gateMsg}</span><button onClick=${()=>setGateMsg("")}>닫기</button></div>`}<${Gate} initialCode=${initialCode} onSession=${(s,isNew)=>{setGateMsg("");setSession(s);if(isNew)setTimeout(()=>track("signup"),1500)}}/><${Toast} msg=${toastMsg}/></div>`;
- if(route==="admin"&&profile.role==="admin")return html`<div className="app wide"><${AdminScreen} uid=${uid} toast=${toast} onPreviewEvo=${previewEvo} onPreviewAway=${previewAway} onExit=${()=>setRoute(st.analysis?"home":"welcome")}/>${evo&&html`<${EvolveOverlay} evt=${evo} seed=${st.createdAt} onClose=${()=>setEvo(null)}/>`}<${Toast} msg=${toastMsg}/></div>`;
+ const fxEl=evo&&(evo.type==="badge"?html`<${BadgeOverlay} key=${evo.ids.join(",")} ids=${evo.ids} replay=${!!evo.replay} equippedTitle=${st&&st.flags.title} onClose=${nextFx} onEquip=${id=>{setSt(s=>({...s,flags:{...s.flags,title:id}}));toast(`칭호 '${badgeById(id).title}'를 달았어요.`)}} onBook=${route==="admin"?null:id=>{setFx([]);setRoute("home");setSheet("achieve")}}/>`:html`<${EvolveOverlay} evt=${evo} seed=${st.createdAt} onClose=${nextFx} onShare=${route==="admin"?null:()=>{setFx([]);setRoute("home");setSheet("cardimg")}}/>`);
+ if(route==="admin"&&profile.role==="admin")return html`<div className="app wide"><${AdminScreen} uid=${uid} toast=${toast} onPreviewEvo=${previewEvo} onPreviewAway=${previewAway} onPreviewBadges=${previewBadges} onExit=${()=>setRoute(st.analysis?"home":"welcome")}/>${fxEl}<${Toast} msg=${toastMsg}/></div>`;
 
  const unread=notes.filter(n=>!n.read_at).length;
  let annSeen=0;try{annSeen=Number(localStorage.getItem("mib-ann-seen")||0)}catch(e){}
@@ -198,6 +204,7 @@ function App(){
   else if(sheet==="attrs")sheetEl=html`<${AttrsSheet} st=${st} update=${update} onClose=${close}/>`;
   else if(sheet==="shelf")sheetEl=html`<${ShelfSheet} st=${st} items=${items} onOpen=${openSheet} onClose=${close}/>`;
   else if(sheet.startsWith("item:")){const id=sheet.slice(5);const it=id==="new"?null:items.find(i=>i.id===id);sheetEl=html`<${ItemEditor} key=${sheet} item=${it} st=${st} canAI=${canAI} demo=${demo} toast=${toast} onSave=${saveItem} onDelete=${deleteItem} onClose=${()=>setSheet("shelf")}/>`}
+  else if(sheet==="achieve"||sheet==="badgebox")sheetEl=html`<${AchieveSheet} st=${st} stats=${stats} update=${update} meName=${profile.nickname} start=${sheet==="badgebox"?"box":"book"} onClose=${close} onReplay=${replayBadge}/>`;
   else if(sheet==="publish")sheetEl=html`<${PublishSheet} st=${st} items=${items} stats=${stats} update=${update} onClose=${close} toast=${toast} demo=${demo} meName=${profile.nickname} uid=${uid} me=${profile}/>`;
   else if(sheet==="mine")sheetEl=demo?null:html`<${MineSheet} uid=${uid} soc=${soc} names=${names} profile=${profile} onClose=${close} openUser=${openUser} ensureNames=${ensureNames}/>`;
   else if(sheet==="cardimg"||sheet==="week")sheetEl=html`<${ShareImageSheet} kind=${sheet==="week"?"week":"card"} st=${st} stats=${stats} profile=${profile} onClose=${close} toast=${toast} exitDone=${stats.exitDone} onExit=${()=>setSheet("exit")}/>`;
@@ -205,6 +212,6 @@ function App(){
  }
  const tabs=route==="home"&&st.analysis&&html`<nav className="tabbar" aria-label="메인">${[["me","나","me"],["step","한 걸음","step"],["feed","소식","feed"],["friends","친구","people"]].map(([k,t,ic])=>html`<button key=${k} className="tab" aria-current=${tab===k?"page":undefined} onClick=${()=>{setTab(k);setSheet(null);window.scrollTo(0,0)}}><${Ico} n=${ic}/>${t}${k==="friends"&&soc.friendships.some(f=>f.status==="pending"&&f.addressee===uid)?html`<i className="tabdot" aria-label="새 친구 요청"></i>`:null}</button>`)}</nav>`;
  const fab=!demo&&!fbOpen&&route!=="reading"&&html`<button className=${"fab"+(tabs?" up":"")} onClick=${()=>setFbOpen(true)} aria-label="이 화면에 대한 의견 보내기"><${Ico} n="chat"/>의견</button>`;
- return html`<div className="app">${header}${demoBar}${body}${tabs}${sheetEl}${fab}${evo&&(route==="home"||route==="reveal")&&html`<${EvolveOverlay} evt=${evo} seed=${st.createdAt} onClose=${()=>setEvo(null)} onShare=${()=>{setEvo(null);setRoute("home");setSheet("cardimg")}}/>`}${fbOpen&&html`<${FeedbackSheet} screen=${screen} onClose=${()=>setFbOpen(false)} toast=${toast}/>`}<${Toast} msg=${toastMsg}/></div>`;
+ return html`<div className="app">${header}${demoBar}${body}${tabs}${sheetEl}${fab}${(route==="home"||route==="reveal")&&fxEl}${fbOpen&&html`<${FeedbackSheet} screen=${screen} onClose=${()=>setFbOpen(false)} toast=${toast}/>`}<${Toast} msg=${toastMsg}/></div>`;
 }
 ReactDOM.createRoot(document.getElementById("root")).render(html`<${App}/>`);

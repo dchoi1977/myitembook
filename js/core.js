@@ -176,27 +176,48 @@ function Hexagon({axes,prev,size=280}){
 /* ───────── badges ───────── */
 const GROUPS={"지속":"#2F5D58","도약":"#A87B2A","회복":"#5F8467","함께":"#A0626A"};
 const FRAMES=["발견","이어감","깊어짐","나눔","전수"];
+/* rarity → how big the acquisition ceremony is */
+const RARITY={common:{name:"일반",en:"ACHIEVEMENT",color:"#9FB39A",n:1},rare:{name:"희귀",en:"RARE ACHIEVEMENT",color:"#7E9BD1",n:2},epic:{name:"영웅",en:"EPIC ACHIEVEMENT",color:"#B58AD8",n:3},legend:{name:"전설",en:"LEGENDARY",color:"#E2BC5C",n:4}};
+/* card frames unlocked by epic+ badges */
+const CARD_FRAMES={gold:{name:"금빛 테두리"},rose:{name:"장밋빛 테두리"},star:{name:"별빛 테두리"},dawn:{name:"새벽빛 테두리"},seven:{name:"일곱 빛깔 테두리"}};
+const BP=(v,t)=>[Math.min(v||0,t),t],BB=v=>[v?1:0,1];
+/* season 1 — every badge: condition(desc), progress(prog), reward(title + optional frame) */
 const BADGES=[
- {id:"step1",g:"지속",name:"첫 걸음",glyph:"발자국",desc:"오늘의 한 걸음을 처음 마쳤어요.",test:s=>s.days>=1},
- {id:"step7",g:"지속",name:"일곱 번의 걸음",glyph:"새싹",desc:"한 걸음을 7일 동안 마쳤어요. 연속이 아니어도 됩니다.",test:s=>s.days>=7},
- {id:"step30",g:"지속",name:"서른 번의 걸음",glyph:"산",desc:"한 걸음이 30일 쌓였어요.",test:s=>s.days>=30},
- {id:"found",g:"도약",name:"첫 발견",glyph:"눈",desc:"AI의 첫 해석을 확인하거나 내 말로 다듬었어요.",test:s=>s.confirmed},
- {id:"newview",g:"도약",name:"새 관점",glyph:"별",desc:"새 기록을 더해 나를 다시 읽었어요.",test:s=>s.analyses>=2},
- {id:"shelf",g:"도약",name:"선반을 열다",glyph:"선반",desc:"나와 함께한 아이템을 처음 담았어요.",test:s=>s.items>=1},
- {id:"rest",g:"회복",name:"쉼표",glyph:"쉼표",desc:"쉬어가기를 골랐어요. 쉼도 기록입니다.",test:s=>s.rests>=1},
- {id:"comeback",g:"회복",name:"다시 시작",glyph:"새싹",desc:"사흘 넘게 쉰 뒤 다시 한 걸음을 뗐어요.",test:s=>s.comebacks>=1},
- {id:"refine",g:"회복",name:"나를 다듬다",glyph:"펜",desc:"AI 해석을 내 말로 고쳤어요.",test:s=>s.edited},
- {id:"open",g:"함께",name:"문을 열다",glyph:"문",desc:"내 카드를 공개했어요.",test:s=>s.isPublic},
- {id:"give",g:"함께",name:"결을 건넨 사람",glyph:"말풍선",desc:"누군가에게 한 단어 추천사를 남겼어요.",test:s=>s.wordsGiven>=1},
- {id:"linked",g:"함께",name:"이어진 결",glyph:"고리",desc:"서로 연결되었거나 한 단어를 받았어요.",test:s=>s.connections>=1||s.wordsReceived>=1}
+ {id:"step1",g:"지속",rar:"common",name:"첫 걸음",glyph:"발자국",desc:"오늘의 한 걸음을 처음 마쳤어요.",cond:"한 걸음 1번 마치기",title:"첫 걸음을 뗀",test:s=>s.days>=1,prog:s=>BP(s.days,1)},
+ {id:"step7",g:"지속",rar:"rare",name:"일곱 번의 걸음",glyph:"새싹",desc:"한 걸음을 7일 동안 마쳤어요. 연속이 아니어도 됩니다.",cond:"한 걸음 7일 마치기 (연속 아니어도 OK)",title:"일곱 번 걸은",test:s=>s.days>=7,prog:s=>BP(s.days,7)},
+ {id:"step30",g:"지속",rar:"epic",name:"서른 번의 걸음",glyph:"산",desc:"한 걸음이 30일 쌓였어요.",cond:"한 걸음 30일 마치기",title:"서른 번 걸은",frame:"gold",test:s=>s.days>=30,prog:s=>BP(s.days,30)},
+ {id:"log1",g:"지속",rar:"common",name:"첫 한 줄",glyph:"펜",desc:"오늘의 한 줄을 처음 남겼어요.",cond:"오늘의 한 줄 1번 남기기",title:"한 줄을 남긴",test:s=>s.logs>=1,prog:s=>BP(s.logs,1)},
+ {id:"log7",g:"지속",rar:"rare",name:"일곱 줄의 일기",glyph:"책",desc:"오늘의 한 줄이 일곱 날 쌓였어요.",cond:"오늘의 한 줄 7일 남기기",title:"매일을 적는",test:s=>s.logs>=7,prog:s=>BP(s.logs,7)},
+ {id:"know6",g:"지속",rar:"rare",name:"나를 들려준 사람",glyph:"말풍선",desc:"알아가기 질문에 여섯 번 답했어요.",cond:"알아가기 질문 6개 답하기",title:"자신을 들려준",test:s=>s.knows>=6,prog:s=>BP(s.knows,6)},
+ {id:"found",g:"도약",rar:"common",name:"첫 발견",glyph:"눈",desc:"AI의 첫 해석을 확인하거나 내 말로 다듬었어요.",cond:"첫 해석을 '맞아요'로 확인하거나 다듬기",title:"젬을 발견한",test:s=>s.confirmed,prog:s=>BB(s.confirmed)},
+ {id:"newview",g:"도약",rar:"rare",name:"새 관점",glyph:"별",desc:"새 기록을 더해 나를 다시 읽었어요.",cond:"새 기록 더해 다시 읽기 1번",title:"다시 읽는",test:s=>s.analyses>=2,prog:s=>BP(Math.max(0,s.analyses-1),1)},
+ {id:"shelf",g:"도약",rar:"common",name:"선반을 열다",glyph:"선반",desc:"나와 함께한 아이템을 처음 담았어요.",cond:"선반에 아이템 1개 담기",title:"선반을 연",test:s=>s.items>=1,prog:s=>BP(s.items,1)},
+ {id:"shelf5",g:"도약",rar:"rare",name:"작은 진열장",glyph:"열쇠",desc:"아끼는 아이템 다섯 개가 선반에 모였어요.",cond:"선반에 아이템 5개 담기",title:"아끼는 것이 많은",test:s=>s.items>=5,prog:s=>BP(s.items,5)},
+ {id:"rest",g:"회복",rar:"common",name:"쉼표",glyph:"쉼표",desc:"쉬어가기를 골랐어요. 쉼도 기록입니다.",cond:"한 걸음 대신 '쉬어가기' 1번",title:"쉼을 아는",test:s=>s.rests>=1,prog:s=>BP(s.rests,1)},
+ {id:"comeback",g:"회복",rar:"rare",name:"다시 시작",glyph:"새싹",desc:"사흘 넘게 쉰 뒤 다시 한 걸음을 뗐어요.",cond:"사흘 넘게 쉰 뒤 한 걸음 다시 하기",title:"다시 일어선",test:s=>s.comebacks>=1,prog:s=>BP(s.comebacks,1)},
+ {id:"refine",g:"회복",rar:"common",name:"나를 다듬다",glyph:"펜",desc:"AI 해석을 내 말로 고쳤어요.",cond:"AI 해석 문장이나 키워드를 내 말로 고치기",title:"제 말로 다듬은",test:s=>s.edited,prog:s=>BB(s.edited)},
+ {id:"back",g:"회복",rar:"rare",name:"돌아온 사람",glyph:"문",desc:"사흘 넘게 자리를 비웠다가 다시 찾아왔어요.",cond:"사흘 넘게 비운 뒤 다시 앱 열기",title:"돌아온",test:s=>s.returns>=1,prog:s=>BP(s.returns,1)},
+ {id:"open",g:"함께",rar:"common",name:"문을 열다",glyph:"문",desc:"내 카드를 공개했어요.",cond:"내 카드 공개하기",title:"문을 연",test:s=>s.isPublic,prog:s=>BB(s.isPublic)},
+ {id:"give",g:"함께",rar:"common",name:"결을 건넨 사람",glyph:"말풍선",desc:"누군가에게 한 단어 추천사를 남겼어요.",cond:"다른 사람에게 한 단어 1번 건네기",title:"결을 건네는",test:s=>s.wordsGiven>=1,prog:s=>BP(s.wordsGiven,1)},
+ {id:"linked",g:"함께",rar:"common",name:"이어진 결",glyph:"고리",desc:"서로 연결되었거나 한 단어를 받았어요.",cond:"친구 1명 맺기 또는 한 단어 1개 받기",title:"이어진",test:s=>s.connections>=1||s.wordsReceived>=1,prog:s=>BP(Math.max(s.connections,s.wordsReceived),1)},
+ {id:"friend3",g:"함께",rar:"rare",name:"세 사람의 결",glyph:"사람",desc:"세 사람과 친구로 이어졌어요.",cond:"친구 3명 맺기",title:"셋이 함께한",test:s=>s.connections>=3,prog:s=>BP(s.connections,3)},
+ {id:"giver10",g:"함께",rar:"rare",name:"다정한 손",glyph:"잎",desc:"공감과 한 단어를 열 번 건넸어요.",cond:"공감·한 단어 합쳐 10번 건네기",title:"다정한 손의",test:s=>s.reactionsGiven+s.wordsGiven>=10,prog:s=>BP(s.reactionsGiven+s.wordsGiven,10)},
+ {id:"loved10",g:"함께",rar:"epic",name:"사랑받는 젬",glyph:"별",desc:"공감과 한 단어를 열 번 받았어요.",cond:"공감·한 단어 합쳐 10개 받기",title:"사랑받는",frame:"rose",test:s=>s.reactionsReceived+s.wordsReceived>=10,prog:s=>BP(s.reactionsReceived+s.wordsReceived,10)},
+ {id:"visited15",g:"함께",rar:"epic",name:"발길이 닿는 카드",glyph:"발자국",desc:"열다섯 사람이 내 카드를 다녀갔어요.",cond:"내 카드를 본 사람 15명",title:"발길이 닿는",frame:"star",test:s=>(s.visitors||0)>=15,prog:s=>BP(s.visitors||0,15)},
+ {id:"dawn",g:"비밀",rar:"epic",secret:true,hint:"해가 뜨기 전, 하루를 먼저 연 사람에게",name:"새벽빛",glyph:"새싹",desc:"새벽 5~7시에 오늘의 한 줄을 남겼어요.",cond:"새벽 5~7시에 오늘의 한 줄 남기기",title:"새벽빛의",frame:"dawn",test:s=>!!s.dawn,prog:s=>BB(s.dawn)},
+ {id:"allweek",g:"비밀",rar:"legend",secret:true,hint:"일곱 날, 하루도 빠짐없이",name:"일곱 빛깔",glyph:"별",desc:"일곱 날 모두 한 걸음이나 한 줄을 남겼어요.",cond:"활동한 날 7일 채우기",title:"일곱 날을 채운",frame:"seven",test:s=>s.active>=7,prog:s=>BP(s.active,7)}
 ];
+GROUPS["비밀"]="#5B4A7A";
+const GROUP_DESC={"지속":"꾸준히 이어 간 시간","도약":"나를 새로 발견한 순간","회복":"쉬고, 다듬고, 돌아온 일","함께":"사람들과 결을 주고받은 일","비밀":"조건이 숨겨진 업적"};
 function frameOf(days){return days>=100?4:days>=60?3:days>=30?2:days>=7?1:0}
 function Medal({b,earned,frame=0,size=60}){
  const c=GROUPS[b.g];const ring=earned?["#B9C3B4","#9FB39A","#C9A45A","#B98A3A","#8E6B22"][frame]:"none";
  return html`<svg viewBox="0 0 60 60" style=${{width:size,height:size}} aria-hidden="true">
   <circle cx="30" cy="30" r="27" style=${{fill:earned?c:"var(--card)",stroke:earned?ring:"var(--line)",strokeWidth:earned?3:1.5,strokeDasharray:earned?"none":"3 3"}}/>
   <circle cx="30" cy="30" r="21.5" style=${{fill:"none",stroke:earned?"rgba(255,255,255,.35)":"none",strokeWidth:1}}/>
-  <g transform="translate(17,17) scale(.866)" style=${{color:earned?"#F7F3EA":"var(--ink-3)"}} dangerouslySetInnerHTML=${{__html:`<g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${glyph(b.glyph)}</g>`}}></g>
+  ${earned&&RARITY[b.rar]&&RARITY[b.rar].n>=2&&html`<circle cx="30" cy="30" r="29" style=${{fill:"none",stroke:RARITY[b.rar].color,strokeWidth:1.2,strokeDasharray:RARITY[b.rar].n>=3?"2 2.4":"none"}}/>`}
+  ${earned&&b.rar==="legend"&&html`<circle cx="30" cy="30" r="27" style=${{fill:"none",stroke:"#FFE9A8",strokeWidth:1,opacity:.8}}/>`}
+  ${!earned&&b.secret?html`<text x="30" y="38" textAnchor="middle" style=${{fill:"var(--ink-3)",font:"700 22px var(--serif)"}}>?</text>`:html`<g transform="translate(17,17) scale(.866)" style=${{color:earned?"#F7F3EA":"var(--ink-3)"}} dangerouslySetInnerHTML=${{__html:`<g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${glyph(b.glyph)}</g>`}}></g>`}
  </svg>`;
 }
 
@@ -261,7 +282,7 @@ function daysWith(st){const t=(st.first&&st.first.at)||(st.analysis&&st.analysis
 function markValues(st,s){return {setting:daysWith(st),sat:s.connections||0,aura:(s.reactionsReceived||0)+(s.wordsReceived||0),stars:s.visitors||0}}
 function marksOf(st,s){const v=markValues(st,s),prev=(st.flags&&st.flags.marks)||{};const o={};MARKS.forEach(m=>{o[m.k]=Math.max(prev[m.k]||0,m.steps.filter(x=>v[m.k]>=x).length)});return o}
 function markNext(m,lv,val){const t=m.steps[lv];return t==null?null:{target:t,left:Math.max(0,t-val),pct:clamp(Math.round((val-(m.steps[lv-1]||0))/(t-(m.steps[lv-1]||0))*100),0,100)}}
-function statsOf(st,items,soc){soc=soc||{};return {days:st.steps.done.length,active:activeDays(st),logs:(st.logs||[]).length,rests:st.steps.rests.length,comebacks:st.steps.comebacks||0,confirmed:!!(st.analysis&&(st.analysis.status==="yes"||st.analysis.status==="edited")),analyses:st.analyses||0,items:items.length,edited:!!st.flags.edited,isPublic:!!st.visibility.public,wordsGiven:soc.wordsGiven||0,wordsReceived:soc.wordsReceived||0,connections:soc.friends||0,reactionsGiven:soc.reactionsGiven||0,reactionsReceived:soc.reactionsReceived||0,exitDone:!!soc.exitDone}}
+function statsOf(st,items,soc){soc=soc||{};return {days:st.steps.done.length,active:activeDays(st),logs:(st.logs||[]).length,rests:st.steps.rests.length,comebacks:st.steps.comebacks||0,confirmed:!!(st.analysis&&(st.analysis.status==="yes"||st.analysis.status==="edited")),analyses:st.analyses||0,items:items.length,edited:!!st.flags.edited,isPublic:!!st.visibility.public,wordsGiven:soc.wordsGiven||0,wordsReceived:soc.wordsReceived||0,connections:soc.friends||0,reactionsGiven:soc.reactionsGiven||0,reactionsReceived:soc.reactionsReceived||0,exitDone:!!soc.exitDone,knows:(st.know||[]).length,returns:(st.flags&&st.flags.returns)||0,dawn:(st.logs||[]).some(l=>{if(!l.at)return false;const h=new Date(l.at).getHours();return h>=5&&h<7})}}
 const STAGES=["","원석","초벌","연마","광택","명품"];
 /* stages rise strictly in order (CBT thresholds; the full service would use 7·30·60 days) */
 const STAGE_RULES=[null,

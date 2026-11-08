@@ -43,7 +43,7 @@ function EvolveOverlay({evt,seed,onClose,onShare}){
  const begun=phase!==-1;
  useEffect(()=>{if(!begun)return;if(start===2){try{navigator.vibrate&&navigator.vibrate(30)}catch(e){}return}
   const t1=setTimeout(()=>setPhase(p=>p<1?1:p),1500),t2=setTimeout(()=>{setPhase(2);try{navigator.vibrate&&navigator.vibrate([20,50,70])}catch(e){}},1850);return()=>{clearTimeout(t1);clearTimeout(t2)}},[begun]);
- const skip=()=>{if(phase===-1)setPhase(start);else if(phase<2)setPhase(2)};
+ const skip=()=>{if(phase===-1){if(!gemChange)onClose();else setPhase(start)}else if(phase<2)setPhase(2)};
  const IN=useMemo(()=>[...Array(12)].map((_,i)=>{const a=i/12*Math.PI*2;return {x:Math.cos(a)*150,y:Math.sin(a)*150,d:(i%4)*.12}}),[]);
  const OUT=useMemo(()=>[...Array(18)].map((_,i)=>{const a=i/18*Math.PI*2+(i%2)*.15;const r=120+(i%3)*30;return {x:Math.cos(a)*r,y:Math.sin(a)*r,d:(i%5)*.04}}),[]);
  if(phase===-1)return html`<div className="evo pa tone-away" role="dialog" aria-modal="true" aria-label="다시 오셨군요" onClick=${skip}>
@@ -54,8 +54,8 @@ function EvolveOverlay({evt,seed,onClose,onShare}){
   </div>
   <div className="evo-away">${evt.away.items.map((x,i)=>html`<div key=${x.k} className="evo-away-tile" style=${{animationDelay:(.15+i*.12)+"s"}}><b>+${reduce?x.n:html`<${CountUp} n=${x.n}/>`}</b><span>${x.label}</span></div>`)}</div>
   <div className="evo-stage sm"><div className="evo-hint"><${GemView} g=${evt.from} seed=${seed} size=${150}/></div></div>
-  <p className="evo-wait">${gemChange?"젬이 무언가에 반응하고 있어요…":"새 배지가 기다리고 있어요…"}</p>
-  <div className="evo-actions"><button className="btn" onClick=${e=>{e.stopPropagation();skip()}}>${gemChange?"젬 확인하기":"배지 확인하기"}</button></div>
+  <p className="evo-wait">${gemChange?"젬이 무언가에 반응하고 있어요…":evt.nb?"새 배지가 기다리고 있어요…":""}</p>
+  <div className="evo-actions"><button className="btn" onClick=${e=>{e.stopPropagation();skip()}}>${gemChange?"젬 확인하기":evt.nb?"배지 확인하기":"좋아요"}</button></div>
  </div>`;
  const medals=evt.badges.map(id=>BADGES.find(b=>b.id===id)).filter(Boolean);
  return html`<div className=${"evo p"+phase+" tone-"+evt.head.tone} role="dialog" aria-modal="true" aria-label=${evt.head.title} onClick=${skip}>
@@ -73,7 +73,7 @@ function EvolveOverlay({evt,seed,onClose,onShare}){
    ${gemChange&&html`<div className="evo-name">${gemName(evt.to)}</div>`}
    ${evt.changes.length>0&&html`<div className="evo-chips">${evt.changes.map(c=>html`<span key=${c.k} className="evo-chip"><b>${c.label}</b> ${fmtVal(c.k,c.from)} <i>→</i> ${fmtVal(c.k,c.to)}</span>`)}</div>`}
    ${gemChange&&medals.length>0&&html`<div className="evo-medals">${medals.map(b=>html`<span key=${b.id} className="evo-medal-mini"><${Medal} b=${b} earned=${true} size=${44}/><small>${b.name}</small></span>`)}</div>`}
-   <div className="evo-actions"><button className="btn" onClick=${e=>{e.stopPropagation();onClose()}}>멋지다!</button>${onShare&&gemChange?html`<button className="btn ghost" onClick=${e=>{e.stopPropagation();onShare()}}>카드 이미지로 남기기</button>`:null}</div>
+   <div className="evo-actions"><button className="btn" onClick=${e=>{e.stopPropagation();onClose()}}>${evt.nb?`멋지다! · 배지 ${evt.nb}개 받기`:"멋지다!"}</button>${onShare&&gemChange?html`<button className="btn ghost" onClick=${e=>{e.stopPropagation();onShare()}}>카드 이미지로 남기기</button>`:null}</div>
   </div>`}
   ${phase<2&&html`<button className="evo-skip" onClick=${e=>{e.stopPropagation();setPhase(2)}}>건너뛰기</button>`}
  </div>`;

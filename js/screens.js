@@ -140,8 +140,9 @@ function LifeCard({st,items,stats,onOpen}){
  const a=st.analysis;const g=livingGem(st);const [back,setBack]=useState(false);
  const earned=BADGES.filter(b=>isEarned(st,stats,b));const stage=stageOf(st,stats);
  const prev=(st.axesHistory||[]).length?st.axesHistory[st.axesHistory.length-1].axes:null;
- return html`<div className="lifecard">
-  <div className="row between"><span className="chip gold">연마 ${stage}단계 · ${STAGES[stage]}</span><button className="linkbtn small" onClick=${()=>setBack(b=>!b)} aria-pressed=${back}>${back?"앞면 보기":"뒷면 · 육각형"}</button></div>
+ const eq=equipped(st,stats);const show=showcaseBadges(st,stats).map(badgeById);
+ return html`<div className=${"lifecard"+(eq.frame?" frame-"+eq.frame:"")}>
+  <div className="row between"><span className="row" style=${{gap:"6px"}}><span className="chip gold">연마 ${stage}단계 · ${STAGES[stage]}</span>${eq.title&&html`<span className="chip plain title-chip">${eq.title}</span>`}</span><button className="linkbtn small" onClick=${()=>setBack(b=>!b)} aria-pressed=${back}>${back?"앞면 보기":"뒷면 · 육각형"}</button></div>
   ${!back?html`<div className="stack" style=${{alignItems:"center"}}>
    <${GemView} g=${g} seed=${st.createdAt} size=${210}/>
    <div className="gemname">${gemName(g)}</div>
@@ -156,13 +157,14 @@ function LifeCard({st,items,stats,onOpen}){
   </div>`}
   <div className="card-foot">
    <span className=${"chip"+(st.visibility.public?"":" plain")}><${Ico} n=${st.visibility.public?"globe":"lock"}/>${st.visibility.public?(st.visibility.audience==="friends"?"친구 공개":"1기 공개"):"나만 보기"}</span>
-   <div className="minibadges" aria-label=${"대표 배지: "+(earned.slice(-3).map(b=>b.name).join(", ")||"없음")}>${earned.slice(-3).map(b=>html`<${Medal} key=${b.id} b=${b} earned=${true} frame=${b.g==="지속"?frameOf(stats.days):0} size=${30}/>`)}</div>
+   <button className="minibadges linkbtn" onClick=${()=>onOpen("badgebox")} aria-label=${"대표 배지: "+(show.map(b=>b.name).join(", ")||"없음")+" · 배지 보관함 열기"}>${show.map(b=>html`<${Medal} key=${b.id} b=${b} earned=${true} frame=${b.g==="지속"?frameOf(stats.days):0} size=${30}/>`)}${!show.length&&html`<span className="small faint">배지 보관함</span>`}</button</div>
   </div>
  </div>`;
 }
 function MeTab({st,items,soc,stats,onOpen,names,top,mid}){
  const featured=items.filter(i=>(st.featured||[]).includes(i.id)).slice(0,3);
  const rows=[["evidence","눈","이렇게 읽은 이유","사실과 AI 해석을 나눠 보고, 맞다·숨기기"],["attrs","별","젬의 8가지 속성","결·색·빛·형·질·강·상·각"],["shelf","선반","나의 선반",`실제로 가진 것 ${items.length}개 · 얼마나 함께했는가`],["publish","문","공개할 모습",st.visibility.public?(st.visibility.audience==="friends"?"친구에게 공개 중":"CBT 1기에 공개 중")+" · 항목별로 고르기":"지금은 나만 보기"],["reread","새싹","새 기록 더하기",`나를 다시 읽기 · 지금까지 ${st.analyses||1}번`]];
+ const achN=earnedIds(st,stats).length;rows.splice(2,0,["achieve","별","업적 도감 · 배지 보관함",`배지 ${achN}/${BADGES.length} · 칭호와 대표 배지 고르기`]);
  return html`<div className="main wrap">
   ${top}
   <${LifeCard} st=${st} items=${items} stats=${stats} onOpen=${onOpen}/>
@@ -265,13 +267,13 @@ function buildPublicCard(st,items,stats){
  const card={v:1,updatedAt:Date.now(),gem:g,gemName:gemName(g),stage:stageOf(st,stats),
   sentence:fl.sentence?displaySentence(a):"",keywords:fl.keywords?displayKeywords(a):[],
   axes:fl.hexagon?visibleAxes(a).map(x=>({name:x.name,level:x.level})):visibleAxes(a).map(x=>({name:x.name})),
-  showHex:!!fl.hexagon,badges:fl.badges?earnedIds(st,stats):[],
+  showHex:!!fl.hexagon,badges:fl.badges?showcaseBadges(st,stats,8):[],title:equipped(st,stats).title,frame:equipped(st,stats).frame,
   items:fl.items?items.filter(i=>(st.featured||[]).includes(i.id)).slice(0,3).map(i=>({name:i.name,category:i.category,since:i.since||"",story:i.story||"",verify:i.verify||""})):[],
   acceptWords:!!fl.words,tags:fl.tags&&st.quick&&st.quick.answers?[st.quick.answers.mbti,st.quick.answers.blood].filter(Boolean):[]};
  return card;
 }
 function PublicCardView({card,name,compact,who}){
- return html`<div className="person"><div className="person-head"><${GemView} g=${card.gem} seed=${card.gemName} size=${compact?64:84}/><div className="grow"><b className="serif" style=${{color:"var(--accent)",fontSize:"17px"}}>${card.gemName}</b><br/><span className="small faint whoname">${who?html`<${Avatar} p=${who} size=${22}/>`:null}${name||"MIB 사용자"} · 연마 ${card.stage||1}단계</span></div></div>
+ return html`<div className=${"person"+(card.frame?" frame-"+card.frame:"")}><div className="person-head"><${GemView} g=${card.gem} seed=${card.gemName} size=${compact?64:84}/><div className="grow"><b className="serif" style=${{color:"var(--accent)",fontSize:"17px"}}>${card.gemName}</b><br/><span className="small faint whoname">${who?html`<${Avatar} p=${who} size=${22}/>`:null}${card.title?card.title+" ":""}${name||"MIB 사용자"} · 연마 ${card.stage||1}단계</span></div></div>
   ${card.sentence&&html`<p className="serif" style=${{fontSize:"15.5px",lineHeight:1.6}}>${card.sentence}</p>`}
   ${(card.keywords||[]).length>0&&html`<div className="row">${card.keywords.map(k=>html`<span className="chip" key=${k}>${k}</span>`)}${(card.tags||[]).map(t=>html`<span className="chip plain" key=${"t"+t}>${t}</span>`)}</div>`}
   ${card.showHex&&!compact&&html`<${Hexagon} axes=${card.axes} size=${240}/>`}
@@ -349,10 +351,10 @@ function StepTab({st,update,stats,canAI,toast,onOpen,demo}){
   <p className="note">남은 거리 대신 걸어온 거리를 셉니다. 연속 기록이 끊겨도 아무것도 잃지 않아요.</p>
   <${Reflection} st=${st} update=${update} canAI=${canAI} existing=${thisRef} wk=${wk} toast=${toast}/>
   <div className="stack"><div className="row between"><h2 className="h3">배지 시즌 1</h2><span className="small faint">${earnedIds(st,stats).length} / ${BADGES.length}</span></div>
-   <p className="small muted">배지는 능력 인증이나 등급이 아니라, 나의 시간이 남긴 작은 표식입니다. 지속 배지의 테두리는 발견 → 이어감 → 깊어짐 → 나눔 → 전수로 깊어집니다.</p>
-   ${groups.map(gname=>html`<div className="stack" key=${gname} style=${{gap:"6px"}}><div className="group-title"><b>${gname}</b></div><div className="badges">${BADGES.filter(b=>b.g===gname).map(b=>{const e=isEarned(st,stats,b);return html`<button key=${b.id} className=${"badge"+(e?"":" locked")} onClick=${()=>setBadge(b)} aria-label=${b.name+(e?" 받음":" 아직")}><${Medal} b=${b} earned=${e} frame=${b.g==="지속"?frameOf(stats.days):0}/><b>${b.name}</b><span>${e?(b.g==="지속"?FRAMES[frameOf(stats.days)]:"받음"):"아직"}</span></button>`})}</div></div>`)}
+   <p className="small muted">배지는 능력 인증이나 등급이 아니라, 나의 시간이 남긴 작은 표식입니다. 배지마다 칭호가 따라오고, 영웅·전설 배지는 카드 테두리도 열어 줘요.</p>
+   ${(()=>{const near=BADGES.filter(b=>!isEarned(st,stats,b)&&!b.secret).map(b=>({b,p:badgeProg(b,stats)})).sort((x,y)=>y.p.pct-x.p.pct).slice(0,2);return near.map(({b,p})=>html`<button key=${b.id} className="ach-row" onClick=${()=>onOpen("achieve")}><span className="ach-medal"><${Medal} b=${b} earned=${false} size=${40}/></span><span className="grow ach-body"><span className="row between"><b className="ach-name">${b.name}</b><span className="small faint">${p.cur} / ${p.tgt}</span></span><${ProgressBar} pct=${p.pct} color=${RARITY[b.rar].color}/><span className="small muted">${b.cond}</span></span></button>`)})()}
+   <div className="row"><button className="btn quiet sm grow" onClick=${()=>onOpen("achieve")}>업적 도감</button><button className="btn quiet sm grow" onClick=${()=>onOpen("badgebox")}>배지 보관함</button></div>
   </div>
-  ${badge&&html`<${Sheet} title=${badge.name} onClose=${()=>setBadge(null)}><div className="stack" style=${{alignItems:"center",textAlign:"center"}}><${Medal} b=${badge} earned=${isEarned(st,stats,badge)} frame=${badge.g==="지속"?frameOf(stats.days):0} size=${120}/><span className="chip">${badge.g}</span><p>${badge.desc}</p><p className="small muted">${isEarned(st,stats,badge)?"받은 배지는 쉬어도 사라지지 않습니다.":"조건을 채우면 받습니다."}</p></div><//>`}
  </div>`;
 }
 function Reflection({st,update,canAI,existing,wk,toast}){
