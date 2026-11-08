@@ -77,6 +77,7 @@ const api={
  async cardWords(id){return Q(sb.rpc("card_words",{owner:id}))},
  async recordView(id){try{await sb.rpc("record_view",{owner:id})}catch(e){}},
  async visitors(){return Q(sb.rpc("my_visitors"))},
+ async reach(){return Q(sb.rpc("my_reach"))},
  async friendsOf(id){return Q(sb.rpc("friends_of",{target:id}))},
  async report(target,reason){return Q(sb.from("reports").insert({target_id:target,reason}))},
  // ── feed & inbox

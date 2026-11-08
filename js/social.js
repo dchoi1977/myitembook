@@ -102,8 +102,8 @@ function MineSheet({uid,soc,names,profile,onClose,openUser,ensureNames}){
 }
 
 /* 소식 — friends' growth moments + CBT 1기 collective gem */
-const FEED_TEXT={discover:p=>`첫 젬을 발견했어요${p.gemName?" · "+p.gemName:""}`,reread:()=>"새 기록으로 나를 다시 읽었어요",stage:p=>`연마 ${p.stage}단계 · ${STAGES[p.stage]||""}에 올랐어요`,badge:p=>{const b=BADGES.find(x=>x.id===p.id);return `새 배지 · ${b?b.name:"배지"}`},step:()=>"오늘의 한 걸음을 마쳤어요",publish:p=>p.aud==="friends"?"친구에게 카드를 공개했어요":"카드를 공개했어요",friend:()=>"새 친구와 이어졌어요",week:()=>"7일의 변화를 돌아봤어요"};
-const FEED_GLYPH={discover:"눈",reread:"새싹",stage:"별",badge:"별",step:"발자국",publish:"문",friend:"고리",week:"산"};
+const FEED_TEXT={discover:p=>`첫 젬을 발견했어요${p.gemName?" · "+p.gemName:""}`,reread:()=>"새 기록으로 나를 다시 읽었어요",stage:p=>`연마 ${p.stage}단계 · ${STAGES[p.stage]||""}에 올랐어요`,badge:p=>{const b=BADGES.find(x=>x.id===p.id);return `새 배지 · ${b?b.name:"배지"}`},step:()=>"오늘의 한 걸음을 마쳤어요",publish:p=>p.aud==="friends"?"친구에게 카드를 공개했어요":"카드를 공개했어요",friend:()=>"새 친구와 이어졌어요",week:()=>"7일의 변화를 돌아봤어요",mark:p=>{const m=MARKS.find(x=>x.k===p.k);return m?`젬에 새 표식 · ${markTitle(m,p.lv)||m.label}`:"젬에 새 표식이 생겼어요"}};
+const FEED_GLYPH={discover:"눈",reread:"새싹",stage:"별",badge:"별",step:"발자국",publish:"문",friend:"고리",week:"산",mark:"별"};
 function cohortGem(c){const st=c&&c.stones?Object.entries(c.stones).sort((a,b)=>b[1]-a[1]):[];return {stone:st.length?st[0][0]:"오팔",lightName:"1기",light:"물결",form:"군집",texture:"결정질",hardness:clamp(1+Math.floor((c&&c.steps||0)/30),1,5),grain:clamp(Math.floor((c&&c.logs||0)/10),0,7),facets:clamp(6+Math.floor((c&&c.participants||0)/3),6,14),symbol:"별"}}
 function FeedTab({uid,soc,names,openUser,toast,demo,reloadSoc,ensureNames}){
  const [items,setItems]=useState(null);const [co,setCo]=useState(null);const [busy,setBusy]=useState(null);

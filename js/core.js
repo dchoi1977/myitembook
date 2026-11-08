@@ -122,8 +122,27 @@ function gemSVG(g,seed,key){
  if(lm==="번짐")under+=`<ellipse cx="100" cy="199" rx="74" ry="12" fill="url(#${id}proj)"/>`;
  if(lm==="물결")[0,1,2].forEach(i=>{under+=`<ellipse cx="100" cy="198" rx="${38+i*19}" ry="${5+i*3.2}" fill="none" stroke="${st.tint}" stroke-opacity="${(.85-i*.22).toFixed(2)}" stroke-width="1.3"/>`});
  if(lm==="반짝임")for(let i=0;i<6;i++){const a=R()*Math.PI*2,r=80+R()*12;const x=100+Math.cos(a)*r,y=100+Math.sin(a)*r*.84;const s=3+R()*4.5;const f=st.light==="#FFFFFF"?st.deep:st.light;around+=`<path d="M${x.toFixed(1)} ${(y-s).toFixed(1)}L${(x+s*.28).toFixed(1)} ${(y-s*.28).toFixed(1)}L${(x+s).toFixed(1)} ${y.toFixed(1)}L${(x+s*.28).toFixed(1)} ${(y+s*.28).toFixed(1)}L${x.toFixed(1)} ${(y+s).toFixed(1)}L${(x-s*.28).toFixed(1)} ${(y+s*.28).toFixed(1)}L${(x-s).toFixed(1)} ${y.toFixed(1)}L${(x-s*.28).toFixed(1)} ${(y-s*.28).toFixed(1)}Z" fill="${f}" opacity=".9"/>`}
+ const mk=g.marks||{};const MET=[null,["#E9EDF1","#A3ACB7","#6E7884"],["#F6DF98","#C99A35","#8C6618"],["#F2F6F8","#B5C3CC","#7A8D99"],["#F6DF98","#C99A35","#8C6618"],["#FFE9A8","#D4A43C","#8C6618"]];
+ let back="",front="",plinth="";
+ const au=clamp(mk.aura||0,0,5);
+ if(au){back+=`<circle cx="100" cy="98" r="96" fill="url(#${id}glow)" opacity="${(.25+au*.15).toFixed(2)}"/>`;for(let i=0;i<au;i++)back+=`<circle cx="100" cy="98" r="${(94-i*6).toFixed(1)}" fill="none" stroke="${i%2?"#E2BC5C":st.light==="#FFFFFF"?st.tint:st.light}" stroke-opacity="${(.62-i*.07).toFixed(2)}" stroke-width="${i===0?1.6:1.1}"${i%2?` stroke-dasharray="1.5 4.5"`:""}/>`}
+ const sr=clamp(mk.stars||0,0,5);
+ if(sr){const RS=rng(seed+"|stars");const n=[0,3,4,5,6,8][sr];const pts=[];for(let i=0;i<n;i++){const left=i%2===0;const t=i/n;pts.push([left?8+RS()*30+t*6:162+RS()*30-t*6,6+RS()*44+(i<2?0:4)])}
+  const L=pts.filter((_,i)=>i%2===0),Rr=pts.filter((_,i)=>i%2===1);const line=a=>a.length>1?`<polyline points="${polyStr(a)}" fill="none" stroke="#E2BC5C" stroke-opacity=".45" stroke-width=".7"/>`:"";
+  back+=line(L)+line(Rr);pts.forEach(([x,y],i)=>{const s=2.2+(i%3)*.9;back+=`<path d="M${x.toFixed(1)} ${(y-s).toFixed(1)}L${(x+s*.3).toFixed(1)} ${(y-s*.3).toFixed(1)}L${(x+s).toFixed(1)} ${y.toFixed(1)}L${(x+s*.3).toFixed(1)} ${(y+s*.3).toFixed(1)}L${x.toFixed(1)} ${(y+s).toFixed(1)}L${(x-s*.3).toFixed(1)} ${(y+s*.3).toFixed(1)}L${(x-s).toFixed(1)} ${y.toFixed(1)}L${(x-s*.3).toFixed(1)} ${(y-s*.3).toFixed(1)}Z" fill="${i%3?"#FFF4D6":"#E2BC5C"}" stroke="#A87B2A" stroke-opacity=".55" stroke-width=".5"/>`})}
+ const sat=clamp(mk.sat||0,0,5);
+ if(sat){back+=`<ellipse cx="100" cy="114" rx="94" ry="20" fill="none" stroke="${st.tint}" stroke-opacity=".55" stroke-width=".8" stroke-dasharray="2 4"/>`;const ANG=[196,344,158,22,122];const others=STONE_NAMES.filter(n=>n!==g.stone);
+  for(let i=0;i<sat;i++){const a=ANG[i]*Math.PI/180;const x=100+Math.cos(a)*94,y=114+Math.sin(a)*20;const c=STONES[others[(i*3)%others.length]];const r=6.5;front+=`<g><polygon points="${polyStr([[x,y-r*1.25],[x+r,y],[x,y+r*1.25],[x-r,y]])}" fill="${c.base}" stroke="${c.deep}" stroke-width=".8"/><polygon points="${polyStr([[x,y-r*1.25],[x+r,y],[x,y]])}" fill="${c.light}" opacity=".7"/></g>`}}
+ const se=clamp(mk.setting||0,0,5);
+ if(se){const [hi,mid,lo]=MET[se];const gid=id+"met";
+  plinth+=`<defs><linearGradient id="${gid}" x1="0" x2="1"><stop offset="0" stop-color="${lo}"/><stop offset=".35" stop-color="${hi}"/><stop offset=".7" stop-color="${mid}"/><stop offset="1" stop-color="${lo}"/></linearGradient></defs>`;
+  plinth+=`<path d="M58 191 L142 191 L132 207 Q100 212 68 207 Z" fill="url(#${gid})" stroke="${lo}" stroke-width=".8"/><ellipse cx="100" cy="191" rx="42" ry="6" fill="${hi}" stroke="${lo}" stroke-width=".8"/>`;
+  if(se>=4)[76,88,100,112,124].forEach((x,i)=>{const c=STONES[STONE_NAMES[(i*2+1)%STONE_NAMES.length]];plinth+=`<circle cx="${x}" cy="${200+Math.abs(x-100)*.04}" r="2.2" fill="${c.base}" stroke="${lo}" stroke-width=".5"/>`});
+  const pr=[0,0,2,4,4,6][se];const PX=[[74,1],[126,1],[64,.7],[136,.7],[86,.85],[114,.85]];
+  for(let i=0;i<pr;i++){const [x,h]=PX[i];front+=`<path d="M${x-3} 190 L${x} ${(190-14*h).toFixed(1)} L${x+3} 190 Z" fill="url(#${gid})" stroke="${lo}" stroke-width=".5"/>`}
+  if(se>=5)[60,80,100,120,140].forEach((x,i)=>{plinth+=`<path d="M${x-4} 186 L${x} ${i===2?175:179} L${x+4} 186 Z" fill="${hi}" stroke="${lo}" stroke-width=".5"/>`})}
  const defs=`<defs><clipPath id="${id}c">${C.map(c=>`<polygon points="${polyStr(c.P)}"/>`).join("")}</clipPath><radialGradient id="${id}glow" cx="50%" cy="46%" r="50%"><stop offset="0" stop-color="${st.light}" stop-opacity=".55"/><stop offset="1" stop-color="${st.light}" stop-opacity="0"/></radialGradient><radialGradient id="${id}proj"><stop offset="0" stop-color="${st.tint}" stop-opacity=".95"/><stop offset="1" stop-color="${st.tint}" stop-opacity="0"/></radialGradient><radialGradient id="${id}milk" cx="45%" cy="40%" r="60%"><stop offset="0" stop-color="#FFFFFF" stop-opacity=".44"/><stop offset="1" stop-color="#FFFFFF" stop-opacity=".04"/></radialGradient></defs>`;
- return `<svg viewBox="0 0 200 215" xmlns="http://www.w3.org/2000/svg">${defs}<circle cx="100" cy="98" r="96" fill="url(#${id}glow)"/>${under}${around}${body}<g clip-path="url(#${id}c)">${over}</g></svg>`;
+ return `<svg viewBox="0 0 200 215" xmlns="http://www.w3.org/2000/svg">${defs}<circle cx="100" cy="98" r="96" fill="url(#${id}glow)"/>${back}${under}${plinth}${around}${body}<g clip-path="url(#${id}c)">${over}</g>${front}</svg>`;
 }
 function fingerprint(a){if(!a)return null;const key=[a.sentence||"",(a.keywords||[]).join(","),(a.axes||[]).map(x=>x.name+":"+x.level).join(","),(a.gem&&a.gem.lightName)||""].join("|");const R=rng("fp|"+key);let hue=Math.round((R()-.5)*24);
  if(a.tint&&a.gem&&STONES[a.gem.stone]){const h=hueOf(a.tint),b=hueOf(STONES[a.gem.stone].base);if(h!=null&&b!=null){let d=((h-b+540)%360)-180;hue=clamp(Math.round(d*.3+(R()-.5)*8),-18,18)}}
@@ -228,8 +247,20 @@ function livingGem(st){
  g.grain=clamp((a.gem.grain||0)+(st.steps.comebacks||0),0,7);
  g.facets=clamp((a.gem.facets||8)+Math.max(0,(st.analyses||1)-1)+Math.max(0,((st.flags&&st.flags.maxStage)||1)-1),6,14);
  g.fp=a.gem.fp||fingerprint(a);
+ const mk=st.flags&&st.flags.marks;if(mk)g.marks={...mk};
  return g;
 }
+/* ───────── 표식 — 자리를 비운 사이에도 쌓이는 이정표 (한번 오르면 줄지 않음) ───────── */
+const MARKS=[
+ {k:"setting",label:"받침",src:"젬과 함께한 날",unit:"일",steps:[3,7,30,100,365],names:["없음","은 받침","금 받침","백금 받침","보석 받침","왕관 받침"],head:"받침이 올라갔어요",desc:n=>`젬과 함께한 지 ${n}일`},
+ {k:"sat",label:"인연석",src:"친구",unit:"명",steps:[1,3,5,10,20],names:["없음","1개","2개","3개","4개","5개"],head:"인연석이 떠올랐어요",desc:n=>`친구 ${n}명과 이어졌어요`},
+ {k:"aura",label:"광채",src:"받은 공감·한 단어",unit:"개",steps:[3,10,30,60,100],names:["없음","은은한 광채","맑은 광채","눈부신 광채","찬란한 광채","만개한 광채"],head:"젬에 광채가 번졌어요",desc:n=>`받은 공감·한 단어 ${n}개`},
+ {k:"stars",label:"별자리",src:"내 카드를 본 사람",unit:"명",steps:[5,15,30,60,100],names:["없음","첫 별","별 무리","작은 별자리","큰 별자리","은하수"],head:"젬 위에 별자리가 생겼어요",desc:n=>`내 카드를 본 사람 ${n}명`}];
+const markTitle=(m,lv)=>m.k==="sat"?`인연석 ${lv}개`:m.names[lv];
+function daysWith(st){const t=(st.first&&st.first.at)||(st.analysis&&st.analysis.at)||null;return t?Math.max(0,Math.floor((Date.now()-t)/86400000)):0}
+function markValues(st,s){return {setting:daysWith(st),sat:s.connections||0,aura:(s.reactionsReceived||0)+(s.wordsReceived||0),stars:s.visitors||0}}
+function marksOf(st,s){const v=markValues(st,s),prev=(st.flags&&st.flags.marks)||{};const o={};MARKS.forEach(m=>{o[m.k]=Math.max(prev[m.k]||0,m.steps.filter(x=>v[m.k]>=x).length)});return o}
+function markNext(m,lv,val){const t=m.steps[lv];return t==null?null:{target:t,left:Math.max(0,t-val),pct:clamp(Math.round((val-(m.steps[lv-1]||0))/(t-(m.steps[lv-1]||0))*100),0,100)}}
 function statsOf(st,items,soc){soc=soc||{};return {days:st.steps.done.length,active:activeDays(st),logs:(st.logs||[]).length,rests:st.steps.rests.length,comebacks:st.steps.comebacks||0,confirmed:!!(st.analysis&&(st.analysis.status==="yes"||st.analysis.status==="edited")),analyses:st.analyses||0,items:items.length,edited:!!st.flags.edited,isPublic:!!st.visibility.public,wordsGiven:soc.wordsGiven||0,wordsReceived:soc.wordsReceived||0,connections:soc.friends||0,reactionsGiven:soc.reactionsGiven||0,reactionsReceived:soc.reactionsReceived||0,exitDone:!!soc.exitDone}}
 const STAGES=["","원석","초벌","연마","광택","명품"];
 /* stages rise strictly in order (CBT thresholds; the full service would use 7·30·60 days) */

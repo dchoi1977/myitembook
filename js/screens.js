@@ -168,6 +168,7 @@ function MeTab({st,items,soc,stats,onOpen,names,top,mid}){
   <${LifeCard} st=${st} items=${items} stats=${stats} onOpen=${onOpen}/>
   <div className="row"><button className="btn quiet sm grow" onClick=${()=>onOpen("cardimg")}><${Ico} n="share"/>카드 이미지 저장</button><button className="btn quiet sm grow" onClick=${()=>onOpen("mine")}><${Ico} n="chat"/>받은 공감 ${stats.reactionsReceived+stats.wordsReceived}</button></div>
   ${(()=>{const ns=nextStage(st,stats);return ns?html`<p className="note" style=${{textAlign:"center"}}>다음 단계 <b>${ns.name}</b> · ${ns.need}</p>`:html`<p className="note" style=${{textAlign:"center"}}>명품 단계에 이르렀어요.</p>`})()}
+  <${MarksPanel} st=${st} stats=${stats}/>
   ${mid}
   ${featured.length>0&&html`<div className="stack"><div className="row between"><h2 className="h3">대표 아이템</h2><button className="linkbtn small" onClick=${()=>onOpen("shelf")}>선반 열기</button></div><div className="shelf">${featured.slice(0,2).map(i=>html`<${ItemTile} key=${i.id} item=${i} featured=${true} onClick=${()=>onOpen("item:"+i.id)}/>`)}</div></div>`}
   ${soc.wordsTo.length>0&&html`<div className="stack"><h2 className="h3">사람들이 건넨 한 단어</h2><div className="wordchips">${soc.wordsTo.map((w,i)=>html`<span className="chip gold" key=${i} title=${(names[w.from_id]||{}).nickname||""}>${w.word}</span>`)}</div></div>`}

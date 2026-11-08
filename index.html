@@ -382,7 +382,20 @@ textarea{min-height:110px;resize:vertical}
 .evo-actions .btn{background:#F4F1E9;color:#173D3B;border-color:#F4F1E9}
 .evo-actions .btn.ghost{background:transparent;color:#F4F1E9;border-color:rgba(244,241,233,.35)}
 .evo-skip{position:absolute;top:calc(14px + env(safe-area-inset-top,0px));right:16px;background:none;border:1px solid rgba(244,241,233,.3);color:rgba(244,241,233,.8);font:inherit;font-size:12.5px;border-radius:999px;padding:6px 12px;cursor:pointer;z-index:3}
-@media (prefers-reduced-motion: reduce){.evo,.evo-new,.evo-text,.evo-out,.evo.p2 .evo-rays{animation:none!important}}
+.evo.tone-mark{background:radial-gradient(circle at 50% 38%,#26365A 0%,#141D33 48%,#080B14 100%)}
+.evo.tone-away{background:radial-gradient(circle at 50% 30%,#2C4A47 0%,#14211F 55%,#090F0E 100%);justify-content:center;gap:14px}
+.evo-away{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;width:100%;max-width:340px}
+.evo-away-tile{display:flex;flex-direction:column;align-items:center;gap:2px;padding:12px 8px;border-radius:14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,226,160,.25);animation:evoUp .5s ease both}
+.evo-away-tile b{font-family:var(--serif);font-size:26px;color:#FFE2A0;line-height:1.1;font-variant-numeric:tabular-nums}
+.evo-away-tile span{font-size:12.5px;color:rgba(244,241,233,.8)}
+.evo-stage.sm{width:200px;height:170px}
+.evo-hint{animation:evoHint 1.6s ease-in-out infinite;filter:drop-shadow(0 0 18px rgba(255,226,160,.35))}
+@keyframes evoHint{0%,100%{transform:translateY(0) scale(1);filter:drop-shadow(0 0 10px rgba(255,226,160,.25))}50%{transform:translateY(-4px) scale(1.03);filter:drop-shadow(0 0 26px rgba(255,226,160,.6))}}
+.marks{gap:10px}
+.mark-row{display:flex;flex-direction:column;gap:5px}
+.mark-bar{height:6px;border-radius:99px;background:var(--line,rgba(0,0,0,.08));overflow:hidden}
+.mark-bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent),#D8B465)}
+@media (prefers-reduced-motion: reduce){.evo,.evo-new,.evo-text,.evo-out,.evo.p2 .evo-rays,.evo-away-tile,.evo-hint{animation:none!important}}
 .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.04em}
 </style>
 </head>
@@ -393,15 +406,15 @@ textarea{min-height:110px;resize:vertical}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/htm@3.1.1/dist/htm.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
-<script src="js/config.js?v=8"></script>
-<script src="js/core.js?v=8"></script>
-<script src="js/api.js?v=8"></script>
-<script src="js/avatars.js?v=8"></script>
-<script src="js/screens.js?v=8"></script>
-<script src="js/social.js?v=8"></script>
-<script src="js/ops.js?v=8"></script>
-<script src="js/quick.js?v=8"></script>
-<script src="js/evolve.js?v=8"></script>
-<script src="js/app.js?v=8"></script>
+<script src="js/config.js?v=9"></script>
+<script src="js/core.js?v=9"></script>
+<script src="js/api.js?v=9"></script>
+<script src="js/avatars.js?v=9"></script>
+<script src="js/screens.js?v=9"></script>
+<script src="js/social.js?v=9"></script>
+<script src="js/ops.js?v=9"></script>
+<script src="js/quick.js?v=9"></script>
+<script src="js/evolve.js?v=9"></script>
+<script src="js/app.js?v=9"></script>
 </body>
 </html>

@@ -11,6 +11,7 @@ function App(){
  const [reading,setReading]=useState({status:"idle",chars:0,error:null});const ctl=useRef(null);
  const [soc,setSoc]=useState(EMPTY_SOC);const [names,setNames]=useState({});const namesRef=useRef({});
  const [notes,setNotes]=useState([]);const [anns,setAnns]=useState([]);const [aiReady,setAiReady]=useState(null);const [ytReady,setYtReady]=useState(null);
+ const [reach,setReach]=useState({visits:0,visitors:0});const freshSoc=useRef(null);const awayRef=useRef(null);const stRef=useRef(null);
  const [avTick,setAvTick]=useState(0);const saveT=useRef(null);const loaded=useRef(false);const pendingHash=useRef(null);
  const toast=useCallback(m=>{setToastMsg(m);clearTimeout(toastT.current);toastT.current=setTimeout(()=>setToastMsg(""),3400)},[]);
  const uid=session&&session.user&&session.user.id;
@@ -28,7 +29,7 @@ function App(){
   return()=>{try{sub.unsubscribe()}catch(e){}}
  },[]);
 
- useEffect(()=>{if(!uid)return;let alive=true;loaded.current=false;setBoot(true);(async()=>{
+ useEffect(()=>{if(!uid)return;let alive=true;loaded.current=false;awayRef.current=null;freshSoc.current=null;setBoot(true);(async()=>{
   try{
    const p=await api.me(uid);if(!alive)return;
    if(!p){await api.logout();setGateMsg("초대 등록이 확인되지 않은 계정입니다. 초대 코드로 다시 등록해 주세요.");setSession(null);setRoute("gate");setBoot(false);return}
@@ -44,9 +45,9 @@ function App(){
  })();return()=>{alive=false}},[uid]);
 
  async function hydratePhotos(its){const paths=its.flatMap(i=>[i.thumbPath,i.photoPath]).filter(Boolean);if(!paths.length)return;try{const m=await api.signedUrls(paths);setItems(list=>list.map(i=>({...i,thumbUrl:i.thumbUrl&&i.thumbUrl.startsWith("data:")?i.thumbUrl:m[i.thumbPath]||i.thumbUrl,photoUrl:i.photoUrl&&i.photoUrl.startsWith("data:")?i.photoUrl:m[i.photoPath]||i.photoUrl})))}catch(e){}}
- const reloadSoc=useCallback(async()=>{if(!uid)return;try{const s=await api.social(uid);setSoc(s);ensureNames([...s.friendships.flatMap(f=>[f.requester,f.addressee]),...s.wordsTo.map(w=>w.from_id),...s.reactTo.map(r=>r.from_id)])}catch(e){}},[uid]);
+ const reloadSoc=useCallback(async()=>{if(!uid)return;try{const [s,r]=await Promise.all([api.social(uid),api.reach().catch(()=>null)]);freshSoc.current=s;setSoc(s);if(r)setReach({visits:+r.visits||0,visitors:+r.visitors||0});ensureNames([...s.friendships.flatMap(f=>[f.requester,f.addressee]),...s.wordsTo.map(w=>w.from_id),...s.reactTo.map(r=>r.from_id)])}catch(e){if(!freshSoc.current)freshSoc.current="fail"}},[uid]);
  const loadInbox=useCallback(async()=>{if(!uid)return;try{const [n,a]=await Promise.all([api.notifications(),api.announcements()]);setNotes(n||[]);setAnns(a||[]);ensureNames((n||[]).map(x=>x.actor_id))}catch(e){}},[uid]);
- useEffect(()=>{if(!uid)return;const t=setInterval(()=>{if(document.visibilityState==="visible"){loadInbox();reloadSoc()}},60000);const v=()=>{if(document.visibilityState==="visible"){loadInbox();reloadSoc()}};document.addEventListener("visibilitychange",v);return()=>{clearInterval(t);document.removeEventListener("visibilitychange",v)}},[uid]);
+ useEffect(()=>{if(!uid)return;const t=setInterval(()=>{if(document.visibilityState==="visible"){loadInbox();reloadSoc()}},60000);const v=()=>{if(document.visibilityState==="visible"){loadInbox();reloadSoc()}else stampSeen()};document.addEventListener("visibilitychange",v);return()=>{clearInterval(t);document.removeEventListener("visibilitychange",v)}},[uid]);
 
  // signed urls for photo avatars this viewer may see (others fall back to the default stone)
  useEffect(()=>{const need=Object.values(names).filter(p=>p&&p.avatar==="photo"&&!(avKey(p) in AVCACHE));if(!need.length)return;need.forEach(p=>{AVCACHE[avKey(p)]=null});api.avatarUrls(need.map(p=>p.id)).then(m=>{need.forEach(p=>{AVCACHE[avKey(p)]=m[p.id]||null});setAvTick(t=>t+1)}).catch(()=>{})},[names]);
@@ -54,26 +55,42 @@ function App(){
  // ── persist (debounced)
  useEffect(()=>{if(!loaded.current||!st||demo||!uid)return;clearTimeout(saveT.current);saveT.current=setTimeout(()=>{api.saveState(uid,st).catch(()=>toast("저장하지 못했습니다. 연결을 확인해 주세요."))},800);return()=>clearTimeout(saveT.current)},[st]);
 
- const socStats=useMemo(()=>{if(demo)return {friends:0,wordsReceived:0,wordsGiven:2,reactionsGiven:0,reactionsReceived:0,exitDone:false};return {friends:friendIds(uid,soc.friendships).length,wordsReceived:soc.wordsTo.length,wordsGiven:soc.wordsFrom.length,reactionsGiven:soc.reactFrom.length,reactionsReceived:soc.reactTo.filter(r=>r.target==="card").length,exitDone:soc.feedback.some(f=>f.kind==="exit")}},[soc,demo,uid]);
+ const socStats=useMemo(()=>{if(demo)return {friends:0,wordsReceived:0,wordsGiven:2,reactionsGiven:0,reactionsReceived:0,exitDone:false};return {friends:friendIds(uid,soc.friendships).length,wordsReceived:soc.wordsTo.length,wordsGiven:soc.wordsFrom.length,reactionsGiven:soc.reactFrom.length,reactionsReceived:soc.reactTo.filter(r=>r.target==="card").length,exitDone:soc.feedback.some(f=>f.kind==="exit"),visitors:reach.visitors}},[soc,demo,uid,reach]);
  const day=profile?cbtDay(profile.joined_at):1;
- const stats=useMemo(()=>st?{...statsOf(st,items,socStats),day}:null,[st,items,socStats,day]);
+ const stats=useMemo(()=>{if(!st)return null;const s={...statsOf(st,items,socStats),day,visitors:socStats.visitors||0};s.mv=markValues(st,s);return s},[st,items,socStats,day]);
+ stRef.current=st;const statsRef=useRef(null);statsRef.current=stats;
+ // the last moment this person was here, and what their counters read then (for the welcome-back card)
+ const seenCounts=s=>({friends:s.connections,cheers:s.reactionsReceived,words:s.wordsReceived,visitors:s.visitors||0});
+ function stampSeen(){const s0=stRef.current,s1=statsRef.current;if(!s0||!uid||demo||!loaded.current||!s0.analysis||!s1)return;const ns={...s0,flags:{...s0.flags,lastSeen:{at:Date.now(),c:seenCounts(s1)}}};setSt(ns);api.saveState(uid,ns).catch(()=>{})}
  const dailyAnswered=soc.feedback.some(f=>f.kind==="daily"&&(f.payload||{}).day===Math.min(day,7));
 
  // stage only rises; badges stay; a visible change of the gem plays the evolve ceremony
  const [evo,setEvo]=useState(null);
- useEffect(()=>{if(!st||!stats||!st.analysis||demo||!loaded.current)return;
+ const AWAY_MS=6*3600000;const AWAY_ITEMS=[["friends","새 친구"],["cheers","받은 공감"],["words","받은 한 단어"],["visitors","새로 다녀간 사람"]];
+ useEffect(()=>{const socReady=freshSoc.current==="fail"||(!!freshSoc.current&&soc===freshSoc.current);if(!st||!stats||!st.analysis||demo||!loaded.current||!socReady)return;
   const sg=Math.max(stageOf(st,stats),st.flags.maxStage||0);const earned=earnedIds(st,stats);const seen=st.flags.badgesSeen||[];const nw=earned.filter(id=>!seen.includes(id));
-  const g=livingGem({...st,flags:{...st.flags,maxStage:sg}});const snap=gemSnap(g,sg);const prev=st.flags.seenGem;
+  const marks=marksOf(st,stats);
+  const g=livingGem({...st,flags:{...st.flags,maxStage:sg,marks}});const snap=gemSnap(g,sg);const prev=st.flags.seenGem;
   const ovKey=JSON.stringify(st.gemOverride||{});const ovChanged=!!prev&&prev.ov!==undefined&&prev.ov!==ovKey;
   const changes=prev?evoDiff(prev,snap):[];
-  if(prev&&!changes.length&&!nw.length&&sg===(st.flags.maxStage||0))return;
+  // first pass of a session: was the person away, and what piled up meanwhile?
+  let away=null;const now=Date.now();const cur=seenCounts(stats);const ls=st.flags.lastSeen;
+  if(awayRef.current===null){awayRef.current=true;if(ls&&now-ls.at>=AWAY_MS){const items=AWAY_ITEMS.map(([k,label])=>({k,label,n:Math.max(0,(cur[k]||0)-((ls.c||{})[k]||0))})).filter(x=>x.n>0);away={ms:now-ls.at,label:awayLabel(now-ls.at),items}}}
+  const marksChanged=JSON.stringify(marks)!==JSON.stringify(st.flags.marks||{});
+  const stampDue=!ls||JSON.stringify(ls.c)!==JSON.stringify(cur)||now-ls.at>10*60000;
+  if(prev&&!changes.length&&!nw.length&&sg===(st.flags.maxStage||0)&&!marksChanged){
+   if(away&&away.items.length)toast(`${away.label} 그사이 ${away.items.map(x=>`${x.label} ${x.n}`).join(", ")}`);
+   if(stampDue)setSt(s=>({...s,flags:{...s.flags,lastSeen:{at:now,c:cur}}}));return}
   const silent=!prev||(ovChanged&&!st.flags.celebrate&&changes.every(c=>c.k==="stone"||c.k==="symbol"));
   const prevStage=st.flags.maxStage||0;
-  setSt(s=>({...s,flags:{...s.flags,maxStage:Math.max(sg,s.flags.maxStage||0),badgesSeen:[...new Set([...(s.flags.badgesSeen||[]),...earned])],seenGem:{...snap,ov:ovKey},celebrate:false}}));
+  setSt(s=>({...s,flags:{...s.flags,maxStage:Math.max(sg,s.flags.maxStage||0),marks,badgesSeen:[...new Set([...(s.flags.badgesSeen||[]),...earned])],seenGem:{...snap,ov:ovKey},celebrate:false,lastSeen:{at:now,c:cur}}}));
   if(sg>prevStage&&prevStage>0){api.postFeed("stage",{stage:sg});track("stage_up",{stage:sg})}
   nw.forEach(id=>{if(["step1","step7","step30","shelf","comeback","refine"].includes(id))api.postFeed("badge",{id});track("badge",{id})});
-  if(!silent&&(changes.length||nw.length))setEvo({from:prev,to:snap,changes,badges:nw,head:evoHeadline(changes,nw,stats)});
+  if(!silent){const ups=changes.filter(c=>MARK_KEYS.includes(c.k)&&c.to>(c.from||0));ups.forEach(c=>track("mark",{k:c.k,lv:c.to}));if(ups.length)api.postFeed("mark",{k:ups[0].k,lv:ups[0].to})}
+  if(!silent&&(changes.length||nw.length))setEvo({from:prev,to:snap,changes,badges:nw,head:evoHeadline(changes,nw,stats),away:away&&(away.items.length||away.ms>=86400000)?away:null});
+  else if(away&&away.items.length)toast(`${away.label} 그사이 ${away.items.map(x=>`${x.label} ${x.n}`).join(", ")}`);
  },[stats]);
+ function previewAway(){const base=st&&st.analysis?livingGem(st):{stone:"비취",lightName:"새벽빛",light:"물결",form:"덩이",texture:"맑음",symbol:"산",hardness:2,grain:1,facets:8,marks:{}};const from=gemSnap({...base,marks:{setting:1,sat:1,aura:1,stars:0}},3);const to={...from,setting:2,sat:2,aura:2,stars:1,marks:{setting:2,sat:2,aura:2,stars:1}};const changes=evoDiff(from,to);setEvo({from,to,changes,badges:["linked"],head:evoHeadline(changes,["linked"],{mv:{setting:7,sat:3,aura:12,stars:6}}),away:{ms:3*86400000,label:"3일 만이에요",items:[{k:"friends",label:"새 친구",n:2},{k:"cheers",label:"받은 공감",n:9},{k:"words",label:"받은 한 단어",n:3},{k:"visitors",label:"새로 다녀간 사람",n:6}]}})}
  function previewEvo(){const base=st&&st.analysis?livingGem(st):{stone:"비취",lightName:"새벽빛",light:"물결",form:"덩이",texture:"맑음",symbol:"산",hardness:2,grain:1,facets:8};const from=gemSnap(base,2);const to={...from,stage:3,hardness:Math.min(5,(from.hardness||1)+1),facets:Math.min(14,(from.facets||8)+1),form:from.form==="군집"?"결정":"군집"};const changes=evoDiff(from,to);setEvo({from,to,changes,badges:["step7"],head:evoHeadline(changes,["step7"],{active:7})})}
 
  // keep the public card fresh
@@ -130,7 +147,7 @@ function App(){
  // ── render
  if(boot||route==="loading")return html`<div className="app"><div className="splash wrap"><div className="stack" style=${{alignItems:"center"}}><div className="pulse"><${GemView} g=${{stone:"오팔",form:"결정",texture:"유백",light:"번짐",hardness:2,grain:1,facets:8}} seed="splash" size=${120}/></div><p className="faint small">MyItemBook을 여는 중</p></div></div></div>`;
  if(route==="gate"||!session||!profile||!st)return html`<div className="app">${gateMsg&&html`<div className="demo-bar wrap"><span>${gateMsg}</span><button onClick=${()=>setGateMsg("")}>닫기</button></div>`}<${Gate} initialCode=${initialCode} onSession=${(s,isNew)=>{setGateMsg("");setSession(s);if(isNew)setTimeout(()=>track("signup"),1500)}}/><${Toast} msg=${toastMsg}/></div>`;
- if(route==="admin"&&profile.role==="admin")return html`<div className="app wide"><${AdminScreen} uid=${uid} toast=${toast} onPreviewEvo=${previewEvo} onExit=${()=>setRoute(st.analysis?"home":"welcome")}/>${evo&&html`<${EvolveOverlay} evt=${evo} seed=${st.createdAt} onClose=${()=>setEvo(null)}/>`}<${Toast} msg=${toastMsg}/></div>`;
+ if(route==="admin"&&profile.role==="admin")return html`<div className="app wide"><${AdminScreen} uid=${uid} toast=${toast} onPreviewEvo=${previewEvo} onPreviewAway=${previewAway} onExit=${()=>setRoute(st.analysis?"home":"welcome")}/>${evo&&html`<${EvolveOverlay} evt=${evo} seed=${st.createdAt} onClose=${()=>setEvo(null)}/>`}<${Toast} msg=${toastMsg}/></div>`;
 
  const unread=notes.filter(n=>!n.read_at).length;
  let annSeen=0;try{annSeen=Number(localStorage.getItem("mib-ann-seen")||0)}catch(e){}
