@@ -64,7 +64,7 @@ function fmtSec(n){if(!n)return "";const h=Math.floor(n/3600),m=Math.floor(n%360
 function ytDigest(res){
  const ch=res.channel||{};const v=(res.videos||[]).filter(x=>x.t&&x.d).sort((a,b)=>a.d<b.d?1:-1);
  const dates=v.map(x=>x.d).sort();const L=[];
- L.push(`채널: ${ch.title||"(이름 없음)"}${ch.since?` · ${ch.since.slice(0,4)}년 개설`:""} · ${res.source==="api"?`업로드 ${v.length}편${ch.total&&ch.total>v.length?` (전체 ${ch.total}편 중 최근)`:""}`:`최근 업로드 ${v.length}편`}`);
+ L.push(`채널: ${ch.title||"(이름 없음)"}${ch.since&&ch.since>="2005"?` · ${ch.since.slice(0,4)}년 개설`:""} · ${res.source==="api"?`업로드 ${v.length}편${ch.total&&ch.total>v.length?` (전체 ${ch.total}편 중 최근)`:""}`:`최근 업로드 ${v.length}편`}`);
  if(dates.length>=3){const span=daysBetween(dates[0],dates[dates.length-1]);const avg=span/(dates.length-1);L.push(`업로드 주기: ${avg<1.5?"거의 매일":`평균 ${Math.round(avg)}일마다`} (${dates[0].replace(/-/g,".")} ~ ${dates[dates.length-1].replace(/-/g,".")})`)}
  if(ch.description)L.push(`채널 소개: ${ch.description.replace(/\s+/g," ").slice(0,200)}`);
  L.push("");v.forEach(x=>L.push(`${x.d.replace(/-/g,".")}  ${x.t}${x.sec?`  (${fmtSec(x.sec)})`:""}`));
