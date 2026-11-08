@@ -39,14 +39,14 @@ const STONE_NAMES=Object.keys(STONES);
 const LIGHTS=["번짐","반짝임","물결"],FORMS=["결정","덩이","군집"],TEXTURES=["맑음","유백","결정질","비단결"];
 const SYMBOLS=["카메라","산","음표","책","펜","잎","그릇","바퀴","발자국","별"];
 const ATTRS=[
- {k:"결",h:"",mean:"살아온 이야기",look:"젬 안을 흐르는 무늬. 전환점과 다시 일어선 순간이 금빛 결로 더해집니다.",speed:"쌓이기만 함"},
- {k:"색",h:"",mean:"핵심 가치",look:"돌의 종류와 바탕색. 내가 확인해야만 바뀝니다.",speed:"내가 정할 때"},
- {k:"빛",h:"",mean:"세상에 비추는 영향",look:"빛이 퍼지는 방식과 아래에 드리우는 투영 무늬. 밝기는 모두 같습니다.",speed:"주 단위"},
- {k:"형",h:"形",mean:"삶의 구조",look:"실루엣. 깊이 판 사람은 길게 뻗은 결정, 어우러지는 사람은 둥근 덩이, 여러 갈래는 군집.",speed:"계절 단위"},
- {k:"질",h:"質",mean:"하루의 기질과 리듬",look:"투명도와 질감. 맑음·유백·결정질·비단결.",speed:"월 단위"},
- {k:"강",h:"剛",mean:"꾸준함과 회복력",look:"가장자리의 선명함. 한 걸음이 쌓일수록 단단해지고, 쉬어도 줄지 않습니다.",speed:"쌓이기만 함"},
+ {k:"결",h:"",mean:"살아온 이야기",look:"젬 안을 흐르는 무늬. 전환점과 다시 일어선 순간이 금빛 결로 더해집니다.",speed:"다시 시작할 때마다 한 줄"},
+ {k:"색",h:"",mean:"핵심 가치",look:"돌의 종류와 바탕색. 다시 읽을 때 새 색을 제안하고, 내가 승인해야 바뀝니다.",speed:"내가 정할 때"},
+ {k:"빛",h:"",mean:"세상에 비추는 영향",look:"빛이 퍼지는 방식과 아래에 드리우는 투영 무늬. 밝기는 모두 같습니다.",speed:"다시 읽을 때, 한 번에 한 가지씩"},
+ {k:"형",h:"形",mean:"삶의 구조",look:"실루엣. 깊이 판 사람은 길게 뻗은 결정, 어우러지는 사람은 둥근 덩이, 여러 갈래는 군집.",speed:"다시 읽을 때, 한 번에 한 가지씩"},
+ {k:"질",h:"質",mean:"하루의 기질과 리듬",look:"투명도와 질감. 맑음·유백·결정질·비단결.",speed:"다시 읽을 때, 한 번에 한 가지씩"},
+ {k:"강",h:"剛",mean:"꾸준함과 회복력",look:"가장자리의 선명함. 활동한 날이 쌓일수록 단단해지고, 쉬어도 줄지 않습니다.",speed:"활동 3·7·21·60일"},
  {k:"상",h:"像",mean:"나를 대표하는 장면",look:"젬 속에 비치는 상징 형상. 내가 고를 수 있습니다.",speed:"내가 정할 때"},
- {k:"각",h:"角",mean:"관점의 다양성",look:"면의 수와 각의 정교함. 새 관점을 더할수록 정교해집니다.",speed:"단계가 오를 때"}
+ {k:"각",h:"角",mean:"관점의 다양성",look:"면의 수와 각의 정교함. 새 관점을 더할수록 정교해집니다.",speed:"새 관점·단계가 오를 때"}
 ];
 const polyStr=P=>P.map(p=>p[0].toFixed(1)+","+p[1].toFixed(1)).join(" ");
 const rot=([x,y],deg)=>{const r=deg*Math.PI/180;return [x*Math.cos(r)-y*Math.sin(r),x*Math.sin(r)+y*Math.cos(r)]};
@@ -219,19 +219,31 @@ function normState(s){const f=freshState();if(!s)return f;s=clone(s);const o={..
 function displaySentence(a){return (a&&(a.editSentence||a.sentence))||""}
 function displayKeywords(a){return (a&&(a.editKeywords||a.keywords))||[]}
 function visibleAxes(a){if(!a)return [];return a.axes.map((x,i)=>({...x,i})).filter(x=>!(a.hiddenAxes||[]).includes(x.i))}
+const HARD_STEPS=[3,7,21,60];
 function activeDays(st){return new Set([...(st.steps.done||[]),...(st.logs||[]).map(l=>l.day)]).size}
 function livingGem(st){
  const a=st.analysis;if(!a)return null;const g={...a.gem,...(st.gemOverride||{})};
  const days=activeDays(st);
- g.hardness=clamp(Math.max(g.hardness||1,1+Math.floor(days/7)),1,5);
+ g.hardness=clamp((a.gem.hardness||1)+HARD_STEPS.filter(d=>days>=d).length,1,5);
  g.grain=clamp((a.gem.grain||0)+(st.steps.comebacks||0),0,7);
- g.facets=clamp((a.gem.facets||8)+Math.max(0,(st.analyses||1)-1)*2,6,14);
+ g.facets=clamp((a.gem.facets||8)+Math.max(0,(st.analyses||1)-1)+Math.max(0,((st.flags&&st.flags.maxStage)||1)-1),6,14);
  g.fp=a.gem.fp||fingerprint(a);
  return g;
 }
 function statsOf(st,items,soc){soc=soc||{};return {days:st.steps.done.length,active:activeDays(st),logs:(st.logs||[]).length,rests:st.steps.rests.length,comebacks:st.steps.comebacks||0,confirmed:!!(st.analysis&&(st.analysis.status==="yes"||st.analysis.status==="edited")),analyses:st.analyses||0,items:items.length,edited:!!st.flags.edited,isPublic:!!st.visibility.public,wordsGiven:soc.wordsGiven||0,wordsReceived:soc.wordsReceived||0,connections:soc.friends||0,reactionsGiven:soc.reactionsGiven||0,reactionsReceived:soc.reactionsReceived||0,exitDone:!!soc.exitDone}}
 const STAGES=["","원석","초벌","연마","광택","명품"];
-function stageOf(st,s){if(!st.analysis)return 0;let v=1;if(s.confirmed)v=2;if(s.active>=7)v=Math.max(v,3);if(s.connections>0||s.wordsReceived>0)v=Math.max(v,4);if(s.wordsGiven>=3&&s.connections>=2)v=5;return Math.max(v,st.flags.maxStage||0)}
+/* stages rise strictly in order (CBT thresholds; the full service would use 7·30·60 days) */
+const STAGE_RULES=[null,
+ {why:"첫 해석으로 원석을 만났어요",need:"첫 해석"},
+ {why:"해석을 확인하거나 내 말로 다듬었어요",need:"해석 확인 또는 다듬기",ok:(st,s)=>s.confirmed},
+ {why:"활동 3일을 채웠어요",need:"활동 3일",ok:(st,s)=>s.active>=3},
+ {why:"활동 5일, 그리고 결을 주고받았어요",need:"활동 5일 + 공감·한 단어 주고받기",ok:(st,s)=>s.active>=5&&(s.reactionsGiven+s.wordsGiven+s.reactionsReceived+s.wordsReceived)>=1},
+ {why:"활동 7일, 다시 읽기, 친구 둘과 함께했어요",need:"활동 7일 + 다시 읽기 1회 + 친구 2명",ok:(st,s)=>s.active>=7&&s.analyses>=2&&s.connections>=2}];
+function stageOf(st,s){if(!st.analysis)return 0;let v=1;for(let k=2;k<=5;k++){if(STAGE_RULES[k].ok(st,s))v=k;else break}return Math.max(v,(st.flags&&st.flags.maxStage)||0)}
+function nextStage(st,s){const cur=stageOf(st,s);return cur>=5?null:{to:cur+1,name:STAGES[cur+1],need:STAGE_RULES[cur+1].need}}
+/* badges stay once earned */
+function earnedIds(st,stats){const seen=(st.flags&&st.flags.badgesSeen)||[];return BADGES.filter(b=>b.test(stats)||seen.includes(b.id)).map(b=>b.id)}
+const isEarned=(st,stats,b)=>b.test(stats)||((st.flags&&st.flags.badgesSeen)||[]).includes(b.id);
 
 /* ───────── AI prompts ───────── */
 const QUESTIONS=["요즘 시간을 가장 많이 쓰는 일은 무엇인가요?","최근 누군가에게 고맙다는 말을 들은 일이 있나요?","1년 뒤, 어떤 모습이 되어 있으면 좋겠나요?"];

@@ -182,7 +182,7 @@ function ShareImageSheet({kind,st,stats,profile,onClose,toast,onExit,exitDone}){
 /* ───────── operator console ───────── */
 function csv(rows){if(!rows.length)return "";const keys=[...new Set(rows.flatMap(r=>Object.keys(r)))];const esc=v=>{if(v==null)return "";const s=typeof v==="object"?JSON.stringify(v):String(v);return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s};return "﻿"+keys.join(",")+"\n"+rows.map(r=>keys.map(k=>esc(r[k])).join(",")).join("\n")}
 function download(name,text,type){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([text],{type:type||"text/csv"}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},800)}
-function AdminScreen({onExit,toast,uid}){
+function AdminScreen({onExit,toast,uid,onPreviewEvo}){
  const [tab,setTab]=useState("kpi");const [ov,setOv]=useState(null);const [fb,setFb]=useState(null);const [reps,setReps]=useState(null);const [anns,setAnns]=useState([]);const [aiOk,setAiOk]=useState(null);const [ytOk,setYtOk]=useState(null);
  const [busy,setBusy]=useState(false);const [avs,setAvs]=useState({});
  async function load(){try{const [o,a,av]=await Promise.all([api.admin.overview(),api.announcements(),api.admin.avatars().catch(()=>[])]);setOv(o);setAnns(a||[]);const m={};(av||[]).forEach(x=>m[x.id]=x.avatar);setAvs(m)}catch(e){toast("운영 데이터를 불러오지 못했습니다.")}api.admin.ping().then(r=>{setAiOk(!!r.ai);setYtOk(!!r.yt)}).catch(()=>setAiOk(null))}
@@ -216,7 +216,7 @@ function AdminScreen({onExit,toast,uid}){
   ${tab==="inv"&&html`<${AdminInvites} invites=${ov.invites||[]} act=${act} busy=${busy} toast=${toast}/>`}
   ${tab==="ann"&&html`<${AdminAnn} anns=${anns} act=${act} busy=${busy}/>`}
   ${tab==="rep"&&html`<div className="stack">${reps===null?html`<p className="faint small">불러오는 중…</p>`:reps.length?reps.map(r=>html`<div key=${r.id} className="panel stack small"><div className="row between"><b>${(byId[r.target_id]||{}).nickname||"(탈퇴)"} 신고</b><span className="faint">${ago(r.created_at)} · ${(byId[r.reporter]||{}).nickname||""}</span></div><span className="prewrap">${r.reason}</span><div className="row">${!r.resolved?html`<button className="btn ghost sm" onClick=${()=>act(async()=>{await api.admin.resolveReport(r.id);setReps(null);api.admin.reports().then(setReps)},"처리 완료로 표시했어요.")}>처리 완료</button>`:html`<span className="chip">처리됨</span>`}<button className="btn ghost sm" onClick=${()=>act(()=>api.admin.hideCard(r.target_id,true),"카드를 숨겼어요.")}>카드 숨기기</button></div></div>`):html`<p className="small muted">들어온 신고가 없습니다.</p>`}</div>`}
-  ${tab==="set"&&html`<${AdminSettings} settings=${ov.settings||{}} act=${act} busy=${busy} aiOk=${aiOk} ytOk=${ytOk}/>`}
+  ${tab==="set"&&html`<${AdminSettings} settings=${ov.settings||{}} act=${act} busy=${busy} aiOk=${aiOk} ytOk=${ytOk} onPreviewEvo=${onPreviewEvo}/>`}
  </div>`;
 }
 function AdminFeedback({fb,byId,today}){
@@ -254,11 +254,12 @@ function AdminAnn({anns,act,busy}){
   ${anns.map(a=>html`<div key=${a.id} className="panel stack small"><div className="row between"><b>${a.title}</b><span className="faint">${ago(a.created_at)}</span></div>${a.body&&html`<span className="prewrap muted">${a.body}</span>`}<button className="linkbtn small" onClick=${()=>act(()=>api.admin.delAnnouncement(a.id),"공지를 내렸어요.")}>내리기</button></div>`)}
  </div>`;
 }
-function AdminSettings({settings,act,busy,aiOk,ytOk}){
+function AdminSettings({settings,act,busy,aiOk,ytOk,onPreviewEvo}){
  const [cap,setCap]=useState(Number(settings.tester_cap||30));const [lim,setLim]=useState(Number(settings.ai_daily_limit||40));
  return html`<div className="stack">
   <div className="panel stack small"><b>AI 연결</b><span>${aiOk===null?"확인 중…":aiOk?"ANTHROPIC_API_KEY가 등록되어 AI 해석이 켜져 있습니다.":"키가 없습니다. Supabase › Edge Functions › Secrets에서 ANTHROPIC_API_KEY를 추가하세요."}</span><span className="muted">모델은 기본값(해석: claude-sonnet-5-5, 짧은 작업: claude-haiku-5-5)을 씁니다. 바꾸려면 같은 곳에 ANTHROPIC_MODEL, ANTHROPIC_MODEL_QUICK를 추가하세요.</span></div>
   <div className="panel stack small"><b>유튜브 채널 읽기</b><span>${ytOk===null?"확인 중…":ytOk?"YOUTUBE_API_KEY가 등록되어, 참여자가 채널 주소만 넣으면 최근 업로드 최대 200편의 제목·날짜·길이를 읽어옵니다.":"키가 없습니다. 참여자는 업로드 목록을 직접 붙여 넣어야 합니다. 같은 Secrets에 YOUTUBE_API_KEY를 추가하면 채널 자동 읽기가 켜집니다."}</span></div>
+  <div className="panel stack small"><b>젬 변신 연출</b><span className="muted">단계가 오르거나 강·결·각·형이 바뀌는 순간, 배지를 받는 순간에 재생됩니다. 미리 보려면 눌러 보세요.</span><button className="btn quiet sm" onClick=${onPreviewEvo}>변신 연출 미리보기</button></div>
   <div className="field"><label htmlFor="s-cap">테스터 정원</label><div className="row"><input type="number" id="s-cap" min="1" max="200" value=${cap} onChange=${e=>setCap(+e.target.value)} style=${{width:"110px"}}/><button className="btn ghost sm" disabled=${busy} onClick=${()=>act(()=>api.admin.setSetting("tester_cap",cap),"정원을 바꿨어요.")}>저장</button></div></div>
   <div className="field"><label htmlFor="s-lim">1인당 하루 AI 호출 한도</label><div className="row"><input type="number" id="s-lim" min="1" max="500" value=${lim} onChange=${e=>setLim(+e.target.value)} style=${{width:"110px"}}/><button className="btn ghost sm" disabled=${busy} onClick=${()=>act(()=>api.admin.setSetting("ai_daily_limit",lim),"한도를 바꿨어요.")}>저장</button></div><span className="hint">첫 해석 1회는 긴 작업, 나머지(새 걸음·회고 정리·아이템 알아보기)는 짧은 작업입니다.</span></div>
  </div>`;

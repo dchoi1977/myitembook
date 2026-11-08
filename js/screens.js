@@ -120,6 +120,8 @@ function Reveal({st,onConfirm,onEdit,onDiffer,onOpen}){
    <p className="serif" style=${{fontSize:"19px",lineHeight:1.6,textWrap:"balance"}}>${displaySentence(a)}</p>
    <div className="kw">${displayKeywords(a).map(k=>html`<span className="chip" key=${k}>${k}</span>`)}</div>
    <${AiLabel} status=${a.status}/>
+   ${(a.changed||[]).length>0&&html`<span className="chip gold">이번에 새로 깎인 곳 · ${a.changed.map(c=>`${c.label} ${c.from} → ${c.to}`).join(", ")}</span>`}
+   ${a.stoneSuggest&&html`<button className="linkbtn small" onClick=${()=>onOpen("attrs")}>새 색 제안이 있어요 · ${a.stoneSuggest}</button>`}
    <button className="linkbtn" onClick=${()=>onOpen("evidence")}>이렇게 읽은 이유 보기</button>
   </div>
   ${mode==="ask"&&html`<div className="stack"><p className="small muted" style=${{textAlign:"center"}}>이 해석이 나와 맞나요?</p><button className="btn block" onClick=${()=>{onConfirm();setMode("done")}}>맞아요</button><div className="row"><button className="btn ghost grow" onClick=${()=>setMode("edit")}>조금 다듬을게요</button><button className="btn ghost grow" onClick=${()=>setMode("differ")}>나와 달라요</button></div></div>`}
@@ -136,7 +138,7 @@ function Reveal({st,onConfirm,onEdit,onDiffer,onOpen}){
 /* ───────── home: me ───────── */
 function LifeCard({st,items,stats,onOpen}){
  const a=st.analysis;const g=livingGem(st);const [back,setBack]=useState(false);
- const earned=BADGES.filter(b=>b.test(stats));const stage=stageOf(st,stats);
+ const earned=BADGES.filter(b=>isEarned(st,stats,b));const stage=stageOf(st,stats);
  const prev=(st.axesHistory||[]).length?st.axesHistory[st.axesHistory.length-1].axes:null;
  return html`<div className="lifecard">
   <div className="row between"><span className="chip gold">연마 ${stage}단계 · ${STAGES[stage]}</span><button className="linkbtn small" onClick=${()=>setBack(b=>!b)} aria-pressed=${back}>${back?"앞면 보기":"뒷면 · 육각형"}</button></div>
@@ -165,6 +167,7 @@ function MeTab({st,items,soc,stats,onOpen,names,top,mid}){
   ${top}
   <${LifeCard} st=${st} items=${items} stats=${stats} onOpen=${onOpen}/>
   <div className="row"><button className="btn quiet sm grow" onClick=${()=>onOpen("cardimg")}><${Ico} n="share"/>카드 이미지 저장</button><button className="btn quiet sm grow" onClick=${()=>onOpen("mine")}><${Ico} n="chat"/>받은 공감 ${stats.reactionsReceived+stats.wordsReceived}</button></div>
+  ${(()=>{const ns=nextStage(st,stats);return ns?html`<p className="note" style=${{textAlign:"center"}}>다음 단계 <b>${ns.name}</b> · ${ns.need}</p>`:html`<p className="note" style=${{textAlign:"center"}}>명품 단계에 이르렀어요.</p>`})()}
   ${mid}
   ${featured.length>0&&html`<div className="stack"><div className="row between"><h2 className="h3">대표 아이템</h2><button className="linkbtn small" onClick=${()=>onOpen("shelf")}>선반 열기</button></div><div className="shelf">${featured.slice(0,2).map(i=>html`<${ItemTile} key=${i.id} item=${i} featured=${true} onClick=${()=>onOpen("item:"+i.id)}/>`)}</div></div>`}
   ${soc.wordsTo.length>0&&html`<div className="stack"><h2 className="h3">사람들이 건넨 한 단어</h2><div className="wordchips">${soc.wordsTo.map((w,i)=>html`<span className="chip gold" key=${i} title=${(names[w.from_id]||{}).nickname||""}>${w.word}</span>`)}</div></div>`}
@@ -199,6 +202,7 @@ function AttrsSheet({st,update,onClose}){
  return html`<${Sheet} title="젬의 8가지 속성" onClose=${onClose}>
   <${GemView} g=${g} seed=${st.createdAt} size=${200}/>
   <p className="small muted" style=${{textAlign:"center"}}>모든 젬은 같은 크기와 같은 밝기로 그려집니다. 다른 것은 모양과 결이고, 좋고 나쁜 값은 없습니다.</p>
+  ${a.stoneSuggest&&a.stoneSuggest!==g.stone&&html`<div className="panel tint stack small"><span>다시 읽어 보니 <b>${a.stoneSuggest}</b>(${STONES[a.stoneSuggest].meaning})의 결이 짙어졌어요. 젬의 색을 바꿀까요?</span><div className="row"><button className="btn sm" onClick=${()=>{update(x=>{x.gemOverride={...x.gemOverride,stone:x.analysis.stoneSuggest};x.analysis.stoneSuggest=null;x.flags.celebrate=true});track("stone_accept")}}>${a.stoneSuggest}로 바꾸기</button><button className="btn ghost sm" onClick=${()=>{update(x=>{x.analysis.stoneSuggest=null});track("stone_keep")}}>지금 색 그대로</button></div></div>`}
   <div>${ATTRS.map(t=>html`<div className="attr" key=${t.k}>
    <div className="k">${t.k}${t.h&&html`<small>${t.h}</small>`}</div>
    <div className="stack" style=${{gap:"4px"}}>
@@ -260,7 +264,7 @@ function buildPublicCard(st,items,stats){
  const card={v:1,updatedAt:Date.now(),gem:g,gemName:gemName(g),stage:stageOf(st,stats),
   sentence:fl.sentence?displaySentence(a):"",keywords:fl.keywords?displayKeywords(a):[],
   axes:fl.hexagon?visibleAxes(a).map(x=>({name:x.name,level:x.level})):visibleAxes(a).map(x=>({name:x.name})),
-  showHex:!!fl.hexagon,badges:fl.badges?BADGES.filter(b=>b.test(stats)).map(b=>b.id):[],
+  showHex:!!fl.hexagon,badges:fl.badges?earnedIds(st,stats):[],
   items:fl.items?items.filter(i=>(st.featured||[]).includes(i.id)).slice(0,3).map(i=>({name:i.name,category:i.category,since:i.since||"",story:i.story||"",verify:i.verify||""})):[],
   acceptWords:!!fl.words,tags:fl.tags&&st.quick&&st.quick.answers?[st.quick.answers.mbti,st.quick.answers.blood].filter(Boolean):[]};
  return card;
@@ -343,11 +347,11 @@ function StepTab({st,update,stats,canAI,toast,onOpen,demo}){
   <div className="stat"><div><b>${stats.days}</b><span>걸어온 날</span></div><div><b>${stats.logs}</b><span>남긴 한 줄</span></div><div><b>${stats.rests}</b><span>쉬어간 날</span></div><div><b>${stats.comebacks}</b><span>다시 시작</span></div></div>
   <p className="note">남은 거리 대신 걸어온 거리를 셉니다. 연속 기록이 끊겨도 아무것도 잃지 않아요.</p>
   <${Reflection} st=${st} update=${update} canAI=${canAI} existing=${thisRef} wk=${wk} toast=${toast}/>
-  <div className="stack"><div className="row between"><h2 className="h3">배지 시즌 1</h2><span className="small faint">${BADGES.filter(b=>b.test(stats)).length} / ${BADGES.length}</span></div>
+  <div className="stack"><div className="row between"><h2 className="h3">배지 시즌 1</h2><span className="small faint">${earnedIds(st,stats).length} / ${BADGES.length}</span></div>
    <p className="small muted">배지는 능력 인증이나 등급이 아니라, 나의 시간이 남긴 작은 표식입니다. 지속 배지의 테두리는 발견 → 이어감 → 깊어짐 → 나눔 → 전수로 깊어집니다.</p>
-   ${groups.map(gname=>html`<div className="stack" key=${gname} style=${{gap:"6px"}}><div className="group-title"><b>${gname}</b></div><div className="badges">${BADGES.filter(b=>b.g===gname).map(b=>{const e=b.test(stats);return html`<button key=${b.id} className=${"badge"+(e?"":" locked")} onClick=${()=>setBadge(b)} aria-label=${b.name+(e?" 받음":" 아직")}><${Medal} b=${b} earned=${e} frame=${b.g==="지속"?frameOf(stats.days):0}/><b>${b.name}</b><span>${e?(b.g==="지속"?FRAMES[frameOf(stats.days)]:"받음"):"아직"}</span></button>`})}</div></div>`)}
+   ${groups.map(gname=>html`<div className="stack" key=${gname} style=${{gap:"6px"}}><div className="group-title"><b>${gname}</b></div><div className="badges">${BADGES.filter(b=>b.g===gname).map(b=>{const e=isEarned(st,stats,b);return html`<button key=${b.id} className=${"badge"+(e?"":" locked")} onClick=${()=>setBadge(b)} aria-label=${b.name+(e?" 받음":" 아직")}><${Medal} b=${b} earned=${e} frame=${b.g==="지속"?frameOf(stats.days):0}/><b>${b.name}</b><span>${e?(b.g==="지속"?FRAMES[frameOf(stats.days)]:"받음"):"아직"}</span></button>`})}</div></div>`)}
   </div>
-  ${badge&&html`<${Sheet} title=${badge.name} onClose=${()=>setBadge(null)}><div className="stack" style=${{alignItems:"center",textAlign:"center"}}><${Medal} b=${badge} earned=${badge.test(stats)} frame=${badge.g==="지속"?frameOf(stats.days):0} size=${120}/><span className="chip">${badge.g}</span><p>${badge.desc}</p><p className="small muted">${badge.test(stats)?"받은 배지는 쉬어도 사라지지 않습니다.":"조건을 채우면 받습니다."}</p></div><//>`}
+  ${badge&&html`<${Sheet} title=${badge.name} onClose=${()=>setBadge(null)}><div className="stack" style=${{alignItems:"center",textAlign:"center"}}><${Medal} b=${badge} earned=${isEarned(st,stats,badge)} frame=${badge.g==="지속"?frameOf(stats.days):0} size=${120}/><span className="chip">${badge.g}</span><p>${badge.desc}</p><p className="small muted">${isEarned(st,stats,badge)?"받은 배지는 쉬어도 사라지지 않습니다.":"조건을 채우면 받습니다."}</p></div><//>`}
  </div>`;
 }
 function Reflection({st,update,canAI,existing,wk,toast}){
