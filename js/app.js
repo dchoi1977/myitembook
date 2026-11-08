@@ -12,7 +12,7 @@ function App(){
  const [soc,setSoc]=useState(EMPTY_SOC);const [names,setNames]=useState({});const namesRef=useRef({});
  const [notes,setNotes]=useState([]);const [anns,setAnns]=useState([]);const [aiReady,setAiReady]=useState(null);const [ytReady,setYtReady]=useState(null);
  const [reach,setReach]=useState({visits:0,visitors:0});const freshSoc=useRef(null);const awayRef=useRef(null);const stRef=useRef(null);
- const [avTick,setAvTick]=useState(0);const saveT=useRef(null);const loaded=useRef(false);const pendingHash=useRef(null);
+ const [avTick,setAvTick]=useState(0);const verRef=useRef(null);const skipSave=useRef(false);const saveT=useRef(null);const loaded=useRef(false);const pendingHash=useRef(null);
  const toast=useCallback(m=>{setToastMsg(m);clearTimeout(toastT.current);toastT.current=setTimeout(()=>setToastMsg(""),3400)},[]);
  const uid=session&&session.user&&session.user.id;
  const initialCode=useMemo(()=>{try{return (new URLSearchParams(location.search).get("code")||"").toUpperCase()}catch(e){return ""}},[]);
@@ -34,7 +34,7 @@ function App(){
    const p=await api.me(uid);if(!alive)return;
    if(!p){await api.logout();setGateMsg("초대 등록이 확인되지 않은 계정입니다. 초대 코드로 다시 등록해 주세요.");setSession(null);setRoute("gate");setBoot(false);return}
    setProfile(p);tracker.uid=uid;errReporter.uid=uid;api.supportUrl().then(setSupportUrl);namesRef.current={...namesRef.current,[uid]:p};setNames(namesRef.current);
-   const [s,its]=await Promise.all([api.loadState(uid),api.loadItems(uid)]);if(!alive)return;
+   const [row,its]=await Promise.all([api.loadStateRow(uid),api.loadItems(uid)]);if(!alive)return;const s=row?row.data:null;verRef.current=row?row.updated_at:null;
    const ns=normState(s);setSt(ns);setItems(its);loaded.current=true;hydratePhotos(its);
    track("app_open",{day:cbtDay(p.joined_at),w:window.innerWidth});
    reloadSoc();loadInbox();
@@ -53,7 +53,13 @@ function App(){
  useEffect(()=>{const need=Object.values(names).filter(p=>p&&p.avatar==="photo"&&!(avKey(p) in AVCACHE));if(!need.length)return;need.forEach(p=>{AVCACHE[avKey(p)]=null});api.avatarUrls(need.map(p=>p.id)).then(m=>{need.forEach(p=>{AVCACHE[avKey(p)]=m[p.id]||null});setAvTick(t=>t+1)}).catch(()=>{})},[names]);
  function onAvatarSaved(next){setProfile(p=>({...p,...next}));namesRef.current={...namesRef.current,[uid]:{...(namesRef.current[uid]||{}),...next}};setNames(namesRef.current)}
  // ── persist (debounced)
- useEffect(()=>{if(!loaded.current||!st||demo||!uid)return;clearTimeout(saveT.current);saveT.current=setTimeout(()=>{api.saveState(uid,st).catch(()=>toast("저장하지 못했습니다. 연결을 확인해 주세요."))},800);return()=>clearTimeout(saveT.current)},[st]);
+ // ── persist (debounced) — another device may have saved meanwhile: never overwrite newer data with an older copy
+ const newer=(a,b)=>!!a&&!!b&&new Date(a).getTime()>new Date(b).getTime()+500;
+ async function pullState(why){try{const r=await api.loadStateRow(uid);if(!r)return;skipSave.current=true;verRef.current=r.updated_at;setSt(normState(r.data));if(why)toast(why)}catch(e){}}
+ async function guardedSave(data){if(!uid)return;try{const cur=await api.stateStamp(uid);if(newer(cur,verRef.current)){await pullState("다른 기기에서 바뀐 내용을 불러왔어요.");return}const v=await api.saveState(uid,data);if(v)verRef.current=v}catch(e){toast("저장하지 못했습니다. 연결을 확인해 주세요.")}}
+ useEffect(()=>{if(!loaded.current||!st||demo||!uid)return;if(skipSave.current){skipSave.current=false;return}clearTimeout(saveT.current);saveT.current=setTimeout(()=>guardedSave(st),800);return()=>clearTimeout(saveT.current)},[st]);
+ // coming back to this tab: pick up what another device saved
+ useEffect(()=>{if(!uid||demo)return;const f=async()=>{if(document.visibilityState!=="visible"||!loaded.current)return;try{const cur=await api.stateStamp(uid);if(newer(cur,verRef.current))pullState()}catch(e){}};document.addEventListener("visibilitychange",f);window.addEventListener("focus",f);return()=>{document.removeEventListener("visibilitychange",f);window.removeEventListener("focus",f)}},[uid,demo]);
 
  const socStats=useMemo(()=>{if(demo)return {friends:0,wordsReceived:0,wordsGiven:2,reactionsGiven:0,reactionsReceived:0,exitDone:false};return {friends:friendIds(uid,soc.friendships).length,wordsReceived:soc.wordsTo.length,wordsGiven:soc.wordsFrom.length,reactionsGiven:soc.reactFrom.length,reactionsReceived:soc.reactTo.filter(r=>r.target==="card").length,exitDone:soc.feedback.some(f=>f.kind==="exit"),visitors:reach.visitors}},[soc,demo,uid,reach]);
  const day=profile?cbtDay(profile.joined_at):1;
@@ -61,7 +67,7 @@ function App(){
  stRef.current=st;const statsRef=useRef(null);statsRef.current=stats;
  // the last moment this person was here, and what their counters read then (for the welcome-back card)
  const seenCounts=s=>({friends:s.connections,cheers:s.reactionsReceived,words:s.wordsReceived,visitors:s.visitors||0});
- function stampSeen(){const s0=stRef.current,s1=statsRef.current;if(!s0||!uid||demo||!loaded.current||!s0.analysis||!s1)return;const ns={...s0,flags:{...s0.flags,lastSeen:{at:Date.now(),c:seenCounts(s1)}}};setSt(ns);api.saveState(uid,ns).catch(()=>{})}
+ function stampSeen(){const s0=stRef.current,s1=statsRef.current;if(!s0||!uid||demo||!loaded.current||!s0.analysis||!s1)return;const ns={...s0,flags:{...s0.flags,lastSeen:{at:Date.now(),c:seenCounts(s1)}}};skipSave.current=true;setSt(ns);guardedSave(ns)}
  const dailyAnswered=soc.feedback.some(f=>f.kind==="daily"&&(f.payload||{}).day===Math.min(day,7));
 
  // stage only rises; badges stay; a visible change of the gem plays the evolve ceremony

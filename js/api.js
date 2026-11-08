@@ -33,7 +33,9 @@ const api={
  async setQuiet(uid,v){return Q(sb.from("profiles").update({quiet_view:v}).eq("id",uid))},
  // ── private state
  async loadState(uid){const r=await Q(sb.from("app_state").select("data").eq("user_id",uid).maybeSingle());return r?r.data:null},
- async saveState(uid,data){return Q(sb.from("app_state").upsert({user_id:uid,data},{onConflict:"user_id"}))},
+ async loadStateRow(uid){return Q(sb.from("app_state").select("data,updated_at").eq("user_id",uid).maybeSingle())},
+ async stateStamp(uid){const r=await Q(sb.from("app_state").select("updated_at").eq("user_id",uid).maybeSingle());return r?r.updated_at:null},
+ async saveState(uid,data){const r=await Q(sb.from("app_state").upsert({user_id:uid,data},{onConflict:"user_id"}).select("updated_at").maybeSingle());return r?r.updated_at:null},
  async loadItems(uid){const r=await Q(sb.from("items").select("id,data,created_at").eq("user_id",uid).order("created_at",{ascending:false}));return r.map(x=>({...x.data,id:x.id}))},
  async saveItem(uid,item){
   const body={...item};const v=Date.now();
