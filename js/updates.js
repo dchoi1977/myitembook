@@ -34,7 +34,7 @@ function UpdatesSheet({st,update,onClose,onOpen}){
  useEffect(()=>{if(hasNewUpdate(st))update(s=>{s.flags=s.flags||{};s.flags.updSeen=UPDATES[0].id});track("open_updates")},[]);
  const seen=(st.flags||{}).updSeen;
  return html`<${Sheet} title="업데이트 소식" onClose=${onClose}>
-  <p className="small muted">CBT 동안 고치고 더한 것들을 모아 둬요. 새 소식이 올라오면 '나' 탭 아래에 표시돼요.</p>
+  <p className="small muted">CBT 동안 고치고 더한 것들을 모아 둬요. 새 소식이 올라오면 메뉴에 NEW 표시가 붙어요.</p>
   ${UPDATES.map((u,ui)=>html`<article key=${u.id} className="upd">
    <div className="upd-head"><span className="upd-date">${u.date}</span>${ui===0&&seen!==u.id&&html`<span className="upd-new">NEW</span>`}</div>
    <h2 className="serif upd-title">${u.title}</h2>

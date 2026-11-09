@@ -162,6 +162,7 @@ function LifeCard({st,items,stats,onOpen}){
  </div>`;
 }
 function MeTab({st,items,soc,stats,onOpen,names,top,mid}){
+ const desk=useDesktop();
  const featured=items.filter(i=>(st.featured||[]).includes(i.id)).slice(0,4);
  const rows=[["evidence","눈","이렇게 읽은 이유","사실과 AI 해석을 나눠 보고, 맞다·숨기기"],["attrs","별","젬의 8가지 속성","결·색·빛·형·질·강·상·각"],["shelf","선반","나의 선반",`실제로 가진 것 ${items.length}개 · 얼마나 함께했는가`],["publish","문","공개할 모습",st.visibility.public?(st.visibility.audience==="friends"?"친구에게 공개 중":"CBT 1기에 공개 중")+" · 항목별로 고르기":"지금은 나만 보기"],["reread","새싹","새 기록 더하기",`나를 다시 읽기 · 지금까지 ${st.analyses||1}번`]];
  const achN=earnedIds(st,stats).length;rows.splice(2,0,["achieve","별","업적 도감 · 배지 보관함",`배지 ${achN}/${BADGES.length} · 칭호와 대표 배지 고르기`]);
@@ -176,7 +177,7 @@ function MeTab({st,items,soc,stats,onOpen,names,top,mid}){
   ${featured.length>0&&html`<div className="stack"><div className="row between"><h2 className="h3">대표 아이템</h2><button className="linkbtn small" onClick=${()=>onOpen("shelf")}>선반 열기</button></div><div className="shelf feat">${featured.map(i=>html`<${ItemTile} key=${i.id} item=${i} featured=${true} onClick=${()=>onOpen("item:"+i.id)}/>`)}</div></div>`}
   ${soc.wordsTo.length>0&&html`<div className="stack"><h2 className="h3">사람들이 건넨 한 단어</h2><div className="wordchips">${soc.wordsTo.map((w,i)=>html`<span className="chip gold" key=${i} title=${(names[w.from_id]||{}).nickname||""}>${w.word}</span>`)}</div></div>`}
   <div className="list">${rows.map(([k,gl,t,d])=>html`<button key=${k} className="list-row" onClick=${()=>onOpen(k)}><span className="ico"><${Glyph} name=${gl} size=${19}/></span><span className="grow"><span className="t">${t}</span><br/><span className="d">${d}</span></span><span className="chev">›</span></button>`)}</div>
-  ${typeof UPDATES!=="undefined"&&html`<div className="list"><button className="list-row upd-row" onClick=${()=>onOpen("updates")}><span className="ico"><${Glyph} name="새싹" size=${19}/></span><span className="grow"><span className="t">업데이트 소식${hasNewUpdate(st)&&html` <span className="upd-new">NEW</span>`}</span><br/><span className="d">${latestUpdate().date} · ${latestUpdate().title}</span></span><span className="chev">›</span></button></div>`}
+  ${!desk&&typeof UPDATES!=="undefined"&&html`<div className="list"><button className="list-row upd-row" onClick=${()=>onOpen("updates")}><span className="ico"><${Glyph} name="새싹" size=${19}/></span><span className="grow"><span className="t">업데이트 소식${hasNewUpdate(st)&&html` <span className="upd-new">NEW</span>`}</span><br/><span className="d">${latestUpdate().date} · ${latestUpdate().title}</span></span><span className="chev">›</span></button></div>`}
  </div>`;
 }
 function EvidenceSheet({st,update,onClose}){

@@ -97,14 +97,14 @@ const DESK_Q="(min-width:1024px)";
 function useDesktop(){const [d,setD]=useState(()=>{try{return matchMedia(DESK_Q).matches}catch(e){return false}});
  useEffect(()=>{let m;try{m=matchMedia(DESK_Q)}catch(e){return}const f=()=>setD(m.matches);m.addEventListener?m.addEventListener("change",f):m.addListener(f);return()=>{m.removeEventListener?m.removeEventListener("change",f):m.removeListener(f)}},[]);return d}
 const DESK_NAV=[["me","나","me"],["step","한 걸음","step"],["feed","소식","feed"],["friends","친구","people"]];
-function DeskSide({tab,setTab,openSheet,profile,day,pending,unread,onFeedback,onAdmin,setSheet}){
+function DeskSide({tab,setTab,openSheet,profile,day,pending,unread,onFeedback,onAdmin,setSheet,updNew}){
  const go=k=>{setTab(k);setSheet(null);window.scrollTo(0,0)};
- const more=[["achieve","별","업적 도감"],["shelf","선반","나의 선반"],["publish","문","공개할 모습"],["inbox","말풍선","알림"+(unread?` ${unread}`:"")],["help","눈","도움말"]];
+ const more=[["achieve","별","업적 도감"],["shelf","선반","나의 선반"],["publish","문","공개할 모습"],["inbox","말풍선","알림"+(unread?` ${unread}`:"")],["help","눈","도움말"],["updates","새싹","업데이트 소식"]];
  return html`<aside className="side" aria-label="메뉴">
   <button className="side-me" onClick=${()=>setSheet("avatar")}><${Avatar} p=${profile} size=${40}/><span className="grow"><b>${profile.nickname}</b><br/><span className="small faint">${MIB_CONFIG.cohort} · Day ${Math.min(day,99)}</span></span></button>
   <nav className="side-nav" aria-label="메인">${DESK_NAV.map(([k,t,ic])=>html`<button key=${k} className="side-item" aria-current=${tab===k?"page":undefined} onClick=${()=>go(k)}><${Ico} n=${ic}/><span className="grow">${t}</span>${k==="friends"&&pending?html`<i className="side-dot" aria-label="새 친구 요청"></i>`:null}</button>`)}</nav>
   <div className="side-sep"></div>
-  ${more.map(([k,gl,t])=>html`<button key=${k} className="side-item sub" onClick=${()=>openSheet(k)}><${Glyph} name=${gl} size=${18}/><span className="grow">${t}</span></button>`)}
+  ${more.map(([k,gl,t])=>html`<button key=${k} className="side-item sub" onClick=${()=>openSheet(k)}><${Glyph} name=${gl} size=${18}/><span className="grow">${t}</span>${k==="updates"&&updNew?html`<span className="upd-new">NEW</span>`:null}</button>`)}
   <div className="side-foot">
    <button className="btn quiet sm block" onClick=${onFeedback}><${Ico} n="chat"/>의견 보내기</button>
    ${onAdmin&&html`<button className="linkbtn small" onClick=${onAdmin}>운영 콘솔</button>`}
