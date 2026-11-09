@@ -162,6 +162,7 @@ async function renderShareImage(kind,{st,stats,profile}){
   x.fillStyle="#1F2A28";x.font=`500 32px ${SANS}`;x.fillText(diff.length?"젬이 달라진 곳 · "+diff.join(" · "):"젬의 모양은 그대로, 걸어온 시간은 쌓였습니다",W/2,1050);
   x.fillStyle="#173D3B";x.font=`700 38px ${SERIF}`;wrapLines(x,displaySentence(a),W-240,2).forEach((l,i)=>x.fillText(l,W/2,1135+i*54));
  }else{
+  if(typeof drawConstellation==="function")drawConstellation(x,myZodiac(st));
   const g=await svgImage(gemSVG(now,st.createdAt,"s0"),520,559);x.drawImage(g,(W-520)/2,170);
   x.fillStyle="#173D3B";x.font=`700 60px ${SERIF}`;x.fillText(gemName(now),W/2,800);
   x.fillStyle="#1F2A28";x.font=`500 40px ${SERIF}`;wrapLines(x,displaySentence(a),W-220,3).forEach((l,i)=>x.fillText(l,W/2,880+i*60));
@@ -189,7 +190,7 @@ function ShareImageSheet({kind,st,stats,profile,onClose,toast,onExit,exitDone}){
   ${url?html`<img src=${url} alt=${kind==="week"?"일주일 전과 지금의 젬 비교 이미지":"내 젬 카드 이미지"} className="shareimg"/>`:html`<p className="small faint">이미지를 만드는 중…</p>`}
   <div className="row"><button className="btn grow" disabled=${!url} onClick=${save}>이미지 저장</button>${canShareFiles&&html`<button className="btn ghost grow" disabled=${!url} onClick=${share}><${Ico} n="share"/>공유하기</button>`}</div>
   ${!isMobile&&html`<p className="small faint">이미지를 마우스 오른쪽 버튼으로 눌러 ‘다른 이름으로 이미지 저장’을 해도 돼요.</p>`}
-  <p className="note">이미지에는 젬, 한 문장, 키워드, 닉네임과 칭호, 그리고 공개 설정에서 켠 MBTI·혈액형 태그만 담깁니다. 원문 기록과 근거는 들어가지 않아요.</p>
+  <p className="note">이미지에는 젬, 한 문장, 키워드, 닉네임과 칭호, 그리고 공개 설정에서 켠 MBTI·혈액형 태그와 별자리만 담깁니다. 원문 기록과 근거는 들어가지 않아요.</p>
   ${kind==="week"&&!exitDone&&html`<div className="panel tint stack"><b>마지막 미션 · 마무리 설문</b><span className="small muted">일주일을 돌아본 지금, 솔직한 의견을 들려주세요.</span><button className="btn sm" onClick=${onExit}>마무리 설문 열기</button></div>`}
  <//>`;
 }

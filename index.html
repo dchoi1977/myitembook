@@ -513,6 +513,19 @@ label.btn{display:inline-flex;align-items:center;justify-content:center;cursor:p
 }
 @media (min-width:1024px) and (max-width:1180px){.shell{grid-template-columns:200px minmax(0,1fr) 300px}.content>.main{padding-inline:20px}}
 @media (prefers-reduced-motion: reduce){.sheet-inner{animation:none!important}}
+/* zodiac sky */
+.zsky{position:relative;max-width:100%;display:flex;flex-direction:column;align-items:center;color:#B08A3E;pointer-events:none;z-index:0}
+.zsky-fig{width:100%;flex:1;min-height:0}
+.zsky-fig svg{display:block;overflow:visible}
+.zsky-label{font-size:11.5px;font-weight:700;letter-spacing:.18em;opacity:.9;line-height:1;margin-bottom:-2px}
+.zsky .zs{animation:zTw 2.4s ease-in-out infinite alternate}
+@keyframes zTw{from{opacity:.35}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.zsky .zs{animation:none}}
+.lifecard .gem{position:relative;z-index:1}
+.zchip{display:inline-flex;gap:4px;align-items:center;padding:3px 10px;border-radius:999px;border:1.5px solid #D9C08A;color:#8A6A2A;font-weight:700;font-size:13px}
+.birth select{width:auto;flex:none;min-height:36px;padding:4px 8px;border-radius:10px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);font:inherit}
+[data-theme="dark"] .zsky,.dark .zsky{color:#D9BE7E}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .zsky{color:#D9BE7E}}
 /* updates */
 .upd{display:flex;flex-direction:column;gap:10px;padding:16px 0;border-top:1px solid var(--line)}
 .upd:first-of-type{border-top:0;padding-top:4px}
@@ -683,22 +696,23 @@ label.btn{display:inline-flex;align-items:center;justify-content:center;cursor:p
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/htm@3.1.1/dist/htm.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
-<script src="js/config.js?v=24"></script>
-<script src="js/core.js?v=24"></script>
-<script src="js/api.js?v=24"></script>
-<script src="js/support.js?v=24"></script>
-<script src="js/avatars.js?v=24"></script>
-<script src="js/screens.js?v=24"></script>
-<script src="js/social.js?v=24"></script>
-<script src="js/ops.js?v=24"></script>
-<script src="js/quick.js?v=24"></script>
-<script src="js/evolve.js?v=24"></script>
-<script src="js/achieve.js?v=24"></script>
-<script src="js/gems.js?v=24"></script>
-<script src="js/showcase.js?v=24"></script>
-<script src="js/ask.js?v=24"></script>
-<script src="js/places.js?v=24"></script>
-<script src="js/updates.js?v=24"></script>
-<script src="js/app.js?v=24"></script>
+<script src="js/config.js?v=26"></script>
+<script src="js/core.js?v=26"></script>
+<script src="js/zodiac.js?v=26"></script>
+<script src="js/api.js?v=26"></script>
+<script src="js/support.js?v=26"></script>
+<script src="js/avatars.js?v=26"></script>
+<script src="js/screens.js?v=26"></script>
+<script src="js/social.js?v=26"></script>
+<script src="js/ops.js?v=26"></script>
+<script src="js/quick.js?v=26"></script>
+<script src="js/evolve.js?v=26"></script>
+<script src="js/achieve.js?v=26"></script>
+<script src="js/gems.js?v=26"></script>
+<script src="js/showcase.js?v=26"></script>
+<script src="js/ask.js?v=26"></script>
+<script src="js/places.js?v=26"></script>
+<script src="js/updates.js?v=26"></script>
+<script src="js/app.js?v=26"></script>
 </body>
 </html>

@@ -11,6 +11,7 @@ async function renderPublicCardImage(card,name){
  if(d.frame){x.lineWidth=8;if(d.frame==="seven"){const gr=x.createLinearGradient(40,40,W-40,H-40);["#E57373","#F0B65A","#E8D96A","#7CC08A","#6AA9D8","#8A7CD0","#C77BB8"].forEach((cl,i,a)=>gr.addColorStop(i/(a.length-1),cl));x.strokeStyle=gr}else x.strokeStyle=FR[d.frame]||"#C9A45A";x.strokeRect(40,40,W-80,H-80)}
  x.fillStyle="#66706E";x.font=`700 26px ${SANS}`;x.textAlign="left";x.fillText("MYITEMBOOK · "+MIB_CONFIG.cohort,90,120);
  x.textAlign="right";x.fillText(d.title?d.title+" "+name:"@"+name,W-90,120);x.textAlign="center";
+ if(typeof drawConstellation==="function"&&d.zodiac)drawConstellation(x,zodiacByKey(d.zodiac));
  const g=await svgImage(gemSVG(d.gem||{},d.gemName||name,"pc"),520,559);x.drawImage(g,(W-520)/2,170);
  x.fillStyle="#173D3B";x.font=`700 60px ${SERIF}`;x.fillText(d.gemName||"",W/2,800);
  if(d.sentence){x.fillStyle="#1F2A28";x.font=`500 40px ${SERIF}`;wrapLines(x,d.sentence,W-220,3).forEach((l,i)=>x.fillText(l,W/2,880+i*60))}
