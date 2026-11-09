@@ -140,7 +140,7 @@ function App(){
 
  async function saveItem(item,opt,onlyFeature){
   if(demo)return;
-  if(onlyFeature){update(s=>{const f=(s.featured||[]).filter(x=>x!==item.id);if(opt.feature){if(f.length>=3){toast("대표 아이템은 3개까지입니다.");s.featured=f.concat([]);return}f.push(item.id)}s.featured=f});return}
+  if(onlyFeature){update(s=>{const f=(s.featured||[]).filter(x=>x!==item.id);if(opt.feature){if(f.length>=4){toast("대표 아이템은 4개까지예요. 다른 아이템의 대표 표시를 먼저 풀어 주세요.");s.featured=f.concat([]);return}f.push(item.id)}s.featured=f});return}
   const exists=items.some(i=>i.id===item.id);
   try{const body=await api.saveItem(uid,item);const old=items.find(i=>i.id===item.id)||{};const view={...body,id:item.id,_shared:old._shared,thumbUrl:item._removePhoto?null:(item.thumb||old.thumbUrl),photoUrl:item._removePhoto?null:(item.photo||old.photoUrl)};setItems(list=>exists?list.map(i=>i.id===item.id?view:i):[view,...list]);track(exists?"item_edit":"item_add",{cat:item.category,photo:!!body.photoPath});toast(exists?"아이템을 저장했습니다.":"선반에 담았습니다.");setSheet("shelf")}catch(e){toast("저장하지 못했습니다. 사진이 너무 크면 다른 사진으로 시도해 주세요.")}
  }
@@ -222,6 +222,7 @@ function App(){
   else if(sheet.startsWith("ask:")){const q=askStat&&askStat.questions.find(x=>String(x.id)===sheet.slice(4));sheetEl=q?html`<${AskSheet} q=${q} fids=${friendIds(uid,soc.friendships)} names=${names} toast=${toast} onClose=${close} onSent=${()=>{close();reloadSoc()}}/>`:null}
   else if(sheet==="asks")sheetEl=html`<${AnswersSheet} stat=${askStat} names=${names} onClose=${close} openUser=${openUser}/>`;
   else if(sheet==="answer"||sheet.startsWith("answer:"))sheetEl=html`<${AnswerSheet} incoming=${asksMe} names=${names} focus=${+sheet.split(":")[1]||null} toast=${toast} onClose=${close} onDone=${reloadSoc}/>`;
+  else if(sheet==="updates")sheetEl=html`<${UpdatesSheet} st=${st} update=${update} onClose=${close} onOpen=${k=>setSheet(k)}/>`;
   else if(sheet==="stay")sheetEl=html`<${StaySheet} st=${st} update=${update} onClose=${close} toast=${toast} demo=${demo}/>`;
   else if(sheet==="stays")sheetEl=html`<${StaysSheet} st=${st} update=${update} onClose=${close}/>`;
   else if(sheet==="achieve"||sheet==="badgebox")sheetEl=html`<${AchieveSheet} st=${st} stats=${stats} update=${update} meName=${profile.nickname} start=${sheet==="badgebox"?"box":"book"} onClose=${close} onReplay=${replayBadge}/>`;

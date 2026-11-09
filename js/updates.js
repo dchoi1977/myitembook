@@ -1,0 +1,45 @@
+"use strict";
+/* MIB CBT · 업데이트 소식 — 새 소식은 맨 위에 추가 (id는 날짜 또는 날짜-순번) */
+
+const UPDATES=[
+ {id:"2026-11-09",date:"11월 9일 (월)",title:"머무른 곳, 친구에게 묻기, 카드 보기 외",
+  lead:"CBT를 시작하기 전에 크게 다듬었어요. 새로 생긴 것부터 써 보시고, 불편한 점은 오른쪽 아래 '의견'으로 알려 주세요.",
+  groups:[
+   {h:"새로 생긴 것",items:[
+    {t:"머무른 곳",d:"'한 걸음' 탭에서 '📍 여기 머물렀어요'를 누르면 지금 있는 곳 주변의 장소가 떠요. 골라서 남기거나, 목록에 없으면 '우리 집'처럼 직접 등록할 수 있어요. 쌓이면 '나의 발자취'에서 어디서 시간을 보냈는지 보여 주고, 활동한 날로 쳐서 젬을 키워요. 내 위치 좌표는 저장하지 않아요."},
+    {t:"친구에게 묻기",d:"'나를 한마디로 표현해 주세요' 같은 나에 대한 질문을 친구에게 한 번씩 물을 수 있어요. 질문지는 하루에 하나씩 늘어나고, 받은 답은 나만 봐요."},
+    {t:"카드 보기",d:"카드 덱 위에 내 카드를 올려 앞면과 뒷면을 뒤집어 볼 수 있어요. 뒷면에는 육각형과 대표 아이템이 정리돼 있어요. 친구의 카드도 같은 방식으로 볼 수 있어요.",go:"cardview"},
+    {t:"My GEMS",d:"'친구' 탭 맨 위에 친구들의 젬을 모은 인벤토리가 생겼어요. 젬을 누르면 그 친구의 카드가 크게 열려요."},
+    {t:"선반 공개",d:"선반의 아이템을 사진과 사연까지 다른 사람에게 보여 줄 수 있어요. 보여 주기 싫은 아이템은 하나씩 숨길 수 있어요."},
+    {t:"카드 공개 요청",d:"카드를 아직 공개하지 않은 친구에게 '카드 공개 요청'을 보낼 수 있어요. 친구가 공개하면 알림으로 알려 드려요."},
+    {t:"업적 도감 · 배지 보관함",d:"어떤 조건을 채우면 어떤 배지와 칭호를 받는지, 지금 얼마나 왔는지 한눈에 볼 수 있어요. 배지를 받을 때는 따로 연출이 나와요.",go:"achieve"},
+    {t:"돌아왔을 때 연출",d:"며칠 만에 들어왔을 때 그사이 쌓인 공감·방문·친구 덕분에 젬이 달라졌다면 변신 장면으로 보여 드려요."},
+    {t:"PC 화면",d:"컴퓨터 브라우저로 들어오면 넓은 화면에 맞춘 배치로 보여요. 같은 계정으로 휴대폰과 PC를 오가며 써도 돼요."}
+   ]},
+   {h:"고친 것",items:[
+    {t:"휴대폰에서 선반 사진 넣기",d:"아이템 화면에 '📷 사진 찍기'와 '🖼 앨범에서' 버튼을 따로 두었어요. 이미 넣은 사진은 '사진 바꾸기'나 '사진 빼기'로 고칠 수 있어요.",go:"shelf"},
+    {t:"대표 아이템 4개",d:"대표 아이템을 4개까지 고를 수 있어요. '나' 탭에 2개만 보이던 문제도 고쳐서, 고른 대표 아이템이 모두 보이고 공개 카드와 카드 뒷면에도 반영돼요."},
+    {t:"MBTI · 혈액형 표시",d:"공개로 설정한 MBTI와 혈액형이 메인 카드와 카드 이미지에 함께 보여요."},
+    {t:"카드 이미지 저장",d:"윈도우 PC에서 저장할 위치를 고를 수 있어요. '공유하기'와 '저장하기' 버튼도 나눴어요."},
+    {t:"육각형 글자 잘림",d:"'나만의 육각형' 오른쪽 글자가 잘리던 문제를 고쳤어요."},
+    {t:"여러 기기에서 쓰기",d:"휴대폰과 PC에서 번갈아 써도 예전 기록이 새 기록을 덮어쓰지 않아요."},
+    {t:"의견 보내기",d:"오류를 알려 주실 때 지금 화면이 자동으로 첨부돼요. 원하지 않으면 빼고 보낼 수 있어요."}
+   ]}
+  ]}
+];
+const latestUpdate=()=>UPDATES[0];
+const hasNewUpdate=st=>!!UPDATES[0]&&((st.flags||{}).updSeen!==UPDATES[0].id);
+
+function UpdatesSheet({st,update,onClose,onOpen}){
+ useEffect(()=>{if(hasNewUpdate(st))update(s=>{s.flags=s.flags||{};s.flags.updSeen=UPDATES[0].id});track("open_updates")},[]);
+ const seen=(st.flags||{}).updSeen;
+ return html`<${Sheet} title="업데이트 소식" onClose=${onClose}>
+  <p className="small muted">CBT 동안 고치고 더한 것들을 모아 둬요. 새 소식이 올라오면 '나' 탭 아래에 표시돼요.</p>
+  ${UPDATES.map((u,ui)=>html`<article key=${u.id} className="upd">
+   <div className="upd-head"><span className="upd-date">${u.date}</span>${ui===0&&seen!==u.id&&html`<span className="upd-new">NEW</span>`}</div>
+   <h2 className="serif upd-title">${u.title}</h2>
+   ${u.lead&&html`<p className="small muted">${u.lead}</p>`}
+   ${u.groups.map(g=>html`<section key=${g.h} className="upd-group"><h3 className="upd-h">${g.h}</h3><ul className="upd-list">${g.items.map(it=>html`<li key=${it.t}><b>${it.t}</b><span>${it.d}</span>${it.go&&onOpen&&html`<button className="linkbtn small" onClick=${()=>onOpen(it.go)}>바로 가기 ›</button>`}</li>`)}</ul></section>`)}
+  </article>`)}
+ <//>`;
+}

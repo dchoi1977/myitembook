@@ -162,7 +162,7 @@ function LifeCard({st,items,stats,onOpen}){
  </div>`;
 }
 function MeTab({st,items,soc,stats,onOpen,names,top,mid}){
- const featured=items.filter(i=>(st.featured||[]).includes(i.id)).slice(0,3);
+ const featured=items.filter(i=>(st.featured||[]).includes(i.id)).slice(0,4);
  const rows=[["evidence","눈","이렇게 읽은 이유","사실과 AI 해석을 나눠 보고, 맞다·숨기기"],["attrs","별","젬의 8가지 속성","결·색·빛·형·질·강·상·각"],["shelf","선반","나의 선반",`실제로 가진 것 ${items.length}개 · 얼마나 함께했는가`],["publish","문","공개할 모습",st.visibility.public?(st.visibility.audience==="friends"?"친구에게 공개 중":"CBT 1기에 공개 중")+" · 항목별로 고르기":"지금은 나만 보기"],["reread","새싹","새 기록 더하기",`나를 다시 읽기 · 지금까지 ${st.analyses||1}번`]];
  const achN=earnedIds(st,stats).length;rows.splice(2,0,["achieve","별","업적 도감 · 배지 보관함",`배지 ${achN}/${BADGES.length} · 칭호와 대표 배지 고르기`]);
  return html`<div className="main wrap">
@@ -173,9 +173,10 @@ function MeTab({st,items,soc,stats,onOpen,names,top,mid}){
   ${(()=>{const ns=nextStage(st,stats);return ns?html`<p className="note" style=${{textAlign:"center"}}>다음 단계 <b>${ns.name}</b> · ${ns.need}</p>`:html`<p className="note" style=${{textAlign:"center"}}>명품 단계에 이르렀어요.</p>`})()}
   <${MarksPanel} st=${st} stats=${stats}/>
   ${mid}
-  ${featured.length>0&&html`<div className="stack"><div className="row between"><h2 className="h3">대표 아이템</h2><button className="linkbtn small" onClick=${()=>onOpen("shelf")}>선반 열기</button></div><div className="shelf">${featured.slice(0,2).map(i=>html`<${ItemTile} key=${i.id} item=${i} featured=${true} onClick=${()=>onOpen("item:"+i.id)}/>`)}</div></div>`}
+  ${featured.length>0&&html`<div className="stack"><div className="row between"><h2 className="h3">대표 아이템</h2><button className="linkbtn small" onClick=${()=>onOpen("shelf")}>선반 열기</button></div><div className="shelf feat">${featured.map(i=>html`<${ItemTile} key=${i.id} item=${i} featured=${true} onClick=${()=>onOpen("item:"+i.id)}/>`)}</div></div>`}
   ${soc.wordsTo.length>0&&html`<div className="stack"><h2 className="h3">사람들이 건넨 한 단어</h2><div className="wordchips">${soc.wordsTo.map((w,i)=>html`<span className="chip gold" key=${i} title=${(names[w.from_id]||{}).nickname||""}>${w.word}</span>`)}</div></div>`}
   <div className="list">${rows.map(([k,gl,t,d])=>html`<button key=${k} className="list-row" onClick=${()=>onOpen(k)}><span className="ico"><${Glyph} name=${gl} size=${19}/></span><span className="grow"><span className="t">${t}</span><br/><span className="d">${d}</span></span><span className="chev">›</span></button>`)}</div>
+  ${typeof UPDATES!=="undefined"&&html`<div className="list"><button className="list-row upd-row" onClick=${()=>onOpen("updates")}><span className="ico"><${Glyph} name="새싹" size=${19}/></span><span className="grow"><span className="t">업데이트 소식${hasNewUpdate(st)&&html` <span className="upd-new">NEW</span>`}</span><br/><span className="d">${latestUpdate().date} · ${latestUpdate().title}</span></span><span className="chev">›</span></button></div>`}
  </div>`;
 }
 function EvidenceSheet({st,update,onClose}){
@@ -259,7 +260,7 @@ function ItemEditor({item,st,canAI,onSave,onDelete,onClose,toast,demo}){
   <div className="field"><label htmlFor="it-name">이름</label><input type="text" id="it-name" value=${f.name} maxLength="30" onChange=${e=>setF(x=>({...x,name:e.target.value}))} placeholder="예) 필름 카메라, 반려견 솜이, 정보처리기사"/></div>
   <div className="field"><label htmlFor="it-since">함께하기 시작한 때</label><input type="month" id="it-since" value=${f.since} onChange=${e=>setF(x=>({...x,since:e.target.value}))}/>${f.since&&html`<span className="hint">${sinceText(f.since)}</span>`}</div>
   <div className="field"><label htmlFor="it-story">사연 한 줄</label><input type="text" id="it-story" value=${f.story} maxLength="60" onChange=${e=>setF(x=>({...x,story:e.target.value}))} placeholder="예) 아버지께 물려받아 첫 출사를 함께한 카메라"/></div>
-  <label className="checkline"><input type="checkbox" id="it-feat" checked=${featured} onChange=${e=>onSave(f,{feature:e.target.checked},true)} disabled=${isNew||demo}/><span><b>대표 아이템</b><br/><span className="small muted">카드 아래와 공개 카드에 최대 3개까지 보입니다.</span></span></label>
+  <label className="checkline"><input type="checkbox" id="it-feat" checked=${featured} onChange=${e=>onSave(f,{feature:e.target.checked},true)} disabled=${isNew||demo}/><span><b>대표 아이템</b><br/><span className="small muted">카드 아래와 공개 카드에 최대 4개까지 보입니다.</span></span></label>
   <label className="checkline"><input type="checkbox" id="it-private" checked=${!!f.private} onChange=${e=>setF(x=>({...x,private:e.target.checked}))} disabled=${demo}/><span><b>공개 선반에서 숨기기</b><br/><span className="small muted">선반을 공개해도 이 아이템은 나만 봅니다. 저장을 눌러야 반영돼요.</span></span></label>
   <div className="panel tint small">인증 표시 · <b>${f.verify}</b><br/><span className="muted">이번 CBT는 '내가 적은 이야기'와 '사진 첨부', 방금 찍은 사진이면 '사진 인증'까지 표시합니다. 서류·기관 인증은 다음 버전입니다.</span></div>
   <button className="btn block" disabled=${!valid||busy||demo} onClick=${()=>onSave({...f,name:f.name.trim(),story:f.story.trim(),at:f.at||Date.now(),photo:(f.photo||"").startsWith("data:")?f.photo:"",thumb:(f.thumb||"").startsWith("data:")?f.thumb:""},{},false)}>${demo?"예시 모드에서는 저장하지 않습니다":isNew?"선반에 담기":"저장"}</button>
@@ -304,7 +305,7 @@ function buildPublicCard(st,items,stats){
   axes:fl.hexagon?visibleAxes(a).map(x=>({name:x.name,level:x.level})):visibleAxes(a).map(x=>({name:x.name})),
   showHex:!!fl.hexagon,badges:fl.badges?showcaseBadges(st,stats,8):[],title:equipped(st,stats).title,frame:equipped(st,stats).frame,
   shelf:fl.shelf?items.filter(i=>!i.private).length:0,
-  items:fl.items?items.filter(i=>(st.featured||[]).includes(i.id)).slice(0,3).map(i=>({name:i.name,category:i.category,since:i.since||"",story:i.story||"",verify:i.verify||""})):[],
+  items:fl.items?items.filter(i=>(st.featured||[]).includes(i.id)).slice(0,4).map(i=>({name:i.name,category:i.category,since:i.since||"",story:i.story||"",verify:i.verify||""})):[],
   acceptWords:!!fl.words,tags:fl.tags?cardTags(st):[]};
  return card;
 }
