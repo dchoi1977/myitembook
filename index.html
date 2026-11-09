@@ -514,6 +514,32 @@ label.btn{display:inline-flex;align-items:center;justify-content:center;cursor:p
 }
 @media (min-width:1024px) and (max-width:1180px){.shell{grid-template-columns:200px minmax(0,1fr) 300px}.content>.main{padding-inline:20px}}
 @media (prefers-reduced-motion: reduce){.sheet-inner{animation:none!important}}
+/* gem idle — only on larger live gems; calm, staggered, never in sync */
+.gem.live svg *{transform-box:fill-box;transform-origin:center}
+.gem.live .gm-sheen{animation:gmSheen 9s cubic-bezier(.45,0,.2,1) infinite;animation-delay:2.2s}
+@keyframes gmSheen{0%,62%{transform:translateX(0)}88%,100%{transform:translateX(330px)}}
+.gem.live .gm-glow{animation:gmGlow 6.5s ease-in-out infinite}
+@keyframes gmGlow{0%,100%{opacity:.82;transform:scale(.985)}50%{opacity:1;transform:scale(1.015)}}
+.gem.live .gm-breathe{animation:gmGlow 8s ease-in-out infinite reverse}
+.gem.live .gm-body{animation:gmFloat 7s ease-in-out infinite}
+@keyframes gmFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-2.2px)}}
+.gem.live .gm-proj{animation:gmProj 7s ease-in-out infinite}
+@keyframes gmProj{0%,100%{opacity:1;transform:scaleX(1)}50%{opacity:.7;transform:scaleX(.92)}}
+.gem.live .gm-ripple{animation:gmRipple 4.2s ease-out infinite}
+@keyframes gmRipple{0%{transform:scale(.72);opacity:0}25%{opacity:1}100%{transform:scale(1.12);opacity:0}}
+.gem.live .gm-spark{animation:gmSpark 3.6s ease-in-out infinite}
+@keyframes gmSpark{0%,100%{opacity:.25;transform:scale(.6) rotate(0)}45%{opacity:1;transform:scale(1.1) rotate(20deg)}60%{opacity:.85;transform:scale(1) rotate(25deg)}}
+.gem.live .gm-twinkle{animation:gmTwinkle 3.2s ease-in-out infinite}
+@keyframes gmTwinkle{0%,100%{opacity:.45;transform:scale(.8)}50%{opacity:1;transform:scale(1.12)}}
+.gem.live .gm-spin{transform-box:view-box;transform-origin:100px 98px;animation:gmSpin 70s linear infinite}
+.gem.live .gm-spin.rev{animation-direction:reverse;animation-duration:90s}
+.gem.live .gm-spin.slow{animation-duration:160s}
+@keyframes gmSpin{to{transform:rotate(360deg)}}
+.gem.live .gm-bob{animation:gmBob 5.5s ease-in-out infinite}
+@keyframes gmBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.6px)}}
+.gem.live .gm-grain{animation:gmGrain 6s ease-in-out infinite}
+@keyframes gmGrain{0%,100%{stroke-opacity:.92}50%{stroke-opacity:.55}}
+@media (prefers-reduced-motion:reduce){.gem.live svg *{animation:none!important}}
 /* zodiac sky */
 .zsky{position:relative;max-width:100%;display:flex;flex-direction:column;align-items:center;color:#B08A3E;pointer-events:none;z-index:0}
 .zsky-fig{width:100%;flex:1;min-height:0}
@@ -700,23 +726,23 @@ label.btn{display:inline-flex;align-items:center;justify-content:center;cursor:p
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/htm@3.1.1/dist/htm.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
-<script src="js/config.js?v=28"></script>
-<script src="js/core.js?v=28"></script>
-<script src="js/zodiac.js?v=28"></script>
-<script src="js/api.js?v=28"></script>
-<script src="js/support.js?v=28"></script>
-<script src="js/avatars.js?v=28"></script>
-<script src="js/screens.js?v=28"></script>
-<script src="js/social.js?v=28"></script>
-<script src="js/ops.js?v=28"></script>
-<script src="js/quick.js?v=28"></script>
-<script src="js/evolve.js?v=28"></script>
-<script src="js/achieve.js?v=28"></script>
-<script src="js/gems.js?v=28"></script>
-<script src="js/showcase.js?v=28"></script>
-<script src="js/ask.js?v=28"></script>
-<script src="js/places.js?v=28"></script>
-<script src="js/updates.js?v=28"></script>
-<script src="js/app.js?v=28"></script>
+<script src="js/config.js?v=29"></script>
+<script src="js/core.js?v=29"></script>
+<script src="js/zodiac.js?v=29"></script>
+<script src="js/api.js?v=29"></script>
+<script src="js/support.js?v=29"></script>
+<script src="js/avatars.js?v=29"></script>
+<script src="js/screens.js?v=29"></script>
+<script src="js/social.js?v=29"></script>
+<script src="js/ops.js?v=29"></script>
+<script src="js/quick.js?v=29"></script>
+<script src="js/evolve.js?v=29"></script>
+<script src="js/achieve.js?v=29"></script>
+<script src="js/gems.js?v=29"></script>
+<script src="js/showcase.js?v=29"></script>
+<script src="js/ask.js?v=29"></script>
+<script src="js/places.js?v=29"></script>
+<script src="js/updates.js?v=29"></script>
+<script src="js/app.js?v=29"></script>
 </body>
 </html>
