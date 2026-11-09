@@ -80,6 +80,7 @@ const api={
  async recordView(id){try{await sb.rpc("record_view",{owner:id})}catch(e){}},
  async visitors(){return Q(sb.rpc("my_visitors"))},
  async reach(){return Q(sb.rpc("my_reach"))},
+ async requestCard(id){return Q(sb.rpc("request_card",{target:id}))},
  async friendsOf(id){return Q(sb.rpc("friends_of",{target:id}))},
  async report(target,reason){return Q(sb.from("reports").insert({target_id:target,reason}))},
  // ── feed & inbox

@@ -163,13 +163,17 @@ function Hexagon({axes,prev,size=280}){
  const shape=polyStr(ax.map((a,i)=>pt(i,a.level==null?.14:clamp(a.level,.14,1))));
  let prevShape=null;
  if(prev&&prev.length){const map={};prev.forEach(p=>map[p.name]=p.level);const vals=ax.map(a=>map[a.name]);if(vals.some(v=>v!=null))prevShape=polyStr(ax.map((a,i)=>pt(i,vals[i]==null?.14:clamp(vals[i],.14,1))))}
- return html`<svg className="hex" viewBox="0 0 300 280" style=${{width:size,height:size*280/300}} role="img" aria-label=${"나만의 육각형: "+ax.map(a=>a.name+(a.level==null?"(발견 중)":"")).join(", ")}>
+ return html`<svg className="hex" viewBox="-14 0 328 280" style=${{width:size,height:size*280/328,overflow:"visible"}} role="img" aria-label=${"나만의 육각형: "+ax.map(a=>a.name+(a.level==null?"(발견 중)":"")).join(", ")}>
   ${rings.map((p,i)=>html`<polygon key=${i} points=${p} style=${{fill:"none",stroke:"var(--line)",strokeWidth:1}}/>`)}
   ${ax.map((_,i)=>{const [x,y]=pt(i,1);return html`<line key=${"l"+i} x1=${cx} y1=${cy} x2=${x} y2=${y} style=${{stroke:"var(--line)",strokeWidth:1}}/>`})}
   ${prevShape&&html`<polygon points=${prevShape} style=${{fill:"none",stroke:"var(--ink-3)",strokeWidth:1.5,strokeDasharray:"4 4"}}/>`}
   <polygon points=${shape} style=${{fill:"var(--sage)",fillOpacity:.5,stroke:"var(--accent)",strokeWidth:2,strokeLinejoin:"round"}}/>
   ${ax.map((a,i)=>{const [x,y]=pt(i,a.level==null?.14:clamp(a.level,.14,1));return html`<circle key=${"c"+i} cx=${x} cy=${y} r="3.5" style=${{fill:a.level==null?"var(--paper)":"var(--accent)",stroke:"var(--accent)",strokeWidth:1.5}}/>`})}
-  ${ax.map((a,i)=>{const [x,y]=pt(i,1.24);const anchor=Math.abs(x-cx)<8?"middle":(x>cx?"start":"end");return html`<text key=${"t"+i} x=${x} y=${y+4} textAnchor=${anchor} style=${{fill:a.level==null?"var(--ink-3)":"var(--ink)",fontSize:13,fontWeight:700,fontFamily:"var(--sans)"}}>${a.name}${a.level==null?html`<tspan x=${x} dy="15" style=${{fontSize:11,fontWeight:400,fill:"var(--ink-3)"}}>발견 중</tspan>`:null}</text>`})}
+  ${ax.map((a,i)=>{const [x,y]=pt(i,1.22);const side=Math.abs(x-cx)>=8;const anchor=side?(x>cx?"start":"end"):"middle";
+   // side labels have ~60px before the edge: long names break at a space (or in half) onto two lines
+   const nm=String(a.name||"");let lines=[nm];if(side&&nm.replace(/\s/g,"").length>4){const sp=nm.indexOf(" ");lines=sp>0?[nm.slice(0,sp),nm.slice(sp+1)]:[nm.slice(0,Math.ceil(nm.length/2)),nm.slice(Math.ceil(nm.length/2))]}
+   const y0=y+4-(lines.length-1)*7.5;
+   return html`<text key=${"t"+i} x=${x} y=${y0} textAnchor=${anchor} style=${{fill:a.level==null?"var(--ink-3)":"var(--ink)",fontSize:13,fontWeight:700,fontFamily:"var(--sans)"}}>${lines.map((l,k)=>html`<tspan key=${k} x=${x} dy=${k?15:0}>${l}</tspan>`)}${a.level==null?html`<tspan x=${x} dy="15" style=${{fontSize:11,fontWeight:400,fill:"var(--ink-3)"}}>발견 중</tspan>`:null}<title>${nm}</title></text>`})}
  </svg>`;
 }
 

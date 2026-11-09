@@ -144,7 +144,9 @@ async function renderShareImage(kind,{st,stats,profile}){
  const SERIF='"Noto Serif KR","Apple SD Gothic Neo",serif',SANS='"Noto Sans KR","Apple SD Gothic Neo",sans-serif';
  x.fillStyle="#F4F1E9";x.fillRect(0,0,W,H);x.strokeStyle="#D6DACF";x.lineWidth=2;x.strokeRect(40,40,W-80,H-80);
  x.fillStyle="#66706E";x.font=`700 26px ${SANS}`;x.textAlign="left";x.fillText("MYITEMBOOK · "+MIB_CONFIG.cohort,90,120);
- x.textAlign="right";x.fillText("@"+profile.nickname,W-90,120);x.textAlign="center";
+ const eqp=(typeof equipped==="function"&&stats)?equipped(st,stats):{title:"",frame:""};
+ x.textAlign="right";x.fillText(eqp.title?eqp.title+" "+profile.nickname:"@"+profile.nickname,W-90,120);x.textAlign="center";
+ const FR={gold:"#C9A45A",rose:"#C9878F",star:"#7E95C9",dawn:"#E7A86B"};if(eqp.frame){x.lineWidth=8;if(eqp.frame==="seven"){const gr=x.createLinearGradient(40,40,W-40,H-40);["#E57373","#F0B65A","#E8D96A","#7CC08A","#6AA9D8","#8A7CD0","#C77BB8"].forEach((c,i,a)=>gr.addColorStop(i/(a.length-1),c));x.strokeStyle=gr}else x.strokeStyle=FR[eqp.frame]||"#C9A45A";x.strokeRect(40,40,W-80,H-80)}
  const a=st.analysis;const now=livingGem(st);
  if(kind==="week"){
   const f=st.first||{gem:a.gem,sentence:displaySentence(a),keywords:displayKeywords(a),at:a.at};
@@ -163,7 +165,7 @@ async function renderShareImage(kind,{st,stats,profile}){
   const g=await svgImage(gemSVG(now,st.createdAt,"s0"),520,559);x.drawImage(g,(W-520)/2,170);
   x.fillStyle="#173D3B";x.font=`700 60px ${SERIF}`;x.fillText(gemName(now),W/2,800);
   x.fillStyle="#1F2A28";x.font=`500 40px ${SERIF}`;wrapLines(x,displaySentence(a),W-220,3).forEach((l,i)=>x.fillText(l,W/2,880+i*60));
-  const kw=displayKeywords(a);x.font=`700 30px ${SANS}`;let tot=kw.reduce((s,k)=>s+x.measureText(k).width+60,0)-16;let cx=(W-tot)/2;kw.forEach(k=>{const w=x.measureText(k).width+44;x.fillStyle="#E4E9DF";x.beginPath();x.roundRect?x.roundRect(cx,1080,w,56,28):x.rect(cx,1080,w,56);x.fill();x.fillStyle="#173D3B";x.textAlign="center";x.fillText(k,cx+w/2,1118);cx+=w+16});
+  const kw=displayKeywords(a).map(t=>({t,tag:false})).concat((st.visibility.fields.tags?cardTags(st):[]).map(t=>({t,tag:true})));x.font=`700 30px ${SANS}`;let tot=kw.reduce((s,k)=>s+x.measureText(k.t).width+60,0)-16;let cx=(W-tot)/2;kw.forEach(({t,tag})=>{const w=x.measureText(t).width+44;x.beginPath();x.roundRect?x.roundRect(cx,1080,w,56,28):x.rect(cx,1080,w,56);if(tag){x.strokeStyle="#A7B5A1";x.lineWidth=2.5;x.stroke()}else{x.fillStyle="#E4E9DF";x.fill()}x.fillStyle=tag?"#465250":"#173D3B";x.textAlign="center";x.fillText(t,cx+w/2,1118);cx+=w+16});
   x.fillStyle="#66706E";x.font=`500 26px ${SANS}`;x.fillText(`연마 ${stageOf(st,stats)}단계 · ${STAGES[stageOf(st,stats)]} · 걸어온 날 ${stats.active}`,W/2,1210);
  }
  x.fillStyle="#93A09B";x.font=`500 22px ${SANS}`;x.fillText("누구나 원석으로 태어난다. 살아가는 만큼, 보석이 된다.",W/2,H-80);
@@ -172,13 +174,22 @@ async function renderShareImage(kind,{st,stats,profile}){
 function ShareImageSheet({kind,st,stats,profile,onClose,toast,onExit,exitDone}){
  const [url,setUrl]=useState(null);const cv=useRef(null);
  useEffect(()=>{let alive=true;renderShareImage(kind,{st,stats,profile}).then(c=>{if(!alive)return;cv.current=c;setUrl(c.toDataURL("image/png"))}).catch(()=>toast("이미지를 만들지 못했습니다."));track(kind==="week"?"open_week":"open_cardimg");return()=>{alive=false}},[]);
- async function save(){const c=cv.current;if(!c)return;const blob=await new Promise(r=>c.toBlob(r,"image/png"));const name=`mib-${kind==="week"?"7days":"card"}-${dayKey()}.png`;const file=new File([blob],name,{type:"image/png"});
-  if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],title:"MyItemBook"});track("share_image",{kind,via:"native"});return}catch(e){if(e&&e.name==="AbortError")return}}
-  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},800);track("share_image",{kind,via:"download"});toast("이미지를 저장했어요.")}
+ const fname=()=>`mib-${kind==="week"?"7days":"card"}-${dayKey()}.png`;
+ const blobOf=()=>new Promise(r=>cv.current.toBlob(r,"image/png"));
+ const canShareFiles=useMemo(()=>{try{return !!(navigator.canShare&&navigator.canShare({files:[new File([new Blob(["x"])],"x.png",{type:"image/png"})]}))}catch(e){return false}},[]);
+ const isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+ async function save(){if(!cv.current)return;const blob=await blobOf();const name=fname();
+  // desktop Chrome/Edge: a real "save as" dialog to choose the folder and name
+  if(window.showSaveFilePicker&&!isMobile){try{const h=await window.showSaveFilePicker({suggestedName:name,types:[{description:"PNG 이미지",accept:{"image/png":[".png"]}}]});const w=await h.createWritable();await w.write(blob);await w.close();track("share_image",{kind,via:"picker"});toast("이미지를 저장했어요.");return}catch(e){if(e&&e.name==="AbortError")return}}
+  // iPhone can't download straight into Photos: its share sheet has "이미지 저장"
+  if(/iPhone|iPad|iPod/i.test(navigator.userAgent)&&canShareFiles){try{await navigator.share({files:[new File([blob],name,{type:"image/png"})]});track("share_image",{kind,via:"ios-share"});return}catch(e){if(e&&e.name==="AbortError")return}}
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},800);track("share_image",{kind,via:"download"});toast(isMobile?"이미지를 저장했어요.":"다운로드 폴더에 저장했어요.")}
+ async function share(){if(!cv.current)return;const blob=await blobOf();try{await navigator.share({files:[new File([blob],fname(),{type:"image/png"})],title:"MyItemBook"});track("share_image",{kind,via:"native"})}catch(e){if(e&&e.name!=="AbortError")toast("공유하지 못했어요. '이미지 저장'을 써 주세요.")}}
  return html`<${Sheet} title=${kind==="week"?"7일 비교 카드":"카드 이미지"} onClose=${onClose}>
   ${url?html`<img src=${url} alt=${kind==="week"?"일주일 전과 지금의 젬 비교 이미지":"내 젬 카드 이미지"} className="shareimg"/>`:html`<p className="small faint">이미지를 만드는 중…</p>`}
-  <button className="btn block" disabled=${!url} onClick=${save}><${Ico} n="share"/>저장하거나 공유하기</button>
-  <p className="note">이미지에는 젬, 한 문장, 키워드와 닉네임만 담깁니다. 원문 기록과 근거는 들어가지 않아요.</p>
+  <div className="row"><button className="btn grow" disabled=${!url} onClick=${save}>이미지 저장</button>${canShareFiles&&html`<button className="btn ghost grow" disabled=${!url} onClick=${share}><${Ico} n="share"/>공유하기</button>`}</div>
+  ${!isMobile&&html`<p className="small faint">이미지를 마우스 오른쪽 버튼으로 눌러 ‘다른 이름으로 이미지 저장’을 해도 돼요.</p>`}
+  <p className="note">이미지에는 젬, 한 문장, 키워드, 닉네임과 칭호, 그리고 공개 설정에서 켠 MBTI·혈액형 태그만 담깁니다. 원문 기록과 근거는 들어가지 않아요.</p>
   ${kind==="week"&&!exitDone&&html`<div className="panel tint stack"><b>마지막 미션 · 마무리 설문</b><span className="small muted">일주일을 돌아본 지금, 솔직한 의견을 들려주세요.</span><button className="btn sm" onClick=${onExit}>마무리 설문 열기</button></div>`}
  <//>`;
 }

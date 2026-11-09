@@ -205,7 +205,7 @@ function App(){
  let sheetEl=null;const close=()=>setSheet(null);
  if(sheet==="help")sheetEl=html`<${HelpSheet} supportUrl=${supportUrl} onClose=${close} onFeedback=${()=>{setSheet(null);openFeedback()}}/>`;
  else if(sheet==="avatar")sheetEl=html`<${AvatarSheet} profile=${profile} uid=${uid} onClose=${close} onSaved=${onAvatarSaved} toast=${toast}/>`;
- else if(sheet==="inbox")sheetEl=html`<${InboxSheet} uid=${uid} notes=${notes} anns=${anns} names=${names} soc=${soc} onClose=${()=>{close();loadInbox()}} openUser=${openUser} reloadSoc=${reloadSoc} toast=${toast}/>`;
+ else if(sheet==="inbox")sheetEl=html`<${InboxSheet} uid=${uid} notes=${notes} anns=${anns} names=${names} soc=${soc} onClose=${()=>{close();loadInbox()}} openUser=${openUser} reloadSoc=${reloadSoc} toast=${toast} isPublic=${!!(st&&st.visibility.public)} onPublish=${st&&st.analysis?()=>setSheet("publish"):null}/>`;
  else if(sheet==="data")sheetEl=html`<${DataSheet} st=${st} items=${items} profile=${profile} onClose=${close} onWipe=${wipe} onReread=${()=>openSheet("reread")} onLogout=${logout} toast=${toast} demo=${demo} setQuiet=${setQuiet}/>`;
  else if(sheet&&sheet.startsWith("user:"))sheetEl=html`<${ProfileSheet} key=${sheet} id=${sheet.slice(5)} uid=${uid} st=${st} soc=${soc} names=${names} onClose=${close} openUser=${openUser} reloadSoc=${reloadSoc} toast=${toast} demo=${demo} ensureNames=${ensureNames}/>`;
  else if(sheet&&st.analysis){
