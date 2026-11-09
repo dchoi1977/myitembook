@@ -542,6 +542,8 @@ label.btn{display:inline-flex;align-items:center;justify-content:center;cursor:p
 .gem.live .gm-cat{animation:gmCat 5s ease-in-out infinite}
 @keyframes gmCat{0%,100%{transform:translateX(-6px);opacity:.55}50%{transform:translateX(6px);opacity:1}}
 .gem.live .gm-asterism{animation:gmTwinkle 4.5s ease-in-out infinite}
+.gem.live .gm-aurora{animation:gmAurora 9s ease-in-out infinite}
+@keyframes gmAurora{0%,100%{transform:translate(-8px,-6px);opacity:.75}50%{transform:translate(8px,6px);opacity:1}}
 .gem.live .gm-fire{animation:gmFire 3.8s ease-in-out infinite}
 @keyframes gmFire{0%,100%{opacity:.15}50%{opacity:.75}}
 @media (prefers-reduced-motion:reduce){.gem.live svg *{animation:none!important}}
@@ -551,6 +553,13 @@ label.btn{display:inline-flex;align-items:center;justify-content:center;cursor:p
 .mg-codex summary{display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-size:13px;font-weight:700;list-style:none}
 .mg-codex summary::-webkit-details-marker{display:none}
 .mg-cx-n{font-weight:500;font-size:12.5px}.mg-cx-n b{color:#FFE2A0}
+.mg-cx-h{margin-top:12px;font-size:11.5px;font-weight:700;letter-spacing:.06em;opacity:.7}
+.mg-cx-vars{display:grid;gap:5px;margin-top:6px}
+.mg-cx-vrow{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:12px}
+.mg-cx-vn{width:44px;flex:none;font-weight:700;opacity:.8}
+.mg-cx-v{display:inline-flex;align-items:center;gap:4px;opacity:.45}.mg-cx-v.on{opacity:1;color:#FFE2A0}
+.mg-cx-v i{width:9px;height:9px;border-radius:2px;border:1.5px solid;transform:rotate(45deg)}
+.gemfeat .gf-id{color:var(--ink-2);font-weight:600}
 .mg-cx-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .mg-cx-stone{display:inline-flex;align-items:center;gap:5px;font-size:12px;opacity:.45}.mg-cx-stone.on{opacity:1}
 .mg-cx-stone i{width:10px;height:10px;border-radius:3px;border:1.5px solid;transform:rotate(45deg)}
@@ -746,23 +755,23 @@ label.btn{display:inline-flex;align-items:center;justify-content:center;cursor:p
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/htm@3.1.1/dist/htm.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
-<script src="js/config.js?v=31"></script>
-<script src="js/core.js?v=31"></script>
-<script src="js/zodiac.js?v=31"></script>
-<script src="js/api.js?v=31"></script>
-<script src="js/support.js?v=31"></script>
-<script src="js/avatars.js?v=31"></script>
-<script src="js/screens.js?v=31"></script>
-<script src="js/social.js?v=31"></script>
-<script src="js/ops.js?v=31"></script>
-<script src="js/quick.js?v=31"></script>
-<script src="js/evolve.js?v=31"></script>
-<script src="js/achieve.js?v=31"></script>
-<script src="js/gems.js?v=31"></script>
-<script src="js/showcase.js?v=31"></script>
-<script src="js/ask.js?v=31"></script>
-<script src="js/places.js?v=31"></script>
-<script src="js/updates.js?v=31"></script>
-<script src="js/app.js?v=31"></script>
+<script src="js/config.js?v=33"></script>
+<script src="js/core.js?v=33"></script>
+<script src="js/zodiac.js?v=33"></script>
+<script src="js/api.js?v=33"></script>
+<script src="js/support.js?v=33"></script>
+<script src="js/avatars.js?v=33"></script>
+<script src="js/screens.js?v=33"></script>
+<script src="js/social.js?v=33"></script>
+<script src="js/ops.js?v=33"></script>
+<script src="js/quick.js?v=33"></script>
+<script src="js/evolve.js?v=33"></script>
+<script src="js/achieve.js?v=33"></script>
+<script src="js/gems.js?v=33"></script>
+<script src="js/showcase.js?v=33"></script>
+<script src="js/ask.js?v=33"></script>
+<script src="js/places.js?v=33"></script>
+<script src="js/updates.js?v=33"></script>
+<script src="js/app.js?v=33"></script>
 </body>
 </html>

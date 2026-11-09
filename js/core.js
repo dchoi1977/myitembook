@@ -96,27 +96,68 @@ const INCLUSIONS={none:{name:"",rar:""},bubbles:{name:"물방울 내포",rar:"�
 function gemTraits(g,seed){const fp=g&&g.fp;const R=rng("trait|"+(fp?(fp.mod||[]).join(",")+"|"+fp.hue+"|"+fp.tilt:String(seed)+(g&&g.stone)));
  const bi=R()<.4;const hue2=(R()<.5?-1:1)*(55+R()*85);const ang=Math.round(R()*180);const glowHue=Math.round((R()-.5)*34);const scale=+(.94+R()*.12).toFixed(3);const hueX=Math.round((R()-.5)*22);
  const r=R();const inc=r<.3?"none":r<.52?"bubbles":r<.7?"needles":r<.84?"phantom":r<.945?"cat":"star";
- return {bi,hue2,ang,glowHue,scale,hueX,inc}}
+ const varR=R(),cutR=R(),patR=R();const vi=varR<.55?0:varR<.88?1:2;
+ const pat=patR<.62?"none":patR<.76?"bands":patR<.88?"zoned":patR<.96?"dendrite":"aurora";
+ return {bi,hue2,ang,glowHue,scale,hueX,inc,vi,cutR,pat}}
+/* 빛깔 변종 — 같은 원석도 세 갈래 (기본 · 변종 · 희귀 변종) */
+const VARIANTS={
+ "오팔":[{n:"우윳빛 오팔"},{n:"불꽃 오팔",base:"#F2A27A",light:"#FFE3C9",deep:"#B5543A",tint:"#FFD36E"},{n:"블랙 오팔",rare:1,base:"#2D3A4A",light:"#7FD3C7",deep:"#111821",tint:"#C69CF2"}],
+ "호박":[{n:"꿀빛 호박"},{n:"체리 호박",base:"#B8432E",light:"#F09A6E",deep:"#6B1D12",tint:"#FFC48A"},{n:"푸른 호박",rare:1,base:"#C98F2E",light:"#9FE0F2",deep:"#6E4A12",tint:"#7FC9F0"}],
+ "청금석":[{n:"청금석"},{n:"하늘 청금석",base:"#4E79C9",light:"#B4CDF6",deep:"#22407E",tint:"#E8C873"},{n:"밤하늘 청금석",rare:1,base:"#1A2459",light:"#5A6FC2",deep:"#080C26",tint:"#F2CF6A"}],
+ "수정":[{n:"맑은 수정"},{n:"연기 수정",base:"#B9A694",light:"#EDE3D8",deep:"#6F5C4B",tint:"#E2D3C2"},{n:"무지개 수정",rare:1,base:"#DCE7F2",light:"#FFFFFF",deep:"#8FA3C7",tint:"#F7C6E8"}],
+ "장미석":[{n:"장미석"},{n:"복숭아 장미석",base:"#F0B59A",light:"#FFE6D8",deep:"#B87358",tint:"#FFD9C2"},{n:"라벤더 장미석",rare:1,base:"#C9B0E0",light:"#F2E8FA",deep:"#806A9E",tint:"#F6C9E2"}],
+ "비취":[{n:"비취"},{n:"사과 비취",base:"#7CC46A",light:"#CDEFB8",deep:"#3C7A2E",tint:"#E6F7C9"},{n:"라벤더 비취",rare:1,base:"#B7A6D6",light:"#E6DDF4",deep:"#6E5E94",tint:"#D9F0DC"}],
+ "자수정":[{n:"자수정"},{n:"새벽 자수정",base:"#C2A4D9",light:"#F0E4F8",deep:"#7D5E9C",tint:"#F7D8E8"},{n:"제왕 자수정",rare:1,base:"#5B2A86",light:"#B88BE0",deep:"#2A0F45",tint:"#E94F8A"}],
+ "마노":[{n:"마노"},{n:"이끼 마노",base:"#A9B89A",light:"#E8EEDC",deep:"#4F6B44",tint:"#F4F1E3"},{n:"불꽃 마노",rare:1,base:"#9E3D2A",light:"#F6A46A",deep:"#4A160E",tint:"#FFD08A"}],
+ "흑요석":[{n:"흑요석"},{n:"눈꽃 흑요석",base:"#43484E",light:"#C9CED3",deep:"#16191C",tint:"#FFFFFF"},{n:"무지개 흑요석",rare:1,base:"#2E3138",light:"#8FD6C9",deep:"#0E1013",tint:"#D79CF0"}]};
+const CUTS={"결정":[["기둥",3],["바늘",2],["쌍뿔",2],["왕관",1.4],["쌍정",1]],"덩이":[["자갈",2.4],["카보숑",2],["물방울",1.4],["쿠션",1.6],["브릴리언트",1.2],["에메랄드 컷",1],["마키즈",1],["트릴리언",.8]],"군집":[["작은 무리",2.4],["부채",1.6],["정동",1]]};
+const PATTERNS={none:"",bands:"띠무늬",zoned:"색 구역",dendrite:"나뭇가지 무늬",aurora:"오로라"};
+function cutOf(form,T){const L=CUTS[form]||CUTS["덩이"];const tot=L.reduce((a,c)=>a+c[1],0);let x=(T.cutR||0)*tot;for(const [n,w] of L){if((x-=w)<0)return n}return L[0][0]}
+function variantOf(stone,T){const V=VARIANTS[stone]||VARIANTS["오팔"];return V[T.vi||0]}
 function gemFeatures(g,seed){const T=gemTraits(g||{},seed);const f=[];if(T.bi)f.push("bicolor");if(T.inc!=="none")f.push(T.inc);return f}
+/* what makes this gem itself: variant · cut · pattern · features (for labels & the collection) */
+function gemIdentity(g,seed){g=g||{};const T=gemTraits(g,seed);const form=FORMS.includes(g.form)?g.form:"덩이";const v=variantOf(g.stone||"오팔",T);return {variant:v.n,rareVariant:!!v.rare,cut:cutOf(form,T),pattern:PATTERNS[T.pat],feats:gemFeatures(g,seed)}}
 const POLISH={1:{sat:-.4,sc:.8,amp:7,frost:.2,crust:.62},2:{sat:-.2,sc:.87,amp:3.6,frost:.1,crust:.36},3:{sat:0,sc:.93,amp:0,frost:0,crust:0},4:{sat:.08,sc:1,amp:0,frost:0,crust:0,glint:2},5:{sat:.16,sc:1.05,amp:0,frost:0,crust:0,glint:4,fire:1}};
 function gemSVG(g,seed,key){
- g=g||{};let st=STONES[g.stone]||STONES["오팔"];const R=rng(seed+"|"+(g.stone||"")+(g.form||"")+(g.facets||0));
+ g=g||{};let st=STONES[g.stone]||STONES["오팔"];const T0=gemTraits(g,seed);{const v=variantOf(g.stone||"오팔",T0);if(v.base)st={...st,base:v.base,light:v.light,deep:v.deep,tint:v.tint}}const R=rng(seed+"|"+(g.stone||"")+(g.form||"")+(g.facets||0));
  const fp=g.fp||null;if(fp)st={...st,base:hueShift(st.base,fp.hue,fp.sat),light:hueShift(st.light,fp.hue*.6,fp.sat*.5),deep:hueShift(st.deep,fp.hue,fp.sat),tint:hueShift(st.tint,fp.hue,fp.sat)};
  const ws=fp?fp.ws:1,hs=fp?fp.hs:1,mod=fp?fp.mod:null;
- const T=gemTraits(g,seed);const pol=clamp(Math.round(g.polish||g.stage||3),1,5);const PO=POLISH[pol];
+ const T=T0;const pol=clamp(Math.round(g.polish||g.stage||3),1,5);const PO=POLISH[pol];
  {const sh=(c,k=1)=>hueShift(c,T.hueX*k,PO.sat);st={...st,base:sh(st.base),light:sh(st.light,.6),deep:sh(st.deep),tint:sh(st.tint)}}
  const glowC=hueShift(st.light==="#FFFFFF"?st.tint:st.light,T.glowHue,.15);
  const id="gm"+key;const facets=clamp(Math.round(g.facets||8),6,14);
  const tex=TEXTURES.includes(g.texture)?g.texture:"맑음";const form=FORMS.includes(g.form)?g.form:"덩이";
  let C;
  const tilt0=(R()-.5)*8;
- if(form==="결정")C=[{P:crystalPts(100,98,1,R,facets,fp?fp.tilt:tilt0,ws,hs),c:[100,98],main:1}];
- else if(form==="군집"){const SIDES=[[78,138,.38,-32],[124,140,.36,30],[64,118,.56,-17],[138,120,.52,15]];const n=clamp(fp?fp.side:2,2,4);C=SIDES.slice(4-n).map(([x,y,sc,tl])=>({P:crystalPts(x,y,sc,R,6,tl+(fp?fp.tilt*.5:0),ws,1),c:[x,y]}));C.push({P:crystalPts(100,98,.86,R,facets,fp?fp.tilt*.6:tilt0*.75,ws,hs),c:[100,98],main:1})}
- else C=[{P:nuggetPts(100,100,R,facets,ws,hs),c:[100,100],main:1}];
+ const cut=cutOf(form,T);const tl=fp?fp.tilt:tilt0;let geode=false;
+ const ring=(n,fn)=>{const P=[];for(let i=0;i<n;i++){const t=i/n*Math.PI*2;P.push(fn(t))}return P};
+ if(form==="결정"){
+  if(cut==="바늘")C=[{P:crystalPts(100,98,1,R,facets,tl,ws*.7,hs*1.16),c:[100,98],main:1}];
+  else if(cut==="쌍뿔"){const w=40*ws,h=82*hs,tp=h*.5;C=[{P:[[0,-h],[w,-h+tp],[w,h-tp],[0,h],[-w,h-tp],[-w,-h+tp]].map(p=>rot(p,tl)).map(([x,y])=>[x+100+(R()-.5)*2,y+98+(R()-.5)*2]),c:[100,98],main:1}]}
+  else if(cut==="왕관"){const w=30*ws,h=80*hs;C=[{P:[[0,-h],[w*1.38,-h*.6],[w*1.34,-h*.12],[w*.86,h*.26],[w*.74,h*.72],[0,h],[-w*.74,h*.72],[-w*.86,h*.26],[-w*1.34,-h*.12],[-w*1.38,-h*.6]].map(p=>rot(p,tl)).map(([x,y])=>[x+100,y+98]),c:[100,92],main:1}]}
+  else if(cut==="쌍정")C=[{P:crystalPts(88,104,.8,R,7,-24+tl*.4,ws,hs),c:[88,104]},{P:crystalPts(110,98,.86,R,facets,22+tl*.4,ws,hs),c:[110,98],main:1}];
+  else C=[{P:crystalPts(100,98,1,R,facets,tl,ws,hs),c:[100,98],main:1}];
+ }else if(form==="군집"){
+  if(cut==="부채"){const F=[[-44,.5],[-22,.68],[0,.9],[22,.66],[44,.48]];C=F.map(([a,sc],i)=>{const r=a*Math.PI/180;const len=80*sc;const x=100+Math.sin(r)*len*.62,y=176-Math.cos(r)*len*.98-len*.02;return {P:crystalPts(x,y,sc,R,i===2?facets:6,a+(fp?fp.tilt*.3:0),ws,hs),c:[x,y],main:i===2?1:0}});const m=C.splice(2,1)[0];C.push(m)}
+  else if(cut==="정동"){geode=true;C=[{P:ring(28,t=>[100+Math.cos(t)*70*ws*(.94+R()*.1),104+Math.sin(t)*62*hs*(.94+R()*.1)]),c:[100,104],main:1}]}
+  else{const SIDES=[[78,138,.38,-32],[124,140,.36,30],[64,118,.56,-17],[138,120,.52,15]];const n=clamp(fp?fp.side:2,2,4);C=SIDES.slice(4-n).map(([x,y,sc,tl2])=>({P:crystalPts(x,y,sc,R,6,tl2+(fp?fp.tilt*.5:0),ws,1),c:[x,y]}));C.push({P:crystalPts(100,98,.86,R,facets,fp?fp.tilt*.6:tilt0*.75,ws,hs),c:[100,98],main:1})}
+ }else{
+  const rx=62*ws,ry=56*hs;
+  if(cut==="카보숑")C=[{P:ring(30,t=>[100+Math.cos(t)*rx*.96,102+Math.sin(t)*ry*.88]),c:[100,102],main:1,smooth:1}];
+  else if(cut==="물방울")C=[{P:ring(14+facets,t=>[100+Math.sin(t)*rx*.86*Math.pow(Math.abs(Math.sin(t/2)),.9),100-Math.cos(t)*ry*1.08]),c:[100,112],main:1}];
+  else if(cut==="쿠션")C=[{P:ring(8+facets*2,t=>{const c=Math.cos(t),s2=Math.sin(t),p=.38;return [100+Math.sign(c)*Math.pow(Math.abs(c),p)*rx*.86,102+Math.sign(s2)*Math.pow(Math.abs(s2),p)*ry*.86]}),c:[100,102],main:1}];
+  else if(cut==="브릴리언트")C=[{P:ring(16,t=>[100+Math.cos(t+Math.PI/16)*rx*.92,102+Math.sin(t+Math.PI/16)*rx*.92*.94]),c:[100,102],main:1,brill:1}];
+  else if(cut==="에메랄드 컷"){const w=46*ws,h=62*hs,k=15;C=[{P:[[-w+k,-h],[w-k,-h],[w,-h+k],[w,h-k],[w-k,h],[-w+k,h],[-w,h-k],[-w,-h+k]].map(([x,y])=>[x+100,y+102]),c:[100,102],main:1,step:1}]}
+  else if(cut==="마키즈")C=[{P:ring(10+facets,t=>[100+Math.sin(t)*Math.pow(Math.abs(Math.sin(t)),.5)*rx*.7,100-Math.cos(t)*ry*1.12]).map(p=>[100+rot([p[0]-100,p[1]-100],tl*2)[0],100+rot([p[0]-100,p[1]-100],tl*2)[1]]),c:[100,100],main:1}];
+  else if(cut==="트릴리언"){const V=[[0,-1],[.866,.5],[-.866,.5]];const P=[];for(let i=0;i<3;i++){const a=V[i],b=V[(i+1)%3];for(let k=0;k<5;k++){const t=k/5;const x=a[0]+(b[0]-a[0])*t,y=a[1]+(b[1]-a[1])*t;const bulge=1+Math.sin(t*Math.PI)*.12;P.push([100+x*bulge*rx*.98,108+y*bulge*ry*1.04])}}C=[{P:P.map(p=>[100+rot([p[0]-100,p[1]-104],tl)[0],104+rot([p[0]-100,p[1]-104],tl)[1]]),c:[100,104],main:1}]}
+  else C=[{P:nuggetPts(100,100,R,facets,ws,hs),c:[100,100],main:1}];
+ }
  if(PO.amp){const RJ=rng(seed+"|rough");C.forEach(cr=>{const out=[];cr.P.forEach((p,i)=>{const q=cr.P[(i+1)%cr.P.length];out.push([p[0]+(RJ()-.5)*PO.amp,p[1]+(RJ()-.5)*PO.amp]);if(pol===1&&RJ()<.6){const t=.3+RJ()*.4;const m=[p[0]+(q[0]-p[0])*t,p[1]+(q[1]-p[1])*t];const L=Math.hypot(m[0]-cr.c[0],m[1]-cr.c[1])||1;const d=-(1.5+RJ()*4);out.push([m[0]+(m[0]-cr.c[0])/L*d,m[1]+(m[1]-cr.c[1])/L*d])}});cr.P=out})}
  const op=tex==="맑음"?.9:1;const hard=clamp(Math.round(g.hardness||2),1,5);
  let body="";
- C.forEach(cr=>{body+=`<g${cr.main?"":` opacity=".93"`}>${facetsSVG(cr.P,cr.c,st,tex,R,op,mod)}<polygon points="${polyStr(cr.P)}" fill="none" stroke="${st.deep}" stroke-opacity=".9" stroke-width="${(.45+hard*.33).toFixed(2)}" stroke-linejoin="round"/><polygon points="${polyStr(cr.P)}" fill="none" stroke="#FFFFFF" stroke-opacity="${(.1+hard*.08).toFixed(2)}" stroke-width=".8" stroke-linejoin="round" transform="translate(-.7,-.7)"/></g>`});
+ C.forEach(cr=>{if(geode&&cr.main){const RG=rng(seed+"|geode");const cav=cr.P.map(([x,y])=>[cr.c[0]+(x-cr.c[0])*.74+(RG()-.5)*4,cr.c[1]+(y-cr.c[1])*.72+(RG()-.5)*4]);let dz="";for(let i=0;i<70;i++){const a=RG()*Math.PI*2,r=Math.sqrt(RG());const x=cr.c[0]+Math.cos(a)*r*48*ws,y=cr.c[1]+Math.sin(a)*r*40*hs;const sz=2.5+RG()*4.5*(1-r*.5);const lit=RG();dz+=`<polygon points="${polyStr([[x,y-sz],[x+sz*.7,y+sz*.5],[x-sz*.7,y+sz*.5]])}" fill="${lit>.6?st.light:lit>.25?st.base:st.deep}" opacity=".95"/>`}
+   body+=`<g><polygon points="${polyStr(cr.P)}" fill="#9A8E80" stroke="#5E554A" stroke-width="1.4" stroke-linejoin="round"/><polygon points="${polyStr(cr.P.map(([x,y])=>[cr.c[0]+(x-cr.c[0])*.88,cr.c[1]+(y-cr.c[1])*.88]))}" fill="#C9BFB2" opacity=".7"/><polygon points="${polyStr(cav)}" fill="${st.deep}"/><g clip-path="url(#${id}cav)">${dz}</g><polygon points="${polyStr(cav)}" fill="none" stroke="${st.light}" stroke-opacity=".6" stroke-width="1"/></g>`;cr.cav=cav;return}
+  body+=`<g${cr.main?"":` opacity=".93"`}>${facetsSVG(cr.P,cr.c,st,tex,R,op,mod)}<polygon points="${polyStr(cr.P)}" fill="none" stroke="${st.deep}" stroke-opacity=".9" stroke-width="${(.45+hard*.33).toFixed(2)}" stroke-linejoin="round"/><polygon points="${polyStr(cr.P)}" fill="none" stroke="#FFFFFF" stroke-opacity="${(.1+hard*.08).toFixed(2)}" stroke-width=".8" stroke-linejoin="round" transform="translate(-.7,-.7)"/></g>`});
  const main=C.find(c=>c.main);const xs=main.P.map(p=>p[0]),ys=main.P.map(p=>p[1]);
  const bx=[Math.min(...xs),Math.max(...xs)],by=[Math.min(...ys),Math.max(...ys)];
  let over="";
@@ -128,6 +169,14 @@ function gemSVG(g,seed,key){
  if(tex==="비단결")for(let i=0;i<8;i++){const x=bx[0]-50+i*22;over+=`<line x1="${x}" y1="${by[1]+10}" x2="${x+70}" y2="${by[0]-10}" stroke="#FFFFFF" stroke-opacity=".17" stroke-width="5"/>`}
  const grain=clamp(Math.round(g.grain||0),0,7);
  for(let k=0;k<grain;k++){const y0=by[0]+(by[1]-by[0])*(.18+.64*R()),y1=by[0]+(by[1]-by[0])*(.18+.64*R());const x0=bx[0]-6,x1=bx[1]+6;const c1=[x0+(x1-x0)*.33,y0+(R()-.5)*50],c2=[x0+(x1-x0)*.66,y1+(R()-.5)*50];over+=`<path d="M${x0.toFixed(1)} ${y0.toFixed(1)}C${c1[0].toFixed(1)} ${c1[1].toFixed(1)} ${c2[0].toFixed(1)} ${c2[1].toFixed(1)} ${x1.toFixed(1)} ${y1.toFixed(1)}" fill="none" stroke="#E2BC5C" stroke-width="${(1.1+R()*.6).toFixed(2)}" stroke-opacity=".92" stroke-linecap="round" class="gm-grain" style="animation-delay:${(k*.7).toFixed(1)}s"/>`}
+ if(main.brill){const P=main.P,[cx,cy]=main.c;const tb=P.map(([x,y])=>[cx+(x-cx)*.42,cy+(y-cy)*.42]);for(let i=0;i<P.length;i+=2){const j=(i+2)%P.length;over+=`<polyline points="${polyStr([P[i],tb[(i+1)%P.length],P[j]])}" fill="none" stroke="#FFFFFF" stroke-opacity=".38" stroke-width=".7"/><line x1="${tb[i][0].toFixed(1)}" y1="${tb[i][1].toFixed(1)}" x2="${P[i][0].toFixed(1)}" y2="${P[i][1].toFixed(1)}" stroke="#FFFFFF" stroke-opacity=".3" stroke-width=".6"/>`}over+=`<polygon points="${polyStr(tb)}" fill="#FFFFFF" fill-opacity=".12" stroke="#FFFFFF" stroke-opacity=".55" stroke-width=".8"/>`}
+ if(main.step){const [cx,cy]=main.c;[.78,.56].forEach(k=>{over+=`<polygon points="${polyStr(main.P.map(([x,y])=>[cx+(x-cx)*k,cy+(y-cy)*k]))}" fill="none" stroke="#FFFFFF" stroke-opacity="${k>.6?.4:.55}" stroke-width=".8"/>`})}
+ if(main.smooth)over+=`<ellipse cx="${main.c[0]-16}" cy="${main.c[1]-20}" rx="24" ry="14" fill="#FFFFFF" opacity=".35" transform="rotate(-24 ${main.c[0]-16} ${main.c[1]-20})"/>`;
+ if(T.pat!=="none"){const RP=rng(seed+"|pat");const W=bx[1]-bx[0],H=by[1]-by[0];
+  if(T.pat==="bands")for(let i=0;i<6;i++){const y=by[0]+H*(i+.5)/6+(RP()-.5)*6;over+=`<path d="M${bx[0]-10} ${y.toFixed(1)} Q${(bx[0]+W/2).toFixed(1)} ${(y+(RP()-.5)*26).toFixed(1)} ${bx[1]+10} ${(y+(RP()-.5)*8).toFixed(1)}" fill="none" stroke="${i%2?st.light:st.deep}" stroke-opacity=".28" stroke-width="${(3+RP()*4).toFixed(1)}"/>`}
+  if(T.pat==="zoned"){const c2=hueShift(st.base,40+RP()*60,.2);over+=`<polygon points="${polyStr([[bx[0]-10,by[0]+H*(.35+RP()*.2)],[bx[1]+10,by[0]+H*(.15+RP()*.2)],[bx[1]+10,by[1]+10],[bx[0]-10,by[1]+10]])}" fill="${c2}" opacity=".32"/>`}
+  if(T.pat==="dendrite"){const br=(x,y,a,l,d)=>{if(d>4||l<3)return "";const x2=x+Math.cos(a)*l,y2=y+Math.sin(a)*l;return `<line x1="${x.toFixed(1)}" y1="${y.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${st.deep}" stroke-opacity=".55" stroke-width="${(1.6-d*.3).toFixed(1)}" stroke-linecap="round"/>`+br(x2,y2,a-.5-RP()*.3,l*.68,d+1)+br(x2,y2,a+.4+RP()*.3,l*.62,d+1)};over+=br(bx[0]+W*.2,by[1]-4,-1.25,H*.22,0)+br(bx[0]+W*.7,by[1]-2,-1.9,H*.18,0)}
+  if(T.pat==="aurora"){const g2=id+"au";over+=`<defs><linearGradient id="${g2}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7FE0C9" stop-opacity=".0"/><stop offset=".35" stop-color="#7FE0C9" stop-opacity=".4"/><stop offset=".6" stop-color="#B98CF2" stop-opacity=".38"/><stop offset=".85" stop-color="#F2A6C9" stop-opacity=".3"/><stop offset="1" stop-color="#F2A6C9" stop-opacity="0"/></linearGradient></defs><rect class="gm-aurora" x="${bx[0]-20}" y="${by[0]-20}" width="${W+40}" height="${H+40}" fill="url(#${g2})"/>`}}
  {const RI=rng(seed+"|inc");const W=bx[1]-bx[0],H=by[1]-by[0],mcx=(bx[0]+bx[1])/2,mcy=(by[0]+by[1])/2;
   if(T.bi){const c2=hueShift(st.base,T.hue2,.1);over+=`<defs><linearGradient id="${id}bi" gradientTransform="rotate(${T.ang} .5 .5)"><stop offset=".25" stop-color="${c2}" stop-opacity="0"/><stop offset="1" stop-color="${c2}" stop-opacity=".62"/></linearGradient></defs><rect x="${bx[0]}" y="${by[0]}" width="${W}" height="${H}" fill="url(#${id}bi)"/>`}
   if(T.inc==="bubbles")for(let i=0;i<9;i++){const x=bx[0]+W*(.2+RI()*.6),y=by[0]+H*(.45+RI()*.45),r=.8+RI()*2.2;over+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" fill="#FFFFFF" fill-opacity=".18" stroke="#FFFFFF" stroke-opacity=".7" stroke-width=".5"/>`}
@@ -175,7 +224,8 @@ function gemSVG(g,seed,key){
   polish=C.map(c=>`<polygon points="${polyStr(c.P)}" fill="none" stroke="#FFFFFF" stroke-opacity="${pol===5?.55:.35}" stroke-width="${pol===5?1.3:1}" stroke-linejoin="round"/>`).join("")+polish}
  if(pol===5)back+=`<g class="gm-spin slow" opacity=".22">${[...Array(12)].map((_,i)=>{const a=i*30*Math.PI/180;return `<line x1="${(100+Math.cos(a)*40).toFixed(1)}" y1="${(98+Math.sin(a)*40).toFixed(1)}" x2="${(100+Math.cos(a)*(i%2?78:92)).toFixed(1)}" y2="${(98+Math.sin(a)*(i%2?78:92)).toFixed(1)}" stroke="${glowC}" stroke-width="${i%2?1:1.6}" stroke-linecap="round"/>`}).join("")}</g>`;
  const sc=+(PO.sc*T.scale).toFixed(3);
- const defs=`<defs><clipPath id="${id}c">${C.map(c=>`<polygon points="${polyStr(c.P)}"/>`).join("")}</clipPath><radialGradient id="${id}glow" cx="50%" cy="46%" r="50%"><stop offset="0" stop-color="${glowC}" stop-opacity="${(.4+pol*.05).toFixed(2)}"/><stop offset="1" stop-color="${glowC}" stop-opacity="0"/></radialGradient><radialGradient id="${id}proj"><stop offset="0" stop-color="${st.tint}" stop-opacity=".95"/><stop offset="1" stop-color="${st.tint}" stop-opacity="0"/></radialGradient><radialGradient id="${id}age" cx="50%" cy="50%" r="50%"><stop offset=".35" stop-color="${st.deep}" stop-opacity="0"/><stop offset=".7" stop-color="${st.deep}" stop-opacity="${(.03+rg*.02).toFixed(3)}"/><stop offset="1" stop-color="${st.deep}" stop-opacity="0"/></radialGradient><radialGradient id="${id}core"><stop offset="0" stop-color="${st.deep}" stop-opacity=".9"/><stop offset="1" stop-color="${st.deep}" stop-opacity="0"/></radialGradient><linearGradient id="${id}sh" x1="0" x2="1"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0"/><stop offset=".5" stop-color="#FFFFFF" stop-opacity="${tex==="맑음"?.55:.4}"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></linearGradient><radialGradient id="${id}milk" cx="45%" cy="40%" r="60%"><stop offset="0" stop-color="#FFFFFF" stop-opacity=".44"/><stop offset="1" stop-color="#FFFFFF" stop-opacity=".04"/></radialGradient></defs>`;
+ const cavDef=C.filter(c=>c.cav).map(c=>`<clipPath id="${id}cav"><polygon points="${polyStr(c.cav)}"/></clipPath>`).join("");
+ const defs=`<defs>${cavDef}<clipPath id="${id}c">${C.map(c=>`<polygon points="${polyStr(c.cav||c.P)}"/>`).join("")}</clipPath><radialGradient id="${id}glow" cx="50%" cy="46%" r="50%"><stop offset="0" stop-color="${glowC}" stop-opacity="${(.4+pol*.05).toFixed(2)}"/><stop offset="1" stop-color="${glowC}" stop-opacity="0"/></radialGradient><radialGradient id="${id}proj"><stop offset="0" stop-color="${st.tint}" stop-opacity=".95"/><stop offset="1" stop-color="${st.tint}" stop-opacity="0"/></radialGradient><radialGradient id="${id}age" cx="50%" cy="50%" r="50%"><stop offset=".35" stop-color="${st.deep}" stop-opacity="0"/><stop offset=".7" stop-color="${st.deep}" stop-opacity="${(.03+rg*.02).toFixed(3)}"/><stop offset="1" stop-color="${st.deep}" stop-opacity="0"/></radialGradient><radialGradient id="${id}core"><stop offset="0" stop-color="${st.deep}" stop-opacity=".9"/><stop offset="1" stop-color="${st.deep}" stop-opacity="0"/></radialGradient><linearGradient id="${id}sh" x1="0" x2="1"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0"/><stop offset=".5" stop-color="#FFFFFF" stop-opacity="${tex==="맑음"?.55:.4}"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></linearGradient><radialGradient id="${id}milk" cx="45%" cy="40%" r="60%"><stop offset="0" stop-color="#FFFFFF" stop-opacity=".44"/><stop offset="1" stop-color="#FFFFFF" stop-opacity=".04"/></radialGradient></defs>`;
  const sheen=`<g transform="rotate(18 100 100)"><rect class="gm-sheen" x="-150" y="-40" width="56" height="300" fill="url(#${id}sh)"/></g>`;
  return `<svg viewBox="0 0 200 215" xmlns="http://www.w3.org/2000/svg">${defs}<circle class="gm-glow" cx="100" cy="98" r="96" fill="url(#${id}glow)"/>${ringsBack}${back}${under}${plinth}${around}<g transform="translate(100 108) scale(${sc}) translate(-100 -108)"><g class="gm-body">${body}<g clip-path="url(#${id}c)">${over}${pol>=3?sheen:""}</g>${polish}</g></g>${front}</svg>`;
 }
