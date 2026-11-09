@@ -48,6 +48,8 @@ const api={
    if(body.thumb&&body.thumb.startsWith("data:"))await Q(sb.storage.from("item-photos").upload(t,dataUrlToBlob(body.thumb),{upsert:true,contentType:"image/jpeg"}));
    body.photoPath=p;body.thumbPath=t;body.photoV=v;
   }
+  if(body._removePhoto){try{await sb.storage.from("item-photos").remove([`${uid}/${item.id}.jpg`,`${uid}/${item.id}_t.jpg`])}catch(e){}delete body.photoPath;delete body.thumbPath;delete body.photoV}
+  delete body._removePhoto;delete body._shared;
   delete body.photo;delete body.thumb;delete body.photoUrl;delete body.thumbUrl;
   await Q(sb.from("items").upsert({id:item.id,user_id:uid,data:body},{onConflict:"id"}));
   return body;
@@ -83,6 +85,7 @@ const api={
  async recordView(id){try{await sb.rpc("record_view",{owner:id})}catch(e){}},
  async visitors(){return Q(sb.rpc("my_visitors"))},
  async reach(){return Q(sb.rpc("my_reach"))},
+ async addMyPlace(row){return Q(sb.from("my_places").insert(row).select("id").single())},
  async askStatus(){return Q(sb.rpc("ask_status"))},
  async asksForMe(){return Q(sb.rpc("asks_for_me"))},
  async askSend(qid,friends){return Q(sb.rpc("ask_send",{qid,friends}))},

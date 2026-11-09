@@ -208,11 +208,16 @@ const BADGES=[
  {id:"giver10",g:"함께",rar:"rare",name:"다정한 손",glyph:"잎",desc:"공감과 한 단어를 열 번 건넸어요.",cond:"공감·한 단어 합쳐 10번 건네기",title:"다정한 손의",test:s=>s.reactionsGiven+s.wordsGiven>=10,prog:s=>BP(s.reactionsGiven+s.wordsGiven,10)},
  {id:"loved10",g:"함께",rar:"epic",name:"사랑받는 젬",glyph:"별",desc:"공감과 한 단어를 열 번 받았어요.",cond:"공감·한 단어 합쳐 10개 받기",title:"사랑받는",frame:"rose",test:s=>s.reactionsReceived+s.wordsReceived>=10,prog:s=>BP(s.reactionsReceived+s.wordsReceived,10)},
  {id:"visited15",g:"함께",rar:"epic",name:"발길이 닿는 카드",glyph:"발자국",desc:"열다섯 사람이 내 카드를 다녀갔어요.",cond:"내 카드를 본 사람 15명",title:"발길이 닿는",frame:"star",test:s=>(s.visitors||0)>=15,prog:s=>BP(s.visitors||0,15)},
+ {id:"stay1",g:"발자취",rar:"common",name:"첫 발자국",glyph:"발자국",desc:"머무른 곳을 처음 남겼어요.",cond:"'여기 머물렀어요'로 장소 1곳 남기기",title:"발자국을 남긴",test:s=>(s.stays||0)>=1,prog:s=>BP(s.stays,1)},
+ {id:"explorer",g:"발자취",rar:"rare",name:"동네 탐험가",glyph:"산",desc:"서로 다른 다섯 곳에 머물렀어요.",cond:"서로 다른 장소 5곳 남기기",title:"동네를 걷는",test:s=>(s.placesN||0)>=5,prog:s=>BP(s.placesN,5)},
+ {id:"regular",g:"발자취",rar:"rare",name:"단골",glyph:"고리",desc:"같은 곳을 서로 다른 세 날에 찾았어요.",cond:"같은 장소를 다른 날 3번 남기기",title:"단골이 있는",test:s=>(s.regular||0)>=3,prog:s=>BP(s.regular,3)},
+ {id:"mapper",g:"발자취",rar:"common",name:"지도에 없던 곳",glyph:"펜",desc:"목록에 없던 나만의 장소를 등록했어요.",cond:"목록에 없는 장소 직접 등록하기",title:"나만의 지도를 그리는",test:s=>(s.newPlaces||0)>=1,prog:s=>BP(s.newPlaces,1)},
+ {id:"wander",g:"발자취",rar:"epic",name:"여러 갈래의 하루",glyph:"별",desc:"다섯 가지 다른 갈래의 장소에 머물렀어요.",cond:"카페·공원·배움 등 서로 다른 갈래 5가지",title:"여러 갈래를 걷는",test:s=>(s.placeCats||0)>=5,prog:s=>BP(s.placeCats,5)},
  {id:"dawn",g:"비밀",rar:"epic",secret:true,hint:"해가 뜨기 전, 하루를 먼저 연 사람에게",name:"새벽빛",glyph:"새싹",desc:"새벽 5~7시에 오늘의 한 줄을 남겼어요.",cond:"새벽 5~7시에 오늘의 한 줄 남기기",title:"새벽빛의",frame:"dawn",test:s=>!!s.dawn,prog:s=>BB(s.dawn)},
  {id:"allweek",g:"비밀",rar:"legend",secret:true,hint:"일곱 날, 하루도 빠짐없이",name:"일곱 빛깔",glyph:"별",desc:"일곱 날 모두 한 걸음이나 한 줄을 남겼어요.",cond:"활동한 날 7일 채우기",title:"일곱 날을 채운",frame:"seven",test:s=>s.active>=7,prog:s=>BP(s.active,7)}
 ];
-GROUPS["비밀"]="#5B4A7A";
-const GROUP_DESC={"지속":"꾸준히 이어 간 시간","도약":"나를 새로 발견한 순간","회복":"쉬고, 다듬고, 돌아온 일","함께":"사람들과 결을 주고받은 일","비밀":"조건이 숨겨진 업적"};
+GROUPS["비밀"]="#5B4A7A";GROUPS["발자취"]="#4F6F8F";
+const GROUP_DESC={"발자취":"머무른 곳이 남긴 길","지속":"꾸준히 이어 간 시간","도약":"나를 새로 발견한 순간","회복":"쉬고, 다듬고, 돌아온 일","함께":"사람들과 결을 주고받은 일","비밀":"조건이 숨겨진 업적"};
 function frameOf(days){return days>=100?4:days>=60?3:days>=30?2:days>=7?1:0}
 function Medal({b,earned,frame=0,size=60}){
  const c=GROUPS[b.g];const ring=earned?["#B9C3B4","#9FB39A","#C9A45A","#B98A3A","#8E6B22"][frame]:"none";
@@ -264,7 +269,7 @@ function displaySentence(a){return (a&&(a.editSentence||a.sentence))||""}
 function displayKeywords(a){return (a&&(a.editKeywords||a.keywords))||[]}
 function visibleAxes(a){if(!a)return [];return a.axes.map((x,i)=>({...x,i})).filter(x=>!(a.hiddenAxes||[]).includes(x.i))}
 const HARD_STEPS=[3,7,21,60];
-function activeDays(st){return new Set([...(st.steps.done||[]),...(st.logs||[]).map(l=>l.day)]).size}
+function activeDays(st){return new Set([...(st.steps.done||[]),...(st.logs||[]).map(l=>l.day),...(st.stays||[]).map(x=>x.day)]).size}
 function livingGem(st){
  const a=st.analysis;if(!a)return null;const g={...a.gem,...(st.gemOverride||{})};
  const days=activeDays(st);
@@ -286,7 +291,7 @@ function daysWith(st){const t=(st.first&&st.first.at)||(st.analysis&&st.analysis
 function markValues(st,s){return {setting:daysWith(st),sat:s.connections||0,aura:(s.reactionsReceived||0)+(s.wordsReceived||0),stars:s.visitors||0}}
 function marksOf(st,s){const v=markValues(st,s),prev=(st.flags&&st.flags.marks)||{};const o={};MARKS.forEach(m=>{o[m.k]=Math.max(prev[m.k]||0,m.steps.filter(x=>v[m.k]>=x).length)});return o}
 function markNext(m,lv,val){const t=m.steps[lv];return t==null?null:{target:t,left:Math.max(0,t-val),pct:clamp(Math.round((val-(m.steps[lv-1]||0))/(t-(m.steps[lv-1]||0))*100),0,100)}}
-function statsOf(st,items,soc){soc=soc||{};return {days:st.steps.done.length,active:activeDays(st),logs:(st.logs||[]).length,rests:st.steps.rests.length,comebacks:st.steps.comebacks||0,confirmed:!!(st.analysis&&(st.analysis.status==="yes"||st.analysis.status==="edited")),analyses:st.analyses||0,items:items.length,edited:!!st.flags.edited,isPublic:!!st.visibility.public,wordsGiven:soc.wordsGiven||0,wordsReceived:soc.wordsReceived||0,connections:soc.friends||0,reactionsGiven:soc.reactionsGiven||0,reactionsReceived:soc.reactionsReceived||0,exitDone:!!soc.exitDone,knows:(st.know||[]).length,returns:(st.flags&&st.flags.returns)||0,dawn:(st.logs||[]).some(l=>{if(!l.at)return false;const h=new Date(l.at).getHours();return h>=5&&h<7})}}
+function statsOf(st,items,soc){soc=soc||{};return {days:st.steps.done.length,active:activeDays(st),logs:(st.logs||[]).length,rests:st.steps.rests.length,comebacks:st.steps.comebacks||0,confirmed:!!(st.analysis&&(st.analysis.status==="yes"||st.analysis.status==="edited")),analyses:st.analyses||0,items:items.length,edited:!!st.flags.edited,isPublic:!!st.visibility.public,wordsGiven:soc.wordsGiven||0,wordsReceived:soc.wordsReceived||0,connections:soc.friends||0,reactionsGiven:soc.reactionsGiven||0,reactionsReceived:soc.reactionsReceived||0,exitDone:!!soc.exitDone,knows:(st.know||[]).length,...(typeof stayStats==='function'?(()=>{const z=stayStats(st);return {stays:z.stays,placesN:z.places,regular:z.regular,placeCats:z.cats,newPlaces:z.newPlaces}})():{}),returns:(st.flags&&st.flags.returns)||0,dawn:(st.logs||[]).some(l=>{if(!l.at)return false;const h=new Date(l.at).getHours();return h>=5&&h<7})}}
 const STAGES=["","원석","초벌","연마","광택","명품"];
 /* stages rise strictly in order (CBT thresholds; the full service would use 7·30·60 days) */
 const STAGE_RULES=[null,
@@ -326,6 +331,7 @@ function buildPrompt({sources,answers,photoCount,items,feedback,prev,logs,stepsD
  if(qa)P.push(`[성찰 질문 답변]\n${qa}`);
  {const ql=quickLines(quick);if(ql)P.push(ql);const kl=knowLines(know);if(kl)P.push(kl)}
  if(logs&&logs.length)P.push(`[MIB에 남긴 오늘의 한 줄 — 최근 기록]\n`+logs.slice(-14).map(l=>`- ${l.day} ${l.text}`).join("\n"));
+ {const sts=(typeof __promptStays!=="undefined"&&__promptStays)||[];if(sts.length){const cats={},names={};sts.forEach(x=>{cats[x.place.cat]=(cats[x.place.cat]||0)+1;names[x.place.name]=(names[x.place.name]||0)+1});P.push(`[머무른 곳 — 본인이 고른 장소, 최근 ${sts.length}번]\n갈래: ${Object.entries(cats).sort((a,b)=>b[1]-a[1]).map(([k,v])=>k+" "+v).join(", ")}\n자주 간 곳: ${Object.entries(names).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([k,v])=>k+(v>1?"("+v+")":"")).join(", ")}\n→ 생활 반경과 리듬(관심 영역 domains, 생활 밀도 pace)을 읽는 근거로만 쓰고, 집·직장 위치를 추정하거나 언급하지 않는다.`)}}
  if(stepsDone&&stepsDone.length)P.push(`[MIB에서 마친 한 걸음]\n`+stepsDone.slice(-10).map(x=>`- ${x}`).join("\n"));
  if(reflections&&reflections.length)P.push(`[주간 회고]\n`+reflections.slice(-2).map(r=>`- 잘한 것: ${r.good} / 어려웠던 것: ${r.hard} / 다음: ${r.next}`).join("\n"));
  if(photoCount)P.push(`[사진] 함께 첨부한 사진 ${photoCount}장은 이 사람이 자기 갤러리에서 고른 사진이다. 사물·장면·반복에서 취미·여가·특기·관심사를 읽는다. 얼굴로 누구인지 알아보려 하지 말고, 신분증·의료·신체 사진은 무시한다.`);

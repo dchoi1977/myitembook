@@ -125,7 +125,7 @@ function App(){
  async function runAnalysis(feedback){
   ctl.current=new AbortController();setReading({status:"waiting",chars:0,error:null});setRoute("reading");
   const prev=st.analysis;const t0=Date.now();
-  const quick=draft.quick||st.quick||null;const prompt=buildPrompt({quick,know:st.know,sources:draft.sources,answers:draft.answers,photoCount:draft.photos.length,items,feedback,prev,logs:prev?st.logs:null,stepsDone:prev?(st.steps.done.length?[(st.steps.current||prev.firstStep).title]:[]):null,reflections:prev?st.reflections:null});
+  const quick=draft.quick||st.quick||null;window.__promptStays=(st.stays||[]).slice(-60);const prompt=buildPrompt({quick,know:st.know,sources:draft.sources,answers:draft.answers,photoCount:draft.photos.length,items,feedback,prev,logs:prev?st.logs:null,stepsDone:prev?(st.steps.done.length?[(st.steps.current||prev.firstStep).title]:[]):null,reflections:prev?st.reflections:null});
   track("analysis_start",{re:!!prev,fb:!!feedback,photos:draft.photos.length,len:prompt.length});
   try{
    const images=[];for(const f of draft.photos.slice(0,4))images.push(await imageForAI(f));
@@ -142,7 +142,7 @@ function App(){
   if(demo)return;
   if(onlyFeature){update(s=>{const f=(s.featured||[]).filter(x=>x!==item.id);if(opt.feature){if(f.length>=3){toast("대표 아이템은 3개까지입니다.");s.featured=f.concat([]);return}f.push(item.id)}s.featured=f});return}
   const exists=items.some(i=>i.id===item.id);
-  try{const body=await api.saveItem(uid,item);const view={...body,id:item.id,thumbUrl:item.thumb||(items.find(i=>i.id===item.id)||{}).thumbUrl,photoUrl:item.photo||(items.find(i=>i.id===item.id)||{}).photoUrl};setItems(list=>exists?list.map(i=>i.id===item.id?view:i):[view,...list]);track(exists?"item_edit":"item_add",{cat:item.category,photo:!!body.photoPath});toast(exists?"아이템을 저장했습니다.":"선반에 담았습니다.");setSheet("shelf")}catch(e){toast("저장하지 못했습니다. 사진이 너무 크면 다른 사진으로 시도해 주세요.")}
+  try{const body=await api.saveItem(uid,item);const old=items.find(i=>i.id===item.id)||{};const view={...body,id:item.id,_shared:old._shared,thumbUrl:item._removePhoto?null:(item.thumb||old.thumbUrl),photoUrl:item._removePhoto?null:(item.photo||old.photoUrl)};setItems(list=>exists?list.map(i=>i.id===item.id?view:i):[view,...list]);track(exists?"item_edit":"item_add",{cat:item.category,photo:!!body.photoPath});toast(exists?"아이템을 저장했습니다.":"선반에 담았습니다.");setSheet("shelf")}catch(e){toast("저장하지 못했습니다. 사진이 너무 크면 다른 사진으로 시도해 주세요.")}
  }
  async function setItemPrivate(item,priv){if(demo)return;try{const clean={...item,private:priv,photo:"",thumb:""};delete clean._shared;await api.saveItem(uid,clean);setItems(list=>list.map(i=>i.id===item.id?{...i,private:priv}:i));track("item_private",{on:priv})}catch(e){toast("바꾸지 못했습니다.")}}
  async function deleteItem(id){const it=items.find(i=>i.id===id);try{await api.deleteItem(uid,it||{id});setItems(list=>list.filter(i=>i.id!==id));update(s=>{s.featured=(s.featured||[]).filter(x=>x!==id)});track("item_delete");toast("선반에서 뺐습니다.");setSheet("shelf")}catch(e){toast("지우지 못했습니다.")}}
@@ -222,6 +222,8 @@ function App(){
   else if(sheet.startsWith("ask:")){const q=askStat&&askStat.questions.find(x=>String(x.id)===sheet.slice(4));sheetEl=q?html`<${AskSheet} q=${q} fids=${friendIds(uid,soc.friendships)} names=${names} toast=${toast} onClose=${close} onSent=${()=>{close();reloadSoc()}}/>`:null}
   else if(sheet==="asks")sheetEl=html`<${AnswersSheet} stat=${askStat} names=${names} onClose=${close} openUser=${openUser}/>`;
   else if(sheet==="answer"||sheet.startsWith("answer:"))sheetEl=html`<${AnswerSheet} incoming=${asksMe} names=${names} focus=${+sheet.split(":")[1]||null} toast=${toast} onClose=${close} onDone=${reloadSoc}/>`;
+  else if(sheet==="stay")sheetEl=html`<${StaySheet} st=${st} update=${update} onClose=${close} toast=${toast} demo=${demo}/>`;
+  else if(sheet==="stays")sheetEl=html`<${StaysSheet} st=${st} update=${update} onClose=${close}/>`;
   else if(sheet==="achieve"||sheet==="badgebox")sheetEl=html`<${AchieveSheet} st=${st} stats=${stats} update=${update} meName=${profile.nickname} start=${sheet==="badgebox"?"box":"book"} onClose=${close} onReplay=${replayBadge}/>`;
   else if(sheet==="publish")sheetEl=html`<${PublishSheet} st=${st} items=${items} stats=${stats} update=${update} onClose=${close} toast=${toast} demo=${demo} meName=${profile.nickname} uid=${uid} me=${profile} onItemPrivate=${setItemPrivate}/>`;
   else if(sheet==="mine")sheetEl=demo?null:html`<${MineSheet} uid=${uid} soc=${soc} names=${names} profile=${profile} onClose=${close} openUser=${openUser} ensureNames=${ensureNames}/>`;
