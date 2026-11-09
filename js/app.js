@@ -45,7 +45,7 @@ function App(){
  })();return()=>{alive=false}},[uid]);
 
  async function hydratePhotos(its){const paths=its.flatMap(i=>[i.thumbPath,i.photoPath]).filter(Boolean);if(!paths.length)return;try{const m=await api.signedUrls(paths);setItems(list=>list.map(i=>({...i,thumbUrl:i.thumbUrl&&i.thumbUrl.startsWith("data:")?i.thumbUrl:m[i.thumbPath]||i.thumbUrl,photoUrl:i.photoUrl&&i.photoUrl.startsWith("data:")?i.photoUrl:m[i.photoPath]||i.photoUrl})))}catch(e){}}
- const reloadSoc=useCallback(async()=>{if(!uid)return;try{const [s,r]=await Promise.all([api.social(uid),api.reach().catch(()=>null)]);freshSoc.current=s;setSoc(s);if(r)setReach({visits:+r.visits||0,visitors:+r.visitors||0});ensureNames([...s.friendships.flatMap(f=>[f.requester,f.addressee]),...s.wordsTo.map(w=>w.from_id),...s.reactTo.map(r=>r.from_id)])}catch(e){if(!freshSoc.current)freshSoc.current="fail"}},[uid]);
+ const reloadSoc=useCallback(async()=>{if(!uid)return;try{const [s,r]=await Promise.all([api.social(uid),api.reach().catch(()=>null)]);freshSoc.current=s;setSoc(s);api.askStatus().then(setAskStat).catch(()=>{});api.asksForMe().then(r=>{setAsksMe(r||[]);ensureNames((r||[]).map(x=>x.owner))}).catch(()=>{});if(r)setReach({visits:+r.visits||0,visitors:+r.visitors||0});ensureNames([...s.friendships.flatMap(f=>[f.requester,f.addressee]),...s.wordsTo.map(w=>w.from_id),...s.reactTo.map(r=>r.from_id)])}catch(e){if(!freshSoc.current)freshSoc.current="fail"}},[uid]);
  const loadInbox=useCallback(async()=>{if(!uid)return;try{const [n,a]=await Promise.all([api.notifications(),api.announcements()]);setNotes(n||[]);setAnns(a||[]);ensureNames((n||[]).map(x=>x.actor_id))}catch(e){}},[uid]);
  useEffect(()=>{if(!uid)return;const t=setInterval(()=>{if(document.visibilityState==="visible"){loadInbox();reloadSoc()}},60000);const v=()=>{if(document.visibilityState==="visible"){loadInbox();reloadSoc()}else stampSeen()};document.addEventListener("visibilitychange",v);return()=>{clearInterval(t);document.removeEventListener("visibilitychange",v)}},[uid]);
 
@@ -71,7 +71,7 @@ function App(){
  const dailyAnswered=soc.feedback.some(f=>f.kind==="daily"&&(f.payload||{}).day===Math.min(day,7));
 
  // stage only rises; badges stay; a visible change of the gem plays the evolve ceremony
- const [fx,setFx]=useState([]);const [show,setShow]=useState(null);const evo=fx[0]||null;const pushFx=list=>setFx(q=>[...q,...list.filter(Boolean)]);const nextFx=()=>setFx(q=>q.slice(1));
+ const [fx,setFx]=useState([]);const [show,setShow]=useState(null);const [askStat,setAskStat]=useState(null);const [asksMe,setAsksMe]=useState([]);const evo=fx[0]||null;const pushFx=list=>setFx(q=>[...q,...list.filter(Boolean)]);const nextFx=()=>setFx(q=>q.slice(1));
  const fxOf=(evt,badges)=>{const out=[];if(evt&&(evt.changes.length||evt.away))out.push({type:"evo",...evt,badges:[],nb:badges.length});if(badges.length)out.push({type:"badge",ids:[...badges].sort((a,b)=>RARITY[badgeById(a).rar].n-RARITY[badgeById(b).rar].n)});return out};
  const AWAY_MS=6*3600000;const AWAY_ITEMS=[["friends","새 친구"],["cheers","받은 공감"],["words","받은 한 단어"],["visitors","새로 다녀간 사람"]];
  useEffect(()=>{const socReady=freshSoc.current==="fail"||(!!freshSoc.current&&soc===freshSoc.current);if(!st||!stats||!st.analysis||demo||!loaded.current||!socReady)return;
@@ -186,6 +186,7 @@ function App(){
   <${DailyQuestion} key=${"dq"+day} day=${day} answered=${dailyAnswered} toast=${toast} onDone=${reloadSoc}/>
 </div>`;
  const mid=!demo&&html`<div className="stack">
+  <${AskPanel} stat=${askStat} incoming=${asksMe} names=${names} onOpen=${openSheet} friendsCount=${friendIds(uid,soc.friendships).length}/>
   <${KnowCard} st=${st} update=${update} toast=${toast} demo=${demo} onReread=${()=>openSheet("reread")}/>
   <${Missions} day=${day} stats=${stats} onOpen=${openSheet}/>
   ${day>=4&&stats.analyses<2&&html`<div className="panel tint stack"><b>중간 다시 읽기 · Day 4</b><span className="small muted">사흘 동안 남긴 한 줄과 한 걸음을 더해 나를 다시 읽어 보세요. 육각형에 지난 모습이 점선으로 겹쳐 보입니다.</span><button className="btn sm" onClick=${()=>openSheet("reread")}>새 기록 더해 다시 읽기</button></div>`}
@@ -210,7 +211,7 @@ function App(){
  let sheetEl=null;const close=()=>setSheet(null);
  if(sheet==="help")sheetEl=html`<${HelpSheet} supportUrl=${supportUrl} onClose=${close} onFeedback=${()=>{setSheet(null);openFeedback()}}/>`;
  else if(sheet==="avatar")sheetEl=html`<${AvatarSheet} profile=${profile} uid=${uid} onClose=${close} onSaved=${onAvatarSaved} toast=${toast}/>`;
- else if(sheet==="inbox")sheetEl=html`<${InboxSheet} uid=${uid} notes=${notes} anns=${anns} names=${names} soc=${soc} onClose=${()=>{close();loadInbox()}} openUser=${openUser} reloadSoc=${reloadSoc} toast=${toast} isPublic=${!!(st&&st.visibility.public)} onPublish=${st&&st.analysis?()=>setSheet("publish"):null}/>`;
+ else if(sheet==="inbox")sheetEl=html`<${InboxSheet} uid=${uid} notes=${notes} anns=${anns} names=${names} soc=${soc} onClose=${()=>{close();loadInbox()}} openUser=${openUser} reloadSoc=${reloadSoc} toast=${toast} isPublic=${!!(st&&st.visibility.public)} onPublish=${st&&st.analysis?()=>setSheet("publish"):null} onAsk=${k=>setSheet(k)} asksMe=${asksMe}/>`;
  else if(sheet==="data")sheetEl=html`<${DataSheet} st=${st} items=${items} profile=${profile} onClose=${close} onWipe=${wipe} onReread=${()=>openSheet("reread")} onLogout=${logout} toast=${toast} demo=${demo} setQuiet=${setQuiet}/>`;
  else if(sheet&&sheet.startsWith("user:"))sheetEl=html`<${ProfileSheet} key=${sheet} id=${sheet.slice(5)} uid=${uid} st=${st} soc=${soc} names=${names} onClose=${close} openUser=${openUser} reloadSoc=${reloadSoc} toast=${toast} demo=${demo} ensureNames=${ensureNames}/>`;
  else if(sheet&&st.analysis){
@@ -218,6 +219,9 @@ function App(){
   else if(sheet==="attrs")sheetEl=html`<${AttrsSheet} st=${st} update=${update} onClose=${close}/>`;
   else if(sheet==="shelf")sheetEl=html`<${ShelfSheet} st=${st} items=${items} onOpen=${openSheet} onClose=${close}/>`;
   else if(sheet.startsWith("item:")){const id=sheet.slice(5);const it=id==="new"?null:items.find(i=>i.id===id);sheetEl=html`<${ItemEditor} key=${sheet} item=${it} st=${st} canAI=${canAI} demo=${demo} toast=${toast} onSave=${saveItem} onDelete=${deleteItem} onClose=${()=>setSheet("shelf")}/>`}
+  else if(sheet.startsWith("ask:")){const q=askStat&&askStat.questions.find(x=>String(x.id)===sheet.slice(4));sheetEl=q?html`<${AskSheet} q=${q} fids=${friendIds(uid,soc.friendships)} names=${names} toast=${toast} onClose=${close} onSent=${()=>{close();reloadSoc()}}/>`:null}
+  else if(sheet==="asks")sheetEl=html`<${AnswersSheet} stat=${askStat} names=${names} onClose=${close} openUser=${openUser}/>`;
+  else if(sheet==="answer"||sheet.startsWith("answer:"))sheetEl=html`<${AnswerSheet} incoming=${asksMe} names=${names} focus=${+sheet.split(":")[1]||null} toast=${toast} onClose=${close} onDone=${reloadSoc}/>`;
   else if(sheet==="achieve"||sheet==="badgebox")sheetEl=html`<${AchieveSheet} st=${st} stats=${stats} update=${update} meName=${profile.nickname} start=${sheet==="badgebox"?"box":"book"} onClose=${close} onReplay=${replayBadge}/>`;
   else if(sheet==="publish")sheetEl=html`<${PublishSheet} st=${st} items=${items} stats=${stats} update=${update} onClose=${close} toast=${toast} demo=${demo} meName=${profile.nickname} uid=${uid} me=${profile} onItemPrivate=${setItemPrivate}/>`;
   else if(sheet==="mine")sheetEl=demo?null:html`<${MineSheet} uid=${uid} soc=${soc} names=${names} profile=${profile} onClose=${close} openUser=${openUser} ensureNames=${ensureNames}/>`;

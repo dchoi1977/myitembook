@@ -131,16 +131,16 @@ function FeedTab({uid,soc,names,openUser,toast,demo,reloadSoc,ensureNames}){
 }
 
 /* 알림함 — notifications + announcements */
-const NOTE_TEXT={friend_request:"님이 친구를 요청했어요",friend_accept:"님과 친구가 되었어요",word:"님이 한 단어를 건넸어요",reaction:"님이 공감을 남겼어요",card_request:"님이 내 카드를 보고 싶어 해요",card_opened:"님이 카드를 공개했어요"};
-function InboxSheet({uid,notes,anns,names,soc,onClose,openUser,reloadSoc,toast,onPublish,isPublic}){
+const NOTE_TEXT={friend_request:"님이 친구를 요청했어요",friend_accept:"님과 친구가 되었어요",word:"님이 한 단어를 건넸어요",reaction:"님이 공감을 남겼어요",card_request:"님이 내 카드를 보고 싶어 해요",card_opened:"님이 카드를 공개했어요",ask:"님이 질문을 보냈어요",ask_answer:"님이 내 질문에 답했어요"};
+function InboxSheet({uid,notes,anns,names,soc,onClose,openUser,reloadSoc,toast,onPublish,isPublic,onAsk,asksMe}){
  useEffect(()=>{const ids=notes.filter(n=>!n.read_at).map(n=>n.id);if(ids.length)api.markRead(ids).catch(()=>{});try{localStorage.setItem("mib-ann-seen",String(anns[0]?anns[0].id:0))}catch(e){}track("open_inbox",{unread:ids.length})},[]);
  return html`<${Sheet} title="알림" onClose=${onClose}>
   ${anns.length>0&&html`<div className="stack"><h2 className="h3">운영 공지</h2>${anns.slice(0,5).map(a=>html`<div className="panel stack small" key=${a.id}><div className="row between"><b>${a.title}</b><span className="faint">${ago(a.created_at)}</span></div>${a.body&&html`<span className="muted prewrap">${a.body}</span>`}</div>`)}</div>`}
   <div className="stack"><h2 className="h3">나에게 온 소식</h2>
-   ${notes.length?html`<div className="list">${notes.map(n=>{const p=n.payload||{};let t=NOTE_TEXT[n.kind]||"새 소식";if(n.kind==="reaction")t=p.target==="feed"?"님이 내 소식을 응원했어요":`님이 내 카드에 '${(REACT[p.kind]||{}).label||"공감"}'를 남겼어요`;if(n.kind==="word")t=`님이 한 단어 '${p.word||""}'를 건넸어요`;return html`<div className="list-row" key=${n.id} style=${{cursor:"default"}}>
+   ${notes.length?html`<div className="list">${notes.map(n=>{const p=n.payload||{};let t=NOTE_TEXT[n.kind]||"새 소식";if(n.kind==="reaction")t=p.target==="feed"?"님이 내 소식을 응원했어요":`님이 내 카드에 '${(REACT[p.kind]||{}).label||"공감"}'를 남겼어요`;if(n.kind==="word")t=`님이 한 단어 '${p.word||""}'를 건넸어요`;if(n.kind==="ask"&&p.q)t=`님이 물어요 · "${p.q}"`;if(n.kind==="ask_answer"&&p.q)t=`님이 답했어요 · "${p.q}"`;return html`<div className="list-row" key=${n.id} style=${{cursor:"default"}}>
     <span className=${"dotmark"+(n.read_at?"":" on")} aria-hidden="true"></span><${Avatar} p=${names[n.actor_id]||{id:n.actor_id}} size=${32}/>
     <span className="grow small"><button className="linkbtn" style=${{padding:0}} onClick=${()=>openUser(n.actor_id)}>${nick(names,n.actor_id)}</button>${t}<br/><span className="d">${ago(n.created_at)}</span></span>
-    ${n.kind==="card_request"&&!isPublic&&onPublish&&html`<button className="btn sm" onClick=${onPublish}>카드 공개하기</button>`}${n.kind==="card_opened"&&html`<button className="btn quiet sm" onClick=${()=>openUser(n.actor_id)}>카드 보기</button>`}
+    ${n.kind==="card_request"&&!isPublic&&onPublish&&html`<button className="btn sm" onClick=${onPublish}>카드 공개하기</button>`}${n.kind==="card_opened"&&html`<button className="btn quiet sm" onClick=${()=>openUser(n.actor_id)}>카드 보기</button>`}${n.kind==="ask"&&onAsk&&html`<button className="btn sm" onClick=${()=>onAsk("answer:"+((n.payload||{}).round||""))}>${(asksMe||[]).some(x=>x.round===(n.payload||{}).round&&x.answer)?"내 답 보기":"답하기"}</button>`}${n.kind==="ask_answer"&&onAsk&&html`<button className="btn quiet sm" onClick=${()=>onAsk("asks")}>답 보기</button>`}
     ${n.kind==="friend_request"&&relation(uid,n.actor_id,soc.friendships)==="incoming"&&html`<${FriendButton} uid=${uid} other=${n.actor_id} soc=${soc} reloadSoc=${reloadSoc} toast=${toast} small=${true}/>`}
    </div>`})}</div>`:html`<p className="small faint">아직 알림이 없어요.</p>`}
   </div>
