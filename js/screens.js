@@ -168,6 +168,7 @@ function MeTab({st,items,soc,stats,onOpen,names,top,mid}){
  return html`<div className="main wrap">
   ${top}
   <${LifeCard} st=${st} items=${items} stats=${stats} onOpen=${onOpen}/>
+  <button className="btn block cardview-btn" onClick=${()=>onOpen("cardview")}><span aria-hidden="true">✦</span> 카드 보기 · 앞면과 뒷면</button>
   <div className="row"><button className="btn quiet sm grow" onClick=${()=>onOpen("cardimg")}><${Ico} n="share"/>카드 이미지 저장</button><button className="btn quiet sm grow" onClick=${()=>onOpen("mine")}><${Ico} n="chat"/>받은 공감 ${stats.reactionsReceived+stats.wordsReceived}</button></div>
   ${(()=>{const ns=nextStage(st,stats);return ns?html`<p className="note" style=${{textAlign:"center"}}>다음 단계 <b>${ns.name}</b> · ${ns.need}</p>`:html`<p className="note" style=${{textAlign:"center"}}>명품 단계에 이르렀어요.</p>`})()}
   <${MarksPanel} st=${st} stats=${stats}/>

@@ -71,7 +71,7 @@ function App(){
  const dailyAnswered=soc.feedback.some(f=>f.kind==="daily"&&(f.payload||{}).day===Math.min(day,7));
 
  // stage only rises; badges stay; a visible change of the gem plays the evolve ceremony
- const [fx,setFx]=useState([]);const evo=fx[0]||null;const pushFx=list=>setFx(q=>[...q,...list.filter(Boolean)]);const nextFx=()=>setFx(q=>q.slice(1));
+ const [fx,setFx]=useState([]);const [show,setShow]=useState(null);const evo=fx[0]||null;const pushFx=list=>setFx(q=>[...q,...list.filter(Boolean)]);const nextFx=()=>setFx(q=>q.slice(1));
  const fxOf=(evt,badges)=>{const out=[];if(evt&&(evt.changes.length||evt.away))out.push({type:"evo",...evt,badges:[],nb:badges.length});if(badges.length)out.push({type:"badge",ids:[...badges].sort((a,b)=>RARITY[badgeById(a).rar].n-RARITY[badgeById(b).rar].n)});return out};
  const AWAY_MS=6*3600000;const AWAY_ITEMS=[["friends","새 친구"],["cheers","받은 공감"],["words","받은 한 단어"],["visitors","새로 다녀간 사람"]];
  useEffect(()=>{const socReady=freshSoc.current==="fail"||(!!freshSoc.current&&soc===freshSoc.current);if(!st||!stats||!st.analysis||demo||!loaded.current||!socReady)return;
@@ -155,6 +155,7 @@ function App(){
   if(k==="home"){setRoute("home");setTab("me");setSheet(null);return}
   if(k==="reread"){if(demo){toast("예시 모드에서는 다시 읽지 않습니다.");return}reread();return}
   if(k.startsWith("tab:")){setRoute("home");setTab(k.slice(4));setSheet(null);return}
+  if(k==="cardview"){if(st&&st.analysis)setShow(myCardFaces(st,items,stats,profile));return}
   if(k==="week"&&day<7&&!(profile&&profile.role==="admin")){toast("7일 비교 카드는 Day 7에 열립니다.");return}
   setSheet(k);
  }
@@ -226,9 +227,9 @@ function App(){
  const tabs=route==="home"&&st.analysis&&html`<nav className="tabbar" aria-label="메인">${[["me","나","me"],["step","한 걸음","step"],["feed","소식","feed"],["friends","친구","people"]].map(([k,t,ic])=>html`<button key=${k} className="tab" aria-current=${tab===k?"page":undefined} onClick=${()=>{setTab(k);setSheet(null);window.scrollTo(0,0)}}><${Ico} n=${ic}/>${t}${k==="friends"&&soc.friendships.some(f=>f.status==="pending"&&f.addressee===uid)?html`<i className="tabdot" aria-label="새 친구 요청"></i>`:null}</button>`)}</nav>`;
  const fab=!demo&&!fbOpen&&route!=="reading"&&html`<button className=${"fab"+(tabs?" up":"")} onClick=${openFeedback} aria-label="이 화면에 대한 의견 보내기"><${Ico} n="chat"/>의견</button>`;
  const pending=soc.friendships.some(f=>f.status==="pending"&&f.addressee===uid);
- if(desk&&route==="home"&&st.analysis)return html`<div className="app desk">${header}${demoBar}<div className="shell"><${DeskSide} tab=${tab} setTab=${setTab} setSheet=${setSheet} openSheet=${openSheet} profile=${profile} day=${day} pending=${pending} unread=${unread} onFeedback=${openFeedback} onAdmin=${profile.role==="admin"?()=>{setRoute("admin");setSheet(null)}:null}/><div className="content">${body}</div><${DeskRail} tab=${tab} st=${st} stats=${stats} openSheet=${openSheet} setTab=${setTab} top=${demo?null:top} mid=${demo?null:mid}/></div>${sheetEl}${fab}${(route==="home"||route==="reveal")&&fxEl}${fbOpen&&html`<${FeedbackSheet} screen=${screen} shot=${fbShot} onClose=${()=>{setFbOpen(false);setFbShot(null)}} onHelp=${()=>{setFbOpen(false);setFbShot(null);setSheet("help")}} toast=${toast}/>`}<${Toast} msg=${toastMsg}/></div>`;
+ if(desk&&route==="home"&&st.analysis)return html`<div className="app desk">${header}${demoBar}<div className="shell"><${DeskSide} tab=${tab} setTab=${setTab} setSheet=${setSheet} openSheet=${openSheet} profile=${profile} day=${day} pending=${pending} unread=${unread} onFeedback=${openFeedback} onAdmin=${profile.role==="admin"?()=>{setRoute("admin");setSheet(null)}:null}/><div className="content">${body}</div><${DeskRail} tab=${tab} st=${st} stats=${stats} openSheet=${openSheet} setTab=${setTab} top=${demo?null:top} mid=${demo?null:mid}/></div>${sheetEl}${fab}${(route==="home"||route==="reveal")&&fxEl}${fbOpen&&html`<${FeedbackSheet} screen=${screen} shot=${fbShot} onClose=${()=>{setFbOpen(false);setFbShot(null)}} onHelp=${()=>{setFbOpen(false);setFbShot(null);setSheet("help")}} toast=${toast}/>`}${show&&html`<${CardShowcase} faces=${show} toast=${toast} onClose=${()=>setShow(null)}/>`}<${Toast} msg=${toastMsg}/></div>`;
  if(desk)return html`<div className="app flow"><${BrandPanel}/><div className="flowcol">${header}${demoBar}${body}${tabs}${sheetEl}${fab}${(route==="home"||route==="reveal")&&fxEl}${fbOpen&&html`<${FeedbackSheet} screen=${screen} shot=${fbShot} onClose=${()=>{setFbOpen(false);setFbShot(null)}} onHelp=${()=>{setFbOpen(false);setFbShot(null);setSheet("help")}} toast=${toast}/>`}<${Toast} msg=${toastMsg}/></div></div>`;
- return html`<div className="app">${header}${demoBar}${body}${tabs}${sheetEl}${fab}${(route==="home"||route==="reveal")&&fxEl}${fbOpen&&html`<${FeedbackSheet} screen=${screen} shot=${fbShot} onClose=${()=>{setFbOpen(false);setFbShot(null)}} onHelp=${()=>{setFbOpen(false);setFbShot(null);setSheet("help")}} toast=${toast}/>`}<${Toast} msg=${toastMsg}/></div>`;
+ return html`<div className="app">${header}${demoBar}${body}${tabs}${sheetEl}${fab}${(route==="home"||route==="reveal")&&fxEl}${fbOpen&&html`<${FeedbackSheet} screen=${screen} shot=${fbShot} onClose=${()=>{setFbOpen(false);setFbShot(null)}} onHelp=${()=>{setFbOpen(false);setFbShot(null);setSheet("help")}} toast=${toast}/>`}${show&&html`<${CardShowcase} faces=${show} toast=${toast} onClose=${()=>setShow(null)}/>`}<${Toast} msg=${toastMsg}/></div>`;
 }
 function TopNotes(){const nv=useNewVersion();return html`${nv&&html`<${NewVersionBar}/>`}<${InAppBar}/>`}
 ReactDOM.createRoot(document.getElementById("root")).render(html`<${ErrorBoundary}><${TopNotes}/><${App}/><//>`);
