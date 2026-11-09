@@ -306,7 +306,7 @@ function buildPublicCard(st,items,stats){
  const card={v:1,updatedAt:Date.now(),gem:fl.tags?g:(({rings,...r})=>r)(g||{}),gemName:gemName(g),stage:stageOf(st,stats),
   sentence:fl.sentence?displaySentence(a):"",keywords:fl.keywords?displayKeywords(a):[],
   axes:fl.hexagon?visibleAxes(a).map(x=>({name:x.name,level:x.level})):visibleAxes(a).map(x=>({name:x.name})),
-  showHex:!!fl.hexagon,badges:fl.badges?showcaseBadges(st,stats,8):[],title:equipped(st,stats).title,frame:equipped(st,stats).frame,
+  showHex:!!fl.hexagon,badges:fl.badges?showcaseBadges(st,stats,12).filter(id=>fl.tags||(badgeById(id)||{}).g!=="연륜").slice(0,8):[],...(()=>{const e=equipped(st,stats);const src=id=>BADGES.find(b=>b.title===id);const hideT=!fl.tags&&e.title&&(src(e.title)||{}).g==="연륜";return {title:hideT?"":e.title,frame:!fl.tags&&e.frame==="ring"?"":e.frame}})(),
   shelf:fl.shelf?items.filter(i=>!i.private).length:0,
   items:fl.items?items.filter(i=>(st.featured||[]).includes(i.id)).slice(0,4).map(i=>({name:i.name,category:i.category,since:i.since||"",story:i.story||"",verify:i.verify||""})):[],
   acceptWords:!!fl.words,tags:fl.tags?cardTags(st):[],zodiac:fl.tags&&myZodiac(st)?myZodiac(st).k:null};

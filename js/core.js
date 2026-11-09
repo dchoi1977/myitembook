@@ -190,7 +190,7 @@ const FRAMES=["발견","이어감","깊어짐","나눔","전수"];
 /* rarity → how big the acquisition ceremony is */
 const RARITY={common:{name:"일반",en:"ACHIEVEMENT",color:"#9FB39A",n:1},rare:{name:"희귀",en:"RARE ACHIEVEMENT",color:"#7E9BD1",n:2},epic:{name:"영웅",en:"EPIC ACHIEVEMENT",color:"#B58AD8",n:3},legend:{name:"전설",en:"LEGENDARY",color:"#E2BC5C",n:4}};
 /* card frames unlocked by epic+ badges */
-const CARD_FRAMES={gold:{name:"금빛 테두리"},rose:{name:"장밋빛 테두리"},star:{name:"별빛 테두리"},dawn:{name:"새벽빛 테두리"},seven:{name:"일곱 빛깔 테두리"}};
+const CARD_FRAMES={gold:{name:"금빛 테두리"},rose:{name:"장밋빛 테두리"},star:{name:"별빛 테두리"},dawn:{name:"새벽빛 테두리"},ring:{name:"나이테 테두리"},seven:{name:"일곱 빛깔 테두리"}};
 const BP=(v,t)=>[Math.min(v||0,t),t],BB=v=>[v?1:0,1];
 /* season 1 — every badge: condition(desc), progress(prog), reward(title + optional frame) */
 const BADGES=[
@@ -220,11 +220,17 @@ const BADGES=[
  {id:"regular",g:"발자취",rar:"rare",name:"단골",glyph:"고리",desc:"같은 곳을 서로 다른 세 날에 찾았어요.",cond:"같은 장소를 다른 날 3번 남기기",title:"단골이 있는",test:s=>(s.regular||0)>=3,prog:s=>BP(s.regular,3)},
  {id:"mapper",g:"발자취",rar:"common",name:"지도에 없던 곳",glyph:"펜",desc:"목록에 없던 나만의 장소를 등록했어요.",cond:"목록에 없는 장소 직접 등록하기",title:"나만의 지도를 그리는",test:s=>(s.newPlaces||0)>=1,prog:s=>BP(s.newPlaces,1)},
  {id:"wander",g:"발자취",rar:"epic",name:"여러 갈래의 하루",glyph:"별",desc:"다섯 가지 다른 갈래의 장소에 머물렀어요.",cond:"카페·공원·배움 등 서로 다른 갈래 5가지",title:"여러 갈래를 걷는",test:s=>(s.placeCats||0)>=5,prog:s=>BP(s.placeCats,5)},
+ {id:"ring1",g:"연륜",rar:"common",name:"맑은 결",glyph:"새싹",desc:"태어난 해를 남겨 젬에 첫 나이테가 새겨졌어요.",cond:"태어난 해 남기기 · 생일에서 태어난 해를 고르면 저절로 새겨져요",title:"맑은 결의",test:s=>(s.rings||0)>=1,prog:s=>BB((s.rings||0)>=1)},
+ {id:"ring2",g:"연륜",rar:"common",name:"단단해지는 결",glyph:"잎",desc:"서른을 넘어선 시간이 젬을 단단하게 다졌어요.",cond:"서른을 넘어선 시간 · 생일에서 태어난 해를 고르면 저절로 새겨져요",title:"단단해지는 결의",test:s=>(s.rings||0)>=2,prog:s=>BB((s.rings||0)>=2)},
+ {id:"ring3",g:"연륜",rar:"rare",name:"깊어지는 결",glyph:"고리",desc:"마흔을 넘어선 시간이 젬 안에 깊은 결을 남겼어요.",cond:"마흔을 넘어선 시간 · 생일에서 태어난 해를 고르면 저절로 새겨져요",title:"깊어지는 결의",test:s=>(s.rings||0)>=3,prog:s=>BB((s.rings||0)>=3)},
+ {id:"ring4",g:"연륜",rar:"rare",name:"짙은 결",glyph:"산",desc:"쉰을 넘어선 시간이 결을 짙게 물들였어요.",cond:"쉰을 넘어선 시간 · 생일에서 태어난 해를 고르면 저절로 새겨져요",title:"짙은 결의",test:s=>(s.rings||0)>=4,prog:s=>BB((s.rings||0)>=4)},
+ {id:"ring5",g:"연륜",rar:"epic",name:"원숙한 결",glyph:"별",desc:"예순을 넘어선 시간이 젬에 원숙한 빛을 더했어요.",cond:"예순을 넘어선 시간 · 생일에서 태어난 해를 고르면 저절로 새겨져요",title:"원숙한 결의",test:s=>(s.rings||0)>=5,prog:s=>BB((s.rings||0)>=5)},
+ {id:"ring6",g:"연륜",rar:"legend",name:"그윽한 결",glyph:"열쇠",desc:"일흔을 넘어선 시간, 가장 그윽한 나이테가 젬을 감쌌어요.",cond:"일흔을 넘어선 시간 · 생일에서 태어난 해를 고르면 저절로 새겨져요",title:"그윽한 결의",frame:"ring",test:s=>(s.rings||0)>=6,prog:s=>BB((s.rings||0)>=6)},
  {id:"dawn",g:"비밀",rar:"epic",secret:true,hint:"해가 뜨기 전, 하루를 먼저 연 사람에게",name:"새벽빛",glyph:"새싹",desc:"새벽 5~7시에 오늘의 한 줄을 남겼어요.",cond:"새벽 5~7시에 오늘의 한 줄 남기기",title:"새벽빛의",frame:"dawn",test:s=>!!s.dawn,prog:s=>BB(s.dawn)},
  {id:"allweek",g:"비밀",rar:"legend",secret:true,hint:"일곱 날, 하루도 빠짐없이",name:"일곱 빛깔",glyph:"별",desc:"일곱 날 모두 한 걸음이나 한 줄을 남겼어요.",cond:"활동한 날 7일 채우기",title:"일곱 날을 채운",frame:"seven",test:s=>s.active>=7,prog:s=>BP(s.active,7)}
 ];
-GROUPS["비밀"]="#5B4A7A";GROUPS["발자취"]="#4F6F8F";
-const GROUP_DESC={"발자취":"머무른 곳이 남긴 길","지속":"꾸준히 이어 간 시간","도약":"나를 새로 발견한 순간","회복":"쉬고, 다듬고, 돌아온 일","함께":"사람들과 결을 주고받은 일","비밀":"조건이 숨겨진 업적"};
+GROUPS["비밀"]="#5B4A7A";GROUPS["발자취"]="#4F6F8F";GROUPS["연륜"]="#8C6A3A";
+const GROUP_DESC={"연륜":"살아온 시간이 젬에 새긴 나이테","발자취":"머무른 곳이 남긴 길","지속":"꾸준히 이어 간 시간","도약":"나를 새로 발견한 순간","회복":"쉬고, 다듬고, 돌아온 일","함께":"사람들과 결을 주고받은 일","비밀":"조건이 숨겨진 업적"};
 function frameOf(days){return days>=100?4:days>=60?3:days>=30?2:days>=7?1:0}
 function Medal({b,earned,frame=0,size=60}){
  const c=GROUPS[b.g];const ring=earned?["#B9C3B4","#9FB39A","#C9A45A","#B98A3A","#8E6B22"][frame]:"none";
@@ -299,7 +305,7 @@ function daysWith(st){const t=(st.first&&st.first.at)||(st.analysis&&st.analysis
 function markValues(st,s){return {setting:daysWith(st),sat:s.connections||0,aura:(s.reactionsReceived||0)+(s.wordsReceived||0),stars:s.visitors||0}}
 function marksOf(st,s){const v=markValues(st,s),prev=(st.flags&&st.flags.marks)||{};const o={};MARKS.forEach(m=>{o[m.k]=Math.max(prev[m.k]||0,m.steps.filter(x=>v[m.k]>=x).length)});return o}
 function markNext(m,lv,val){const t=m.steps[lv];return t==null?null:{target:t,left:Math.max(0,t-val),pct:clamp(Math.round((val-(m.steps[lv-1]||0))/(t-(m.steps[lv-1]||0))*100),0,100)}}
-function statsOf(st,items,soc){soc=soc||{};return {days:st.steps.done.length,active:activeDays(st),logs:(st.logs||[]).length,rests:st.steps.rests.length,comebacks:st.steps.comebacks||0,confirmed:!!(st.analysis&&(st.analysis.status==="yes"||st.analysis.status==="edited")),analyses:st.analyses||0,items:items.length,edited:!!st.flags.edited,isPublic:!!st.visibility.public,wordsGiven:soc.wordsGiven||0,wordsReceived:soc.wordsReceived||0,connections:soc.friends||0,reactionsGiven:soc.reactionsGiven||0,reactionsReceived:soc.reactionsReceived||0,exitDone:!!soc.exitDone,knows:(st.know||[]).length,...(typeof stayStats==='function'?(()=>{const z=stayStats(st);return {stays:z.stays,placesN:z.places,regular:z.regular,placeCats:z.cats,newPlaces:z.newPlaces}})():{}),returns:(st.flags&&st.flags.returns)||0,dawn:(st.logs||[]).some(l=>{if(!l.at)return false;const h=new Date(l.at).getHours();return h>=5&&h<7})}}
+function statsOf(st,items,soc){soc=soc||{};return {days:st.steps.done.length,active:activeDays(st),logs:(st.logs||[]).length,rests:st.steps.rests.length,comebacks:st.steps.comebacks||0,confirmed:!!(st.analysis&&(st.analysis.status==="yes"||st.analysis.status==="edited")),analyses:st.analyses||0,items:items.length,edited:!!st.flags.edited,isPublic:!!st.visibility.public,wordsGiven:soc.wordsGiven||0,wordsReceived:soc.wordsReceived||0,connections:soc.friends||0,reactionsGiven:soc.reactionsGiven||0,reactionsReceived:soc.reactionsReceived||0,exitDone:!!soc.exitDone,knows:(st.know||[]).length,rings:(typeof ringsOf==="function"?ringsOf(st):0),...(typeof stayStats==='function'?(()=>{const z=stayStats(st);return {stays:z.stays,placesN:z.places,regular:z.regular,placeCats:z.cats,newPlaces:z.newPlaces}})():{}),returns:(st.flags&&st.flags.returns)||0,dawn:(st.logs||[]).some(l=>{if(!l.at)return false;const h=new Date(l.at).getHours();return h>=5&&h<7})}}
 const STAGES=["","원석","초벌","연마","광택","명품"];
 /* stages rise strictly in order (CBT thresholds; the full service would use 7·30·60 days) */
 const STAGE_RULES=[null,

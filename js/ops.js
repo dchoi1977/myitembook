@@ -146,7 +146,7 @@ async function renderShareImage(kind,{st,stats,profile}){
  x.fillStyle="#66706E";x.font=`700 26px ${SANS}`;x.textAlign="left";x.fillText("MYITEMBOOK · "+MIB_CONFIG.cohort,90,120);
  const eqp=(typeof equipped==="function"&&stats)?equipped(st,stats):{title:"",frame:""};
  x.textAlign="right";x.fillText(eqp.title?eqp.title+" "+profile.nickname:"@"+profile.nickname,W-90,120);x.textAlign="center";
- const FR={gold:"#C9A45A",rose:"#C9878F",star:"#7E95C9",dawn:"#E7A86B"};if(eqp.frame){x.lineWidth=8;if(eqp.frame==="seven"){const gr=x.createLinearGradient(40,40,W-40,H-40);["#E57373","#F0B65A","#E8D96A","#7CC08A","#6AA9D8","#8A7CD0","#C77BB8"].forEach((c,i,a)=>gr.addColorStop(i/(a.length-1),c));x.strokeStyle=gr}else x.strokeStyle=FR[eqp.frame]||"#C9A45A";x.strokeRect(40,40,W-80,H-80)}
+ const FR={gold:"#C9A45A",rose:"#C9878F",star:"#7E95C9",dawn:"#E7A86B",ring:"#8C6A3A"};if(eqp.frame){x.lineWidth=8;if(eqp.frame==="seven"){const gr=x.createLinearGradient(40,40,W-40,H-40);["#E57373","#F0B65A","#E8D96A","#7CC08A","#6AA9D8","#8A7CD0","#C77BB8"].forEach((c,i,a)=>gr.addColorStop(i/(a.length-1),c));x.strokeStyle=gr}else x.strokeStyle=FR[eqp.frame]||"#C9A45A";x.strokeRect(40,40,W-80,H-80)}
  const a=st.analysis;const now=livingGem(st);
  if(kind==="week"){
   const f=st.first||{gem:a.gem,sentence:displaySentence(a),keywords:displayKeywords(a),at:a.at};

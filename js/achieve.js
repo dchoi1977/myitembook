@@ -1,7 +1,7 @@
 "use strict";
 /* MIB CBT · 업적 도감 · 배지 보관함 · 배지별 획득 연출 */
 
-const BADGE_GROUPS=["지속","도약","회복","함께","발자취","비밀"];
+const BADGE_GROUPS=["지속","도약","회복","함께","발자취","연륜","비밀"];
 const badgeById=id=>BADGES.find(b=>b.id===id);
 function badgeProg(b,stats){const [c,t]=b.prog?b.prog(stats):[b.test(stats)?1:0,1];return {cur:c,tgt:t,pct:Math.round(Math.min(1,c/t)*100)}}
 function badgeReward(b){const r=[{k:"title",label:"칭호",v:`'${b.title}'`}];if(b.frame)r.push({k:"frame",label:"카드 테두리",v:CARD_FRAMES[b.frame].name});return r}
@@ -59,7 +59,7 @@ function AchieveSheet({st,stats,update,onClose,onReplay,meName,start}){
  const [tab,setTab]=useState(start==="box"?"box":"book");const [filter,setFilter]=useState("all");const [open,setOpen]=useState(null);
  useEffect(()=>{track("open_achieve",{tab})},[tab]);
  const eq=equipped(st,stats);const total=BADGES.length;const got=eq.earned.length;
- const near=BADGES.filter(b=>!isEarned(st,stats,b)&&!b.secret).map(b=>({b,p:badgeProg(b,stats)})).sort((x,y)=>y.p.pct-x.p.pct||(x.p.tgt-x.p.cur)-(y.p.tgt-y.p.cur)).slice(0,3);
+ const near=BADGES.filter(b=>!isEarned(st,stats,b)&&!b.secret&&b.g!=="연륜").map(b=>({b,p:badgeProg(b,stats)})).sort((x,y)=>y.p.pct-x.p.pct||(x.p.tgt-x.p.cur)-(y.p.tgt-y.p.cur)).slice(0,3);
  const shown=b=>{const e=isEarned(st,stats,b);return filter==="all"||(filter==="got"&&e)||(filter==="todo"&&!e)};
  const stage=stageOf(st,stats);const lv=marksOf(st,stats);const mv=stats.mv||markValues(st,stats);
  const marksGot=MARKS.reduce((n,m)=>n+(lv[m.k]||0),0);

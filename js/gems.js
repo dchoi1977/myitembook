@@ -7,7 +7,7 @@ async function renderPublicCardImage(card,name){
  try{await Promise.all([document.fonts.load('700 48px "Noto Serif KR"'),document.fonts.load('500 30px "Noto Sans KR"'),document.fonts.load('700 30px "Noto Sans KR"')])}catch(e){}
  const SERIF='"Noto Serif KR","Apple SD Gothic Neo",serif',SANS='"Noto Sans KR","Apple SD Gothic Neo",sans-serif';
  x.fillStyle="#F4F1E9";x.fillRect(0,0,W,H);x.strokeStyle="#D6DACF";x.lineWidth=2;x.strokeRect(40,40,W-80,H-80);
- const FR={gold:"#C9A45A",rose:"#C9878F",star:"#7E95C9",dawn:"#E7A86B"};
+ const FR={gold:"#C9A45A",rose:"#C9878F",star:"#7E95C9",dawn:"#E7A86B",ring:"#8C6A3A"};
  if(d.frame){x.lineWidth=8;if(d.frame==="seven"){const gr=x.createLinearGradient(40,40,W-40,H-40);["#E57373","#F0B65A","#E8D96A","#7CC08A","#6AA9D8","#8A7CD0","#C77BB8"].forEach((cl,i,a)=>gr.addColorStop(i/(a.length-1),cl));x.strokeStyle=gr}else x.strokeStyle=FR[d.frame]||"#C9A45A";x.strokeRect(40,40,W-80,H-80)}
  x.fillStyle="#66706E";x.font=`700 26px ${SANS}`;x.textAlign="left";x.fillText("MYITEMBOOK · "+MIB_CONFIG.cohort,90,120);
  x.textAlign="right";x.fillText(d.title?d.title+" "+name:"@"+name,W-90,120);x.textAlign="center";

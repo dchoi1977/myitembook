@@ -14,7 +14,7 @@ async function renderCardBack(d){
  const bg=x.createLinearGradient(0,0,0,H);bg.addColorStop(0,"#173D3B");bg.addColorStop(1,"#0E2624");x.fillStyle=bg;x.fillRect(0,0,W,H);
  const glow=x.createRadialGradient(W/2,525,40,W/2,525,520);glow.addColorStop(0,st.base+"55");glow.addColorStop(1,"rgba(0,0,0,0)");x.fillStyle=glow;x.fillRect(0,0,W,H);
  x.strokeStyle="rgba(216,180,101,.55)";x.lineWidth=2;x.strokeRect(40,40,W-80,H-80);
- const FR={gold:"#C9A45A",rose:"#C9878F",star:"#7E95C9",dawn:"#E7A86B"};
+ const FR={gold:"#C9A45A",rose:"#C9878F",star:"#7E95C9",dawn:"#E7A86B",ring:"#8C6A3A"};
  if(d.frame){x.lineWidth=8;if(d.frame==="seven"){const gr=x.createLinearGradient(40,40,W-40,H-40);["#E57373","#F0B65A","#E8D96A","#7CC08A","#6AA9D8","#8A7CD0","#C77BB8"].forEach((cl,i,a)=>gr.addColorStop(i/(a.length-1),cl));x.strokeStyle=gr}else x.strokeStyle=FR[d.frame]||"#C9A45A";x.strokeRect(40,40,W-80,H-80)}
  x.fillStyle="#D8B465";x.font=`700 24px ${SANS}`;x.textAlign="left";x.fillText("MYITEMBOOK · "+MIB_CONFIG.cohort,90,118);
  x.textAlign="right";x.fillStyle="rgba(244,241,233,.75)";x.fillText(d.title?d.title+" "+d.name:"@"+d.name,W-90,118);

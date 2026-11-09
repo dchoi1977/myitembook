@@ -14,24 +14,25 @@ function settleReread(an,prev){
 }
 
 /* what the person can see change */
-const EVO_FIELDS=[["stage","단계"],["stone","색"],["form","형"],["texture","질"],["light","빛"],["symbol","상"],["setting","받침"],["sat","인연석"],["aura","광채"],["stars","별자리"],["hardness","강"],["grain","결"],["facets","각"]];
+const EVO_FIELDS=[["stage","단계"],["stone","색"],["form","형"],["texture","질"],["light","빛"],["symbol","상"],["setting","받침"],["sat","인연석"],["aura","광채"],["stars","별자리"],["hardness","강"],["grain","결"],["facets","각"],["rings","연륜"]];
 const MARK_KEYS=["setting","sat","aura","stars"];
-function gemSnap(g,stage){const m=g.marks||{};return {stone:g.stone,form:g.form,texture:g.texture,light:g.light,symbol:g.symbol,hardness:g.hardness,grain:g.grain,facets:g.facets,lightName:g.lightName,fp:g.fp,stage,setting:m.setting||0,sat:m.sat||0,aura:m.aura||0,stars:m.stars||0,marks:{...m}}}
+function gemSnap(g,stage){const m=g.marks||{};return {stone:g.stone,form:g.form,texture:g.texture,light:g.light,symbol:g.symbol,hardness:g.hardness,grain:g.grain,facets:g.facets,lightName:g.lightName,fp:g.fp,stage,setting:m.setting||0,sat:m.sat||0,aura:m.aura||0,stars:m.stars||0,rings:g.rings||0,marks:{...m}}}
 /* a field the old snapshot never had (older app version) is adopted quietly, not celebrated */
-function evoDiff(a,b){if(!a||!b)return [];return EVO_FIELDS.filter(([k])=>a[k]!==undefined&&a[k]!==b[k]).map(([k,label])=>({k,label,from:a[k],to:b[k]}))}
+function evoDiff(a,b){if(!a||!b)return [];const av=k=>k==="rings"&&a[k]===undefined?0:a[k];return EVO_FIELDS.filter(([k])=>av(k)!==undefined&&av(k)!==b[k]).map(([k,label])=>({k,label,from:av(k),to:b[k]}))}
 function evoHeadline(changes,badges,stats){
  const has=k=>changes.find(c=>c.k===k);const mv=(stats&&stats.mv)||{};
  if(has("stage")){const c=has("stage");return {title:`${STAGES[c.to]} 단계 달성!`,sub:`연마 ${c.to}단계 · ${STAGE_RULES[c.to].why}`,tone:"stage"}}
  if(has("stone"))return {title:"젬의 색이 바뀌었어요",sub:`${has("stone").to} · ${STONES[has("stone").to].meaning}`,tone:"reshape"};
  if(has("form")||has("texture")||has("light")||has("symbol"))return {title:"젬이 새 모습을 찾았어요",sub:"새 관점으로 다시 깎였습니다",tone:"reshape"};
  for(const m of MARKS){const c=has(m.k);if(c)return {title:m.head,sub:`${m.desc(mv[m.k]!=null?mv[m.k]:m.steps[c.to-1])} · ${markTitle(m,c.to)}`,tone:"mark"}}
+ if(has("rings")){const c=has("rings");return c.to>(c.from||0)?{title:"살아온 시간이 젬에 새겨졌어요",sub:`연륜 · ${ringName(c.to)} · 나이테 같은 결과 깊이가 더해졌어요`,tone:"grain"}:{title:"젬의 연륜 결을 거뒀어요",sub:"태어난 해를 지워 나이테가 사라졌어요",tone:"reshape"}}
  if(has("hardness")){const c=has("hardness");return {title:"젬이 단단해졌어요",sub:`활동 ${stats?stats.active:""}일 · 강(剛) ${c.from} → ${c.to}`,tone:"harden"}}
  if(has("grain"))return {title:"금빛 결이 새겨졌어요",sub:"멈췄다가 다시 시작한 순간이 젬에 남았어요",tone:"grain"};
  if(has("facets")){const c=has("facets");return {title:"새 면이 깎였어요",sub:`각(角) ${c.from}면 → ${c.to}면`,tone:"facet"}}
  if(badges&&badges.length){const b=BADGES.find(x=>x.id===badges[0]);return {title:"배지 획득!",sub:b?`${b.name} · ${b.desc}`:"",tone:"badge"}}
  return {title:"젬이 반응했어요",sub:"",tone:"stage"};
 }
-const fmtVal=(k,v)=>MARK_KEYS.includes(k)?(MARKS.find(m=>m.k===k).names[v]||"없음"):k==="stage"?`${v}단계 ${STAGES[v]||""}`:k==="facets"?`${v}면`:k==="hardness"?`${v}/5`:k==="grain"?`${v}줄`:String(v);
+const fmtVal=(k,v)=>MARK_KEYS.includes(k)?(MARKS.find(m=>m.k===k).names[v]||"없음"):k==="stage"?`${v}단계 ${STAGES[v]||""}`:k==="facets"?`${v}면`:k==="hardness"?`${v}/5`:k==="grain"?`${v}줄`:k==="rings"?(ringName(v)||"없음"):String(v);
 
 /* numbers that tick up on the welcome-back card */
 function CountUp({n,ms=900}){const [v,setV]=useState(0);useEffect(()=>{let raf,t0;const f=t=>{if(!t0)t0=t;const k=Math.min(1,(t-t0)/ms);setV(Math.round(n*(1-Math.pow(1-k,3))));if(k<1)raf=requestAnimationFrame(f)};raf=requestAnimationFrame(f);return()=>cancelAnimationFrame(raf)},[n]);return v}

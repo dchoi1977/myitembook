@@ -72,9 +72,9 @@ function App(){
 
  // stage only rises; badges stay; a visible change of the gem plays the evolve ceremony
  const [fx,setFx]=useState([]);const [show,setShow]=useState(null);const [askStat,setAskStat]=useState(null);const [asksMe,setAsksMe]=useState([]);const evo=fx[0]||null;const pushFx=list=>setFx(q=>[...q,...list.filter(Boolean)]);const nextFx=()=>setFx(q=>q.slice(1));
- const fxOf=(evt,badges)=>{const out=[];if(evt&&(evt.changes.length||evt.away))out.push({type:"evo",...evt,badges:[],nb:badges.length});if(badges.length)out.push({type:"badge",ids:[...badges].sort((a,b)=>RARITY[badgeById(a).rar].n-RARITY[badgeById(b).rar].n)});return out};
+ const fxOf=(evt,badges)=>{const rb=badges.filter(id=>(badgeById(id)||{}).g==="연륜");if(rb.length>1)badges=badges.filter(id=>!rb.includes(id)||id===rb.sort().slice(-1)[0]);const out=[];if(evt&&(evt.changes.length||evt.away))out.push({type:"evo",...evt,badges:[],nb:badges.length});if(badges.length)out.push({type:"badge",ids:[...badges].sort((a,b)=>RARITY[badgeById(a).rar].n-RARITY[badgeById(b).rar].n)});return out};
  const AWAY_MS=6*3600000;const AWAY_ITEMS=[["friends","새 친구"],["cheers","받은 공감"],["words","받은 한 단어"],["visitors","새로 다녀간 사람"]];
- useEffect(()=>{const socReady=freshSoc.current==="fail"||(!!freshSoc.current&&soc===freshSoc.current);if(!st||!stats||!st.analysis||demo||!loaded.current||!socReady)return;
+ useEffect(()=>{const socReady=freshSoc.current==="fail"||(!!freshSoc.current&&soc===freshSoc.current);if(!st||!stats||!st.analysis||demo||!loaded.current||!socReady||sheet==="publish")return;
   const sg=Math.max(stageOf(st,stats),st.flags.maxStage||0);const earned=earnedIds(st,stats);const seen=st.flags.badgesSeen||[];const nw=earned.filter(id=>!seen.includes(id));
   const marks=marksOf(st,stats);
   const g=livingGem({...st,flags:{...st.flags,maxStage:sg,marks}});const snap=gemSnap(g,sg);const prev=st.flags.seenGem;
@@ -94,11 +94,11 @@ function App(){
   const prevStage=st.flags.maxStage||0;
   setSt(s=>({...s,flags:{...s.flags,maxStage:Math.max(sg,s.flags.maxStage||0),marks,badgesSeen:[...new Set([...(s.flags.badgesSeen||[]),...earned])],badgeAt:(()=>{const m={...(s.flags.badgeAt||{})};earned.forEach(id=>{if(!m[id])m[id]=now});return m})(),seenGem:{...snap,ov:ovKey},celebrate:false,lastSeen:{at:now,c:cur}}}));
   if(sg>prevStage&&prevStage>0){api.postFeed("stage",{stage:sg});track("stage_up",{stage:sg})}
-  nw.forEach(id=>{const b=badgeById(id);if(!silent&&b&&(b.rar!=="common"||["step1","shelf","refine"].includes(id)))api.postFeed("badge",{id});track("badge",{id})});
+  nw.forEach(id=>{const b=badgeById(id);if(!silent&&b&&b.g!=="연륜"&&(b.rar!=="common"||["step1","shelf","refine"].includes(id)))api.postFeed("badge",{id});track("badge",{id})});
   if(!silent){const ups=changes.filter(c=>MARK_KEYS.includes(c.k)&&c.to>(c.from||0));ups.forEach(c=>track("mark",{k:c.k,lv:c.to}));if(ups.length)api.postFeed("mark",{k:ups[0].k,lv:ups[0].to})}
   if(!silent&&(changes.length||nw.length))pushFx(fxOf({from:prev,to:snap,changes,head:evoHeadline(changes,nw,stats),away:away&&(away.items.length||away.ms>=86400000)?away:null},nw));
   else if(away&&away.items.length)toast(`${away.label} 그사이 ${away.items.map(x=>`${x.label} ${x.n}`).join(", ")}`);
- },[stats]);
+ },[stats,sheet==="publish"]);
  function previewAway(){const base=st&&st.analysis?livingGem(st):{stone:"비취",lightName:"새벽빛",light:"물결",form:"덩이",texture:"맑음",symbol:"산",hardness:2,grain:1,facets:8,marks:{}};const from=gemSnap({...base,marks:{setting:1,sat:1,aura:1,stars:0}},3);const to={...from,setting:2,sat:2,aura:2,stars:1,marks:{setting:2,sat:2,aura:2,stars:1}};const changes=evoDiff(from,to);pushFx(fxOf({from,to,changes,head:evoHeadline(changes,["linked"],{mv:{setting:7,sat:3,aura:12,stars:6}}),away:{ms:3*86400000,label:"3일 만이에요",items:[{k:"friends",label:"새 친구",n:2},{k:"cheers",label:"받은 공감",n:9},{k:"words",label:"받은 한 단어",n:3},{k:"visitors",label:"새로 다녀간 사람",n:6}]}},["friend3","back"]))}
  function previewBadges(){pushFx([{type:"badge",ids:["log1","friend3","loved10","allweek"]}])}
  function replayBadge(id){pushFx([{type:"badge",ids:[id],replay:true}])}
