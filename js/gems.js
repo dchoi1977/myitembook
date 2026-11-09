@@ -23,7 +23,7 @@ async function renderPublicCardImage(card,name){
  return c;
 }
 
-const UNCUT={stone:"수정",form:"덩이",texture:"유백",light:"번짐",facets:6,hardness:1,grain:0};
+const UNCUT={stone:"수정",form:"덩이",texture:"유백",light:"번짐",facets:6,hardness:1,grain:0,polish:1};
 function MyGems({fids,cardOf,names,soc,uid,openUser,toast,onFind}){
  const desk=useDesktop();const cols=desk?6:4;
  const sorted=[...fids].sort((a,b)=>(cardOf(b)?1:0)-(cardOf(a)?1:0)||nick(names,a).localeCompare(nick(names,b)));
@@ -32,12 +32,18 @@ function MyGems({fids,cardOf,names,soc,uid,openUser,toast,onFind}){
  const shown=sorted.filter(id=>cardOf(id)).length;
  return html`<section className="mygems" aria-label="My GEMS">
   <div className="mg-head"><div><div className="mg-eyebrow">INVENTORY</div><h2 className="mg-title">My GEMS</h2></div><span className="mg-count">${sorted.length}<small> 개의 젬 · 빛나는 ${shown}</small></span></div>
+  ${(()=>{const gems=sorted.map(id=>cardOf(id)).filter(Boolean).map(c=>c.data);const stones=new Set(gems.map(d=>d.gem&&d.gem.stone).filter(Boolean));const feats=new Set(gems.flatMap(d=>gemFeatures(d.gem||{},d.gemName)));const FK=["bubbles","needles","phantom","bicolor","cat","star"];
+   return html`<details className="mg-codex"><summary><span>수집 도감</span><span className="mg-cx-n">원석 <b>${stones.size}</b>/${STONE_NAMES.length} · 특성 <b>${feats.size}</b>/${FK.length}</span></summary>
+    <div className="mg-cx-row">${STONE_NAMES.map(n=>html`<span key=${n} className=${"mg-cx-stone"+(stones.has(n)?" on":"")} title=${n}><i style=${{background:stones.has(n)?STONES[n].base:"transparent",borderColor:STONES[n].base}}></i>${n}</span>`)}</div>
+    <div className="mg-cx-row">${FK.map(k=>html`<span key=${k} className=${"mg-cx-feat"+(feats.has(k)?" on":"")+" r-"+INCLUSIONS[k].rar}>${feats.has(k)?INCLUSIONS[k].name:"？？？"}<small>${INCLUSIONS[k].rar}</small></span>`)}</div>
+    <p className="mg-note">친구의 젬마다 원석 종류와 숨은 특성이 달라요. 친구를 맺고 카드를 열어 도감을 채워 보세요.</p></details>`})()}
   <div className="mg-tray" style=${{gridTemplateColumns:`repeat(${cols},minmax(0,1fr))`}}>
    ${Array.from({length:slots}).map((_,i)=>{const id=sorted[i];
     if(!id)return i===sorted.length?html`<button key=${"add"+i} className="mg-slot add" onClick=${onFind}><span className="mg-plus" aria-hidden="true">+</span><span className="mg-name">친구 찾기</span></button>`:html`<div key=${"e"+i} className="mg-slot empty" aria-hidden="true"></div>`;
     const c=cardOf(id);const g=c?c.data.gem:UNCUT;
     return html`<button key=${id} className=${"mg-slot"+(c?"":" sealed")} onClick=${()=>{setPop(id);track("mygems_open",{card:!!c})}} aria-label=${nick(names,id)+(c?" · "+c.data.gemName:" · 아직 원석")}>
      <span className="mg-gem"><${GemView} g=${g} seed=${c?c.data.gemName:id} size=${desk?74:54}/></span>
+     ${c&&(()=>{const f=gemFeatures(c.data.gem||{},c.data.gemName);const r=f.find(k=>k==="star"||k==="cat");return r?html`<span className="mg-rare" title=${INCLUSIONS[r].name}>✦</span>`:null})()}
      ${c&&html`<span className="mg-stage" aria-hidden="true">${[1,2,3,4,5].map(k=>html`<i key=${k} className=${k<=(c.data.stage||1)?"on":""}></i>`)}</span>`}
      <span className="mg-name">${nick(names,id)}</span>
     </button>`})}

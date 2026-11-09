@@ -539,7 +539,27 @@ label.btn{display:inline-flex;align-items:center;justify-content:center;cursor:p
 @keyframes gmBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.6px)}}
 .gem.live .gm-grain{animation:gmGrain 6s ease-in-out infinite}
 @keyframes gmGrain{0%,100%{stroke-opacity:.92}50%{stroke-opacity:.55}}
+.gem.live .gm-cat{animation:gmCat 5s ease-in-out infinite}
+@keyframes gmCat{0%,100%{transform:translateX(-6px);opacity:.55}50%{transform:translateX(6px);opacity:1}}
+.gem.live .gm-asterism{animation:gmTwinkle 4.5s ease-in-out infinite}
+.gem.live .gm-fire{animation:gmFire 3.8s ease-in-out infinite}
+@keyframes gmFire{0%,100%{opacity:.15}50%{opacity:.75}}
 @media (prefers-reduced-motion:reduce){.gem.live svg *{animation:none!important}}
+/* gem features & collection */
+.gemfeat{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:-4px;font-size:12.5px;font-weight:700;color:#A0782E;letter-spacing:.02em}
+.mg-codex{margin:2px 0 12px;border:1px solid rgba(244,241,233,.14);border-radius:14px;padding:8px 12px;color:rgba(244,241,233,.85)}
+.mg-codex summary{display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-size:13px;font-weight:700;list-style:none}
+.mg-codex summary::-webkit-details-marker{display:none}
+.mg-cx-n{font-weight:500;font-size:12.5px}.mg-cx-n b{color:#FFE2A0}
+.mg-cx-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.mg-cx-stone{display:inline-flex;align-items:center;gap:5px;font-size:12px;opacity:.45}.mg-cx-stone.on{opacity:1}
+.mg-cx-stone i{width:10px;height:10px;border-radius:3px;border:1.5px solid;transform:rotate(45deg)}
+.mg-cx-feat{display:inline-flex;flex-direction:column;align-items:center;padding:5px 9px;border-radius:10px;border:1px dashed rgba(244,241,233,.25);font-size:12px;opacity:.6;line-height:1.3}
+.mg-cx-feat small{font-size:10px;opacity:.75}
+.mg-cx-feat.on{opacity:1;border-style:solid;border-color:rgba(216,180,101,.6);color:#FFE2A0}
+.mg-cx-feat.on.r-희귀{box-shadow:0 0 10px rgba(143,199,255,.35)}.mg-cx-feat.on.r-전설{box-shadow:0 0 12px rgba(255,210,122,.5)}
+.mg-slot{position:relative}
+.mg-rare{position:absolute;top:4px;right:6px;font-size:11px;color:#FFE2A0;text-shadow:0 0 6px rgba(255,210,122,.9)}
 /* zodiac sky */
 .zsky{position:relative;max-width:100%;display:flex;flex-direction:column;align-items:center;color:#B08A3E;pointer-events:none;z-index:0}
 .zsky-fig{width:100%;flex:1;min-height:0}
@@ -726,23 +746,23 @@ label.btn{display:inline-flex;align-items:center;justify-content:center;cursor:p
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/htm@3.1.1/dist/htm.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
-<script src="js/config.js?v=29"></script>
-<script src="js/core.js?v=29"></script>
-<script src="js/zodiac.js?v=29"></script>
-<script src="js/api.js?v=29"></script>
-<script src="js/support.js?v=29"></script>
-<script src="js/avatars.js?v=29"></script>
-<script src="js/screens.js?v=29"></script>
-<script src="js/social.js?v=29"></script>
-<script src="js/ops.js?v=29"></script>
-<script src="js/quick.js?v=29"></script>
-<script src="js/evolve.js?v=29"></script>
-<script src="js/achieve.js?v=29"></script>
-<script src="js/gems.js?v=29"></script>
-<script src="js/showcase.js?v=29"></script>
-<script src="js/ask.js?v=29"></script>
-<script src="js/places.js?v=29"></script>
-<script src="js/updates.js?v=29"></script>
-<script src="js/app.js?v=29"></script>
+<script src="js/config.js?v=31"></script>
+<script src="js/core.js?v=31"></script>
+<script src="js/zodiac.js?v=31"></script>
+<script src="js/api.js?v=31"></script>
+<script src="js/support.js?v=31"></script>
+<script src="js/avatars.js?v=31"></script>
+<script src="js/screens.js?v=31"></script>
+<script src="js/social.js?v=31"></script>
+<script src="js/ops.js?v=31"></script>
+<script src="js/quick.js?v=31"></script>
+<script src="js/evolve.js?v=31"></script>
+<script src="js/achieve.js?v=31"></script>
+<script src="js/gems.js?v=31"></script>
+<script src="js/showcase.js?v=31"></script>
+<script src="js/ask.js?v=31"></script>
+<script src="js/places.js?v=31"></script>
+<script src="js/updates.js?v=31"></script>
+<script src="js/app.js?v=31"></script>
 </body>
 </html>

@@ -147,6 +147,7 @@ function LifeCard({st,items,stats,onOpen}){
    <${ZodiacSky} z=${myZodiac(st)} size=${210}/>
    <${GemView} g=${g} seed=${st.createdAt} size=${210}/>
    <div className="gemname">${gemName(g)}</div>
+   ${(()=>{const f=gemFeatures(g,st.createdAt);return f.length?html`<div className="gemfeat">${f.map(k=>html`<span key=${k} title=${INCLUSIONS[k].desc}>✧ ${INCLUSIONS[k].name}</span>`)}</div>`:null})()}
    <p className="sentence">${displaySentence(a)}</p>
    <div className="kw">${displayKeywords(a).map(k=>html`<span className="chip" key=${k}>${k}</span>`)}${st.visibility.fields.tags&&cardTags(st).map(t=>html`<span className="chip plain tagchip" key=${"t"+t}>${t}</span>`)}</div>
    <${AiLabel} status=${a.status}/>

@@ -16,7 +16,7 @@ function settleReread(an,prev){
 /* what the person can see change */
 const EVO_FIELDS=[["stage","단계"],["stone","색"],["form","형"],["texture","질"],["light","빛"],["symbol","상"],["setting","받침"],["sat","인연석"],["aura","광채"],["stars","별자리"],["hardness","강"],["grain","결"],["facets","각"],["rings","연륜"]];
 const MARK_KEYS=["setting","sat","aura","stars"];
-function gemSnap(g,stage){const m=g.marks||{};return {stone:g.stone,form:g.form,texture:g.texture,light:g.light,symbol:g.symbol,hardness:g.hardness,grain:g.grain,facets:g.facets,lightName:g.lightName,fp:g.fp,stage,setting:m.setting||0,sat:m.sat||0,aura:m.aura||0,stars:m.stars||0,rings:g.rings||0,marks:{...m}}}
+function gemSnap(g,stage){const m=g.marks||{};return {stone:g.stone,form:g.form,texture:g.texture,light:g.light,symbol:g.symbol,hardness:g.hardness,grain:g.grain,facets:g.facets,lightName:g.lightName,fp:g.fp,stage,setting:m.setting||0,sat:m.sat||0,aura:m.aura||0,stars:m.stars||0,rings:g.rings||0,polish:stage,marks:{...m}}}
 /* a field the old snapshot never had (older app version) is adopted quietly, not celebrated */
 function evoDiff(a,b){if(!a||!b)return [];const av=k=>k==="rings"&&a[k]===undefined?0:a[k];return EVO_FIELDS.filter(([k])=>av(k)!==undefined&&av(k)!==b[k]).map(([k,label])=>({k,label,from:av(k),to:b[k]}))}
 function evoHeadline(changes,badges,stats){
