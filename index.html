@@ -544,6 +544,17 @@ label.btn{display:inline-flex;align-items:center;justify-content:center;cursor:p
 .gem.live .gm-asterism{animation:gmTwinkle 4.5s ease-in-out infinite}
 .gem.live .gm-aurora{animation:gmAurora 9s ease-in-out infinite}
 @keyframes gmAurora{0%,100%{transform:translate(-8px,-6px);opacity:.75}50%{transform:translate(8px,6px);opacity:1}}
+.gem.live .gm-firefly{animation:gmFly 4.4s ease-in-out infinite}
+@keyframes gmFly{0%,100%{transform:translate(0,0);opacity:.35}50%{transform:translate(3px,-5px);opacity:1}}
+.gem.live .gm-pulse{animation:gmPulse 4s ease-in-out infinite}
+@keyframes gmPulse{0%,100%{opacity:.7;transform:scale(.94)}50%{opacity:1;transform:scale(1.06)}}
+.gem.live .gm-holo{animation:gmHolo 7s linear infinite}
+@keyframes gmHolo{to{transform:translateX(66px)}}
+.gem.live .gm-orbit{transform-box:view-box;transform-origin:100px 98px;animation:gmSpin 24s linear infinite}
+.gem.live .gm-wing{transform-box:view-box;animation:gmWing 3.6s ease-in-out infinite}
+.gem.live .gm-wing.r{animation-name:gmWingR}
+@keyframes gmWing{0%,100%{transform:rotate(0)}50%{transform:rotate(-7deg)}}
+@keyframes gmWingR{0%,100%{transform:rotate(0)}50%{transform:rotate(7deg)}}
 .gem.live .gm-fire{animation:gmFire 3.8s ease-in-out infinite}
 @keyframes gmFire{0%,100%{opacity:.15}50%{opacity:.75}}
 @media (prefers-reduced-motion:reduce){.gem.live svg *{animation:none!important}}
@@ -559,6 +570,8 @@ label.btn{display:inline-flex;align-items:center;justify-content:center;cursor:p
 .mg-cx-vn{width:44px;flex:none;font-weight:700;opacity:.8}
 .mg-cx-v{display:inline-flex;align-items:center;gap:4px;opacity:.45}.mg-cx-v.on{opacity:1;color:#FFE2A0}
 .mg-cx-v i{width:9px;height:9px;border-radius:2px;border:1.5px solid;transform:rotate(45deg)}
+.gemfeat .aw{color:#8C6A3A}.gemfeat .aw.t2{color:#3E7FB0}.gemfeat .aw.t3{color:#8A4FC0}.gemfeat .aw.t4{color:#C0632A;text-shadow:0 0 8px rgba(255,190,90,.6)}
+.mg-cx-feat.on.r-영웅{box-shadow:0 0 10px rgba(201,162,255,.45)}
 .gemfeat .gf-id{color:var(--ink-2);font-weight:600}
 .mg-cx-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .mg-cx-stone{display:inline-flex;align-items:center;gap:5px;font-size:12px;opacity:.45}.mg-cx-stone.on{opacity:1}
@@ -755,23 +768,23 @@ label.btn{display:inline-flex;align-items:center;justify-content:center;cursor:p
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/htm@3.1.1/dist/htm.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
-<script src="js/config.js?v=33"></script>
-<script src="js/core.js?v=33"></script>
-<script src="js/zodiac.js?v=33"></script>
-<script src="js/api.js?v=33"></script>
-<script src="js/support.js?v=33"></script>
-<script src="js/avatars.js?v=33"></script>
-<script src="js/screens.js?v=33"></script>
-<script src="js/social.js?v=33"></script>
-<script src="js/ops.js?v=33"></script>
-<script src="js/quick.js?v=33"></script>
-<script src="js/evolve.js?v=33"></script>
-<script src="js/achieve.js?v=33"></script>
-<script src="js/gems.js?v=33"></script>
-<script src="js/showcase.js?v=33"></script>
-<script src="js/ask.js?v=33"></script>
-<script src="js/places.js?v=33"></script>
-<script src="js/updates.js?v=33"></script>
-<script src="js/app.js?v=33"></script>
+<script src="js/config.js?v=35"></script>
+<script src="js/core.js?v=35"></script>
+<script src="js/zodiac.js?v=35"></script>
+<script src="js/api.js?v=35"></script>
+<script src="js/support.js?v=35"></script>
+<script src="js/avatars.js?v=35"></script>
+<script src="js/screens.js?v=35"></script>
+<script src="js/social.js?v=35"></script>
+<script src="js/ops.js?v=35"></script>
+<script src="js/quick.js?v=35"></script>
+<script src="js/evolve.js?v=35"></script>
+<script src="js/achieve.js?v=35"></script>
+<script src="js/gems.js?v=35"></script>
+<script src="js/showcase.js?v=35"></script>
+<script src="js/ask.js?v=35"></script>
+<script src="js/places.js?v=35"></script>
+<script src="js/updates.js?v=35"></script>
+<script src="js/app.js?v=35"></script>
 </body>
 </html>

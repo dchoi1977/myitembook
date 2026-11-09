@@ -147,7 +147,7 @@ function LifeCard({st,items,stats,onOpen}){
    <${ZodiacSky} z=${myZodiac(st)} size=${210}/>
    <${GemView} g=${g} seed=${st.createdAt} size=${210}/>
    <div className="gemname">${gemName(g)}</div>
-   ${(()=>{const I=gemIdentity(g,st.createdAt);return html`<div className="gemfeat"><span className="gf-id">${I.rareVariant?"✦ ":""}${I.variant} · ${I.cut}${I.pattern?" · "+I.pattern:""}</span>${I.feats.map(k=>html`<span key=${k} title=${INCLUSIONS[k].desc}>✧ ${INCLUSIONS[k].name}</span>`)}</div>`})()}
+   ${(()=>{const I=gemIdentity(g,st.createdAt);return html`<div className="gemfeat"><span className="gf-id">${I.rareVariant?"✦ ":""}${I.variant} · ${I.cut}${I.pattern?" · "+I.pattern:""}</span>${I.feats.map(k=>html`<span key=${k} title=${INCLUSIONS[k].desc}>✧ ${INCLUSIONS[k].name}</span>`)}${(I.aw||[]).map(x=>html`<span key=${x.k} className=${"aw t"+x.t} title=${AW_TIERS[x.t][0]+" 발현 · 연마 "+x.at+"단계"}>✺ ${x.n}</span>`)}</div>`})()}
    <p className="sentence">${displaySentence(a)}</p>
    <div className="kw">${displayKeywords(a).map(k=>html`<span className="chip" key=${k}>${k}</span>`)}${st.visibility.fields.tags&&cardTags(st).map(t=>html`<span className="chip plain tagchip" key=${"t"+t}>${t}</span>`)}</div>
    <${AiLabel} status=${a.status}/>
@@ -315,6 +315,7 @@ function buildPublicCard(st,items,stats){
 }
 function PublicCardView({card,name,compact,who}){
  return html`<div className=${"person"+(card.frame?" frame-"+card.frame:"")}><div className="person-head"><${GemView} g=${card.gem} seed=${card.gemName} size=${compact?64:84}/><div className="grow"><b className="serif" style=${{color:"var(--accent)",fontSize:"17px"}}>${card.gemName}</b><br/><span className="small faint whoname">${who?html`<${Avatar} p=${who} size=${22}/>`:null}${card.title?card.title+" ":""}${name||"MIB 사용자"} · 연마 ${card.stage||1}단계</span></div></div>
+  ${!compact&&card.gem&&(()=>{const I=gemIdentity(card.gem,card.gemName);return html`<div className="gemfeat" style=${{justifyContent:"flex-start"}}><span className="gf-id">${I.rareVariant?"✦ ":""}${I.variant} · ${I.cut}</span>${(I.aw||[]).filter(x=>x.t>=2).map(x=>html`<span key=${x.k} className=${"aw t"+x.t}>✺ ${x.n}</span>`)}</div>`})()}
   ${card.sentence&&html`<p className="serif" style=${{fontSize:"15.5px",lineHeight:1.6}}>${card.sentence}</p>`}
   ${((card.keywords||[]).length>0||(card.tags||[]).length>0||card.zodiac)&&html`<div className="row">${(card.keywords||[]).map(k=>html`<span className="chip" key=${k}>${k}</span>`)}${(card.tags||[]).map(t=>html`<span className="chip plain tagchip" key=${"t"+t}>${t}</span>`)}${zodiacByKey(card.zodiac)&&html`<span className="chip plain tagchip zchip-c"><span aria-hidden="true">${zodiacByKey(card.zodiac).sym+"\uFE0E"}</span> ${zodiacByKey(card.zodiac).ko}</span>`}</div>`}
   ${card.showHex&&!compact&&html`<${Hexagon} axes=${card.axes} size=${240}/>`}

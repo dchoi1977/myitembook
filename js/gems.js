@@ -33,12 +33,14 @@ function MyGems({fids,cardOf,names,soc,uid,openUser,toast,onFind}){
  return html`<section className="mygems" aria-label="My GEMS">
   <div className="mg-head"><div><div className="mg-eyebrow">INVENTORY</div><h2 className="mg-title">My GEMS</h2></div><span className="mg-count">${sorted.length}<small> 개의 젬 · 빛나는 ${shown}</small></span></div>
   ${(()=>{const gems=sorted.map(id=>cardOf(id)).filter(Boolean).map(c=>c.data);const ids=gems.map(d=>({...gemIdentity(d.gem||{},d.gemName),stone:d.gem&&d.gem.stone}));
-   const vars=new Set(ids.map(x=>x.variant)),cuts=new Set(ids.map(x=>x.cut)),feats=new Set(ids.flatMap(x=>x.feats));const FK=["bubbles","needles","phantom","bicolor","cat","star"];const ALLC=[...new Set(Object.values(CUTS).flat().map(c=>c[0]))];const nV=Object.values(VARIANTS).flat().length;
-   return html`<details className="mg-codex"><summary><span>수집 도감</span><span className="mg-cx-n">빛깔 <b>${vars.size}</b>/${nV} · 모양 <b>${cuts.size}</b>/${ALLC.length} · 특성 <b>${feats.size}</b>/${FK.length}</span></summary>
+   const vars=new Set(ids.map(x=>x.variant)),cuts=new Set(ids.map(x=>x.cut)),feats=new Set(ids.flatMap(x=>x.feats));const FK=["bubbles","needles","phantom","bicolor","cat","star"];const ALLC=[...new Set(Object.values(CUTS).flat().map(c=>c[0])),"하트 컷","별 컷"];const nV=Object.values(VARIANTS).flat().length;
+   return html`<details className="mg-codex"><summary><span>수집 도감</span><span className="mg-cx-n">빛깔 <b>${vars.size}</b>/${nV} · 모양 <b>${cuts.size}</b>/${ALLC.length} · 발현 <b>${new Set(ids.flatMap(x=>(x.aw||[]).map(a=>a.k))).size}</b>/${AWAKEN.length} · 특성 <b>${feats.size}</b>/${FK.length}</span></summary>
     <div className="mg-cx-h">빛깔 · 원석 9종 × 세 갈래 (✦ 희귀 변종)</div>
     <div className="mg-cx-vars">${STONE_NAMES.map(n=>html`<div key=${n} className="mg-cx-vrow"><span className="mg-cx-vn">${n}</span>${VARIANTS[n].map((v,k)=>{const on=vars.has(v.n);const c=v.base||STONES[n].base;return html`<span key=${k} className=${"mg-cx-v"+(on?" on":"")} title=${on?v.n:"？？？"}><i style=${{background:on?c:"transparent",borderColor:c}}></i>${on?v.n:(v.rare?"✦ ？？？":"？？？")}</span>`})}</div>`)}</div>
     <div className="mg-cx-h">모양</div>
     <div className="mg-cx-row">${ALLC.map(k=>html`<span key=${k} className=${"mg-cx-feat"+(cuts.has(k)?" on":"")}>${cuts.has(k)?k:"？？？"}</span>`)}</div>
+    <div className="mg-cx-h">발현 · 연마 단계가 오를 때 깨어나는 것</div>
+    <div className="mg-cx-row">${(()=>{const got=new Set(ids.flatMap(x=>(x.aw||[]).map(a=>a.k)));return AWAKEN.map(a=>html`<span key=${a.k} className=${"mg-cx-feat"+(got.has(a.k)?" on":"")+" r-"+AW_TIERS[a.t][0]}>${got.has(a.k)?a.n:"？？？"}<small>${AW_TIERS[a.t][0]}</small></span>`)})()}</div>
     <div className="mg-cx-h">숨은 특성</div>
     <div className="mg-cx-row">${FK.map(k=>html`<span key=${k} className=${"mg-cx-feat"+(feats.has(k)?" on":"")+" r-"+INCLUSIONS[k].rar}>${feats.has(k)?INCLUSIONS[k].name:"？？？"}<small>${INCLUSIONS[k].rar}</small></span>`)}</div>
     <p className="mg-note">같은 원석이라도 빛깔·모양·무늬·숨은 특성이 사람마다 달라요. 친구를 맺고 카드를 열어 도감을 채워 보세요.</p></details>`})()}
@@ -48,7 +50,7 @@ function MyGems({fids,cardOf,names,soc,uid,openUser,toast,onFind}){
     const c=cardOf(id);const g=c?c.data.gem:UNCUT;
     return html`<button key=${id} className=${"mg-slot"+(c?"":" sealed")} onClick=${()=>{setPop(id);track("mygems_open",{card:!!c})}} aria-label=${nick(names,id)+(c?" · "+c.data.gemName:" · 아직 원석")}>
      <span className="mg-gem"><${GemView} g=${g} seed=${c?c.data.gemName:id} size=${desk?74:54}/></span>
-     ${c&&(()=>{const f=gemFeatures(c.data.gem||{},c.data.gemName);const I=gemIdentity(c.data.gem||{},c.data.gemName);const r=f.find(k=>k==="star"||k==="cat");return (r||I.rareVariant)?html`<span className="mg-rare" title=${r?INCLUSIONS[r].name:I.variant}>✦</span>`:null})()}
+     ${c&&(()=>{const f=gemFeatures(c.data.gem||{},c.data.gemName);const I=gemIdentity(c.data.gem||{},c.data.gemName);const r=f.find(k=>k==="star"||k==="cat");const ep=(I.aw||[]).some(a=>a.t>=3);return (r||I.rareVariant||ep)?html`<span className="mg-rare" title=${r?INCLUSIONS[r].name:I.variant}>✦</span>`:null})()}
      ${c&&html`<span className="mg-stage" aria-hidden="true">${[1,2,3,4,5].map(k=>html`<i key=${k} className=${k<=(c.data.stage||1)?"on":""}></i>`)}</span>`}
      <span className="mg-name">${nick(names,id)}</span>
     </button>`})}

@@ -14,7 +14,7 @@ const QUICK=[
  {id:"help",q:"사람들에게 내가 주로 건네는 것은?",type:"one",opts:["곁에서 들어주기","새로운 아이디어","꾸준히 챙기기"]},
  {id:"time",q:"요즘 시간을 가장 많이 쓰는 일은?",hint:"최대 4개",type:"multi",max:4,opts:["일·공부","운동","음악","요리","여행","사진·영상","글쓰기","독서","게임","가족·반려","봉사","만들기","살림","배움"]},
  {id:"years",q:"그중 가장 오래 이어 온 일은 얼마나 됐나요?",type:"one",opts:["1년 미만","1~3년","3~10년","10년 이상"]},
- {id:"symbol",q:"나를 닮은 그림 하나를 고른다면?",type:"symbol",opts:SYMBOLS},
+ {id:"symbol",q:"나를 닮은 그림 하나를 고른다면?",type:"symbol",opts:SYMBOLS_QUICK},
  {id:"mbti",q:"MBTI를 알고 있나요?",hint:"본인이 아는 대로 고르면 돼요",type:"mbti",optional:true},
  {id:"blood",q:"혈액형은?",hint:"재미로 묻는 질문이에요. 해석에는 쓰지 않아요",type:"one",optional:true,opts:["A형","B형","O형","AB형"]}
 ];
