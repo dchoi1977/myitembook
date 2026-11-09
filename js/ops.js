@@ -162,6 +162,7 @@ async function renderShareImage(kind,{st,stats,profile}){
   x.fillStyle="#1F2A28";x.font=`500 32px ${SANS}`;x.fillText(diff.length?"젬이 달라진 곳 · "+diff.join(" · "):"젬의 모양은 그대로, 걸어온 시간은 쌓였습니다",W/2,1050);
   x.fillStyle="#173D3B";x.font=`700 38px ${SERIF}`;wrapLines(x,displaySentence(a),W-240,2).forEach((l,i)=>x.fillText(l,W/2,1135+i*54));
  }else{
+  if(typeof drawAgeDepth==="function")drawAgeDepth(x,now&&now.rings);
   if(typeof drawConstellation==="function")drawConstellation(x,myZodiac(st));
   const g=await svgImage(gemSVG(now,st.createdAt,"s0"),520,559);x.drawImage(g,(W-520)/2,170);
   x.fillStyle="#173D3B";x.font=`700 60px ${SERIF}`;x.fillText(gemName(now),W/2,800);

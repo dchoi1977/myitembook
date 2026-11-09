@@ -122,6 +122,13 @@ function gemSVG(g,seed,key){
  if(lm==="번짐")under+=`<ellipse cx="100" cy="199" rx="74" ry="12" fill="url(#${id}proj)"/>`;
  if(lm==="물결")[0,1,2].forEach(i=>{under+=`<ellipse cx="100" cy="198" rx="${38+i*19}" ry="${5+i*3.2}" fill="none" stroke="${st.tint}" stroke-opacity="${(.85-i*.22).toFixed(2)}" stroke-width="1.3"/>`});
  if(lm==="반짝임")for(let i=0;i<6;i++){const a=R()*Math.PI*2,r=80+R()*12;const x=100+Math.cos(a)*r,y=100+Math.sin(a)*r*.84;const s=3+R()*4.5;const f=st.light==="#FFFFFF"?st.deep:st.light;around+=`<path d="M${x.toFixed(1)} ${(y-s).toFixed(1)}L${(x+s*.28).toFixed(1)} ${(y-s*.28).toFixed(1)}L${(x+s).toFixed(1)} ${y.toFixed(1)}L${(x+s*.28).toFixed(1)} ${(y+s*.28).toFixed(1)}L${x.toFixed(1)} ${(y+s).toFixed(1)}L${(x-s*.28).toFixed(1)} ${(y+s*.28).toFixed(1)}L${(x-s).toFixed(1)} ${y.toFixed(1)}L${(x-s*.28).toFixed(1)} ${(y-s*.28).toFixed(1)}Z" fill="${f}" opacity=".9"/>`}
+ const rg=clamp(Math.round(g.rings||0),0,6);let ringsBack="";
+ if(rg){const RR=rng(seed+"|rings");const n=rg+2;
+  ringsBack+=`<circle cx="100" cy="98" r="96" fill="url(#${id}age)"/>`;
+  for(let i=0;i<n;i++){const r=62+i*(26/n)+RR()*1.5;const dash=`${(22+RR()*40).toFixed(0)} ${(3+RR()*5).toFixed(0)} ${(8+RR()*20).toFixed(0)} ${(2+RR()*4).toFixed(0)}`;ringsBack+=`<ellipse cx="${(100+(RR()-.5)*1.6).toFixed(1)}" cy="${(98+(RR()-.5)*1.6).toFixed(1)}" rx="${r.toFixed(1)}" ry="${(r*(.97+RR()*.05)).toFixed(1)}" fill="none" stroke="${i%3===2?"#C9A45A":st.deep}" stroke-opacity="${(.16+rg*.014-i*(.1/n)).toFixed(3)}" stroke-width="${(.5+RR()*.6).toFixed(2)}" stroke-dasharray="${dash}" transform="rotate(${(RR()*360).toFixed(0)} 100 98)"/>`}
+  const ox=bx[0]-18,oy=by[1]+26,maxR=Math.hypot(bx[1]-ox,by[0]-oy);const m=rg*2+2;
+  for(let i=1;i<=m;i++){const r=maxR*(i/(m+1))*(.97+RR()*.06);const w=i%2?1+rg*.18:.6+rg*.1;over+=`<circle cx="${ox.toFixed(1)}" cy="${oy.toFixed(1)}" r="${r.toFixed(1)}" fill="none" stroke="${i%2?st.deep:st.tint}" stroke-opacity="${(.16+rg*.035).toFixed(3)}" stroke-width="${(w*1.25).toFixed(2)}"/>`}
+  over+=`<ellipse cx="${((bx[0]+bx[1])/2).toFixed(1)}" cy="${((by[0]+by[1])/2+8).toFixed(1)}" rx="${((bx[1]-bx[0])*.42).toFixed(1)}" ry="${((by[1]-by[0])*.4).toFixed(1)}" fill="url(#${id}core)" opacity="${(.12+rg*.06).toFixed(2)}"/>`}
  const mk=g.marks||{};const MET=[null,["#E9EDF1","#A3ACB7","#6E7884"],["#F6DF98","#C99A35","#8C6618"],["#F2F6F8","#B5C3CC","#7A8D99"],["#F6DF98","#C99A35","#8C6618"],["#FFE9A8","#D4A43C","#8C6618"]];
  let back="",front="",plinth="";
  const au=clamp(mk.aura||0,0,5);
@@ -141,8 +148,8 @@ function gemSVG(g,seed,key){
   const pr=[0,0,2,4,4,6][se];const PX=[[74,1],[126,1],[64,.7],[136,.7],[86,.85],[114,.85]];
   for(let i=0;i<pr;i++){const [x,h]=PX[i];front+=`<path d="M${x-3} 190 L${x} ${(190-14*h).toFixed(1)} L${x+3} 190 Z" fill="url(#${gid})" stroke="${lo}" stroke-width=".5"/>`}
   if(se>=5)[60,80,100,120,140].forEach((x,i)=>{plinth+=`<path d="M${x-4} 186 L${x} ${i===2?175:179} L${x+4} 186 Z" fill="${hi}" stroke="${lo}" stroke-width=".5"/>`})}
- const defs=`<defs><clipPath id="${id}c">${C.map(c=>`<polygon points="${polyStr(c.P)}"/>`).join("")}</clipPath><radialGradient id="${id}glow" cx="50%" cy="46%" r="50%"><stop offset="0" stop-color="${st.light}" stop-opacity=".55"/><stop offset="1" stop-color="${st.light}" stop-opacity="0"/></radialGradient><radialGradient id="${id}proj"><stop offset="0" stop-color="${st.tint}" stop-opacity=".95"/><stop offset="1" stop-color="${st.tint}" stop-opacity="0"/></radialGradient><radialGradient id="${id}milk" cx="45%" cy="40%" r="60%"><stop offset="0" stop-color="#FFFFFF" stop-opacity=".44"/><stop offset="1" stop-color="#FFFFFF" stop-opacity=".04"/></radialGradient></defs>`;
- return `<svg viewBox="0 0 200 215" xmlns="http://www.w3.org/2000/svg">${defs}<circle cx="100" cy="98" r="96" fill="url(#${id}glow)"/>${back}${under}${plinth}${around}${body}<g clip-path="url(#${id}c)">${over}</g>${front}</svg>`;
+ const defs=`<defs><clipPath id="${id}c">${C.map(c=>`<polygon points="${polyStr(c.P)}"/>`).join("")}</clipPath><radialGradient id="${id}glow" cx="50%" cy="46%" r="50%"><stop offset="0" stop-color="${st.light}" stop-opacity=".55"/><stop offset="1" stop-color="${st.light}" stop-opacity="0"/></radialGradient><radialGradient id="${id}proj"><stop offset="0" stop-color="${st.tint}" stop-opacity=".95"/><stop offset="1" stop-color="${st.tint}" stop-opacity="0"/></radialGradient><radialGradient id="${id}age" cx="50%" cy="50%" r="50%"><stop offset=".35" stop-color="${st.deep}" stop-opacity="0"/><stop offset=".7" stop-color="${st.deep}" stop-opacity="${(.03+rg*.02).toFixed(3)}"/><stop offset="1" stop-color="${st.deep}" stop-opacity="0"/></radialGradient><radialGradient id="${id}core"><stop offset="0" stop-color="${st.deep}" stop-opacity=".9"/><stop offset="1" stop-color="${st.deep}" stop-opacity="0"/></radialGradient><radialGradient id="${id}milk" cx="45%" cy="40%" r="60%"><stop offset="0" stop-color="#FFFFFF" stop-opacity=".44"/><stop offset="1" stop-color="#FFFFFF" stop-opacity=".04"/></radialGradient></defs>`;
+ return `<svg viewBox="0 0 200 215" xmlns="http://www.w3.org/2000/svg">${defs}<circle cx="100" cy="98" r="96" fill="url(#${id}glow)"/>${ringsBack}${back}${under}${plinth}${around}${body}<g clip-path="url(#${id}c)">${over}</g>${front}</svg>`;
 }
 function fingerprint(a){if(!a)return null;const key=[a.sentence||"",(a.keywords||[]).join(","),(a.axes||[]).map(x=>x.name+":"+x.level).join(","),(a.gem&&a.gem.lightName)||""].join("|");const R=rng("fp|"+key);let hue=Math.round((R()-.5)*24);
  if(a.tint&&a.gem&&STONES[a.gem.stone]){const h=hueOf(a.tint),b=hueOf(STONES[a.gem.stone].base);if(h!=null&&b!=null){let d=((h-b+540)%360)-180;hue=clamp(Math.round(d*.3+(R()-.5)*8),-18,18)}}
@@ -278,6 +285,7 @@ function livingGem(st){
  g.facets=clamp((a.gem.facets||8)+Math.max(0,(st.analyses||1)-1)+Math.max(0,((st.flags&&st.flags.maxStage)||1)-1),6,14);
  g.fp=a.gem.fp||fingerprint(a);
  const mk=st.flags&&st.flags.marks;if(mk)g.marks={...mk};
+ if(typeof ringsOf==="function"){const r=ringsOf(st);if(r)g.rings=r;else delete g.rings}
  return g;
 }
 /* ───────── 표식 — 자리를 비운 사이에도 쌓이는 이정표 (한번 오르면 줄지 않음) ───────── */

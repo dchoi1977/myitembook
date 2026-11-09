@@ -526,6 +526,9 @@ label.btn{display:inline-flex;align-items:center;justify-content:center;cursor:p
 .birth select{width:auto;flex:none;min-height:36px;padding:4px 8px;border-radius:10px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);font:inherit}
 [data-theme="dark"] .zsky,.dark .zsky{color:#D9BE7E}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .zsky{color:#D9BE7E}}
+.lifecard[data-age]{background-image:radial-gradient(ellipse 70% 46% at 50% 30%,rgba(176,138,62,calc(.03 + var(--ag,0)*.018)),rgba(120,96,60,calc(.015 + var(--ag,0)*.01)) 62%,transparent 100%)}
+.lifecard[data-age="1"]{--ag:1}.lifecard[data-age="2"]{--ag:2}.lifecard[data-age="3"]{--ag:3}.lifecard[data-age="4"]{--ag:4}.lifecard[data-age="5"]{--ag:5}.lifecard[data-age="6"]{--ag:6}
+.zchip.ring{border-color:#C9B08A;color:#7A5E34}
 /* updates */
 .upd{display:flex;flex-direction:column;gap:10px;padding:16px 0;border-top:1px solid var(--line)}
 .upd:first-of-type{border-top:0;padding-top:4px}
@@ -696,23 +699,23 @@ label.btn{display:inline-flex;align-items:center;justify-content:center;cursor:p
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/htm@3.1.1/dist/htm.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
-<script src="js/config.js?v=26"></script>
-<script src="js/core.js?v=26"></script>
-<script src="js/zodiac.js?v=26"></script>
-<script src="js/api.js?v=26"></script>
-<script src="js/support.js?v=26"></script>
-<script src="js/avatars.js?v=26"></script>
-<script src="js/screens.js?v=26"></script>
-<script src="js/social.js?v=26"></script>
-<script src="js/ops.js?v=26"></script>
-<script src="js/quick.js?v=26"></script>
-<script src="js/evolve.js?v=26"></script>
-<script src="js/achieve.js?v=26"></script>
-<script src="js/gems.js?v=26"></script>
-<script src="js/showcase.js?v=26"></script>
-<script src="js/ask.js?v=26"></script>
-<script src="js/places.js?v=26"></script>
-<script src="js/updates.js?v=26"></script>
-<script src="js/app.js?v=26"></script>
+<script src="js/config.js?v=27"></script>
+<script src="js/core.js?v=27"></script>
+<script src="js/zodiac.js?v=27"></script>
+<script src="js/api.js?v=27"></script>
+<script src="js/support.js?v=27"></script>
+<script src="js/avatars.js?v=27"></script>
+<script src="js/screens.js?v=27"></script>
+<script src="js/social.js?v=27"></script>
+<script src="js/ops.js?v=27"></script>
+<script src="js/quick.js?v=27"></script>
+<script src="js/evolve.js?v=27"></script>
+<script src="js/achieve.js?v=27"></script>
+<script src="js/gems.js?v=27"></script>
+<script src="js/showcase.js?v=27"></script>
+<script src="js/ask.js?v=27"></script>
+<script src="js/places.js?v=27"></script>
+<script src="js/updates.js?v=27"></script>
+<script src="js/app.js?v=27"></script>
 </body>
 </html>

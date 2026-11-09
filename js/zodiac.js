@@ -50,18 +50,31 @@ function drawConstellation(x,z,{left=110,top=185,w=860,h=330,label=true}={}){
  x.restore();
 }
 
-/* birthday picker (month · day only) */
+/* 연륜 — 살아온 시간이 젬에 새기는 결. 나이는 숫자로 어디에도 보이지 않음 */
+const RING_NAMES=["","맑은 결","단단해지는 결","깊어지는 결","짙은 결","원숙한 결","그윽한 결"];
+const YEAR_NOW=new Date().getFullYear();
+function birthYear(st){const y=st&&st.quick&&st.quick.answers&&st.quick.answers.birthYear;return Number.isInteger(y)&&y>=1920&&y<=YEAR_NOW-10?y:null}
+function ringsOf(st){const y=birthYear(st);if(!y)return 0;const age=YEAR_NOW-y;return clamp(Math.floor((age-10)/10),1,6)}
+const ringName=r=>RING_NAMES[clamp(r||0,0,6)]||"";
+
+/* card image: a warm depth that deepens with the rings, behind gem and sky */
+function drawAgeDepth(x,rg,cx=540,cy=450){if(!rg)return;x.save();const R=560;const g=x.createRadialGradient(cx,cy,60,cx,cy,R);g.addColorStop(0,`rgba(176,138,62,${(.04+rg*.022).toFixed(3)})`);g.addColorStop(.7,`rgba(120,96,60,${(.02+rg*.012).toFixed(3)})`);g.addColorStop(1,"rgba(120,96,60,0)");x.fillStyle=g;x.fillRect(42,42,996,1266);
+ const n=rg+2;for(let i=0;i<n;i++){const r=300+i*(240/n);x.strokeStyle=`rgba(140,106,52,${(.05+rg*.01-i*.004).toFixed(3)})`;x.lineWidth=1.4;x.beginPath();x.ellipse(cx,cy,r,r*.97,0,0,Math.PI*2);x.stroke()}x.restore()}
+
+/* birthday picker (year optional · month · day) */
 function BirthPicker({st,update}){
- const b=birthMD(st)||[0,0];const [mo,setMo]=useState(b[0]||"");const [d,setD]=useState(b[1]||"");
- function save(m,dd){setMo(m);setD(dd);update(s=>{s.quick=s.quick||{answers:{}};const a={...(s.quick.answers||{})};if(m&&dd&&dd<=MONTH_DAYS[m-1])a.birth=String(m).padStart(2,"0")+"-"+String(dd).padStart(2,"0");else delete a.birth;s.quick.answers=a})}
- const z=mo&&d?zodiacOf(+mo,+d):null;
+ const b=birthMD(st)||[0,0];const [mo,setMo]=useState(b[0]||"");const [d,setD]=useState(b[1]||"");const [yr,setYr]=useState(birthYear(st)||"");
+ function save(m,dd,y){setMo(m);setD(dd);setYr(y);update(s=>{s.quick=s.quick||{answers:{}};const a={...(s.quick.answers||{})};if(m&&dd&&dd<=MONTH_DAYS[m-1])a.birth=String(m).padStart(2,"0")+"-"+String(dd).padStart(2,"0");else delete a.birth;if(y)a.birthYear=+y;else delete a.birthYear;s.quick.answers=a})}
+ const z=mo&&d?zodiacOf(+mo,+d):null;const rg=yr?clamp(Math.floor((YEAR_NOW-yr-10)/10),1,6):0;
+ const years=[];for(let y=YEAR_NOW-10;y>=1930;y--)years.push(y);
  return html`<div className="stack birth" style=${{gap:"6px"}}>
-  <div className="row" style=${{gap:"6px",alignItems:"center"}}><span className="muted">생일</span>
-   <select id="bd-m" aria-label="생일 월" value=${mo} onChange=${e=>save(+e.target.value||"",d&&+e.target.value&&d>MONTH_DAYS[+e.target.value-1]?"":d)}><option value="">월</option>${MONTH_DAYS.map((_,i)=>html`<option key=${i} value=${i+1}>${i+1}월</option>`)}</select>
-   <select id="bd-d" aria-label="생일 일" value=${d} onChange=${e=>save(mo,+e.target.value||"")}><option value="">일</option>${Array.from({length:mo?MONTH_DAYS[mo-1]:31},(_,i)=>html`<option key=${i} value=${i+1}>${i+1}일</option>`)}</select>
-   ${z&&html`<span className="zchip"><span aria-hidden="true">${z.sym+"\uFE0E"}</span> ${z.ko}</span>`}
-   ${(mo||d)&&html`<button className="linkbtn small" onClick=${()=>save("","")}>지우기</button>`}
+  <div className="row" style=${{gap:"6px",alignItems:"center",flexWrap:"wrap"}}><span className="muted">생일</span>
+   <select id="bd-y" aria-label="태어난 해 (선택)" value=${yr} onChange=${e=>save(mo,d,+e.target.value||"")}><option value="">연도</option>${years.map(y=>html`<option key=${y} value=${y}>${y}년</option>`)}</select>
+   <select id="bd-m" aria-label="생일 월" value=${mo} onChange=${e=>save(+e.target.value||"",d&&+e.target.value&&d>MONTH_DAYS[+e.target.value-1]?"":d,yr)}><option value="">월</option>${MONTH_DAYS.map((_,i)=>html`<option key=${i} value=${i+1}>${i+1}월</option>`)}</select>
+   <select id="bd-d" aria-label="생일 일" value=${d} onChange=${e=>save(mo,+e.target.value||"",yr)}><option value="">일</option>${Array.from({length:mo?MONTH_DAYS[mo-1]:31},(_,i)=>html`<option key=${i} value=${i+1}>${i+1}일</option>`)}</select>
+   ${(mo||d||yr)&&html`<button className="linkbtn small" onClick=${()=>save("","","")}>지우기</button>`}
   </div>
-  <span className="faint">선택 · 월과 일만 받아요(연도는 저장하지 않아요). 고르면 카드 앞면 젬 뒤 하늘에 별자리가 떠요.</span>
+  ${(z||rg>0)&&html`<div className="row" style=${{gap:"6px",flexWrap:"wrap"}}>${z&&html`<span className="zchip"><span aria-hidden="true">${z.sym+"\uFE0E"}</span> ${z.ko}</span>`}${rg>0&&html`<span className="zchip ring"><span aria-hidden="true">◎</span> 연륜 · ${ringName(rg)}</span>`}</div>`}
+  <span className="faint">모두 선택이에요. 월·일을 고르면 젬 뒤 하늘에 별자리가, 연도까지 고르면 살아온 시간만큼 젬 안에 나이테 같은 결과 깊이가 새겨져요. 나이는 숫자로 어디에도 보이지 않고, 해석(AI)에도 보내지 않아요.</span>
  </div>`;
 }

@@ -141,7 +141,7 @@ function LifeCard({st,items,stats,onOpen}){
  const earned=BADGES.filter(b=>isEarned(st,stats,b));const stage=stageOf(st,stats);
  const prev=(st.axesHistory||[]).length?st.axesHistory[st.axesHistory.length-1].axes:null;
  const eq=equipped(st,stats);const show=showcaseBadges(st,stats).map(badgeById);
- return html`<div className=${"lifecard"+(eq.frame?" frame-"+eq.frame:"")}>
+ return html`<div className=${"lifecard"+(eq.frame?" frame-"+eq.frame:"")} data-age=${g&&g.rings?g.rings:undefined}>
   <div className="row between"><span className="row" style=${{gap:"6px"}}><span className="chip gold">연마 ${stage}단계 · ${STAGES[stage]}</span>${eq.title&&html`<span className="chip plain title-chip">${eq.title}</span>`}</span><button className="linkbtn small" onClick=${()=>setBack(b=>!b)} aria-pressed=${back}>${back?"앞면 보기":"뒷면 · 육각형"}</button></div>
   ${!back?html`<div className="stack" style=${{alignItems:"center"}}>
    <${ZodiacSky} z=${myZodiac(st)} size=${210}/>
@@ -303,7 +303,7 @@ function TagEditor({st,update}){const a=(st.quick&&st.quick.answers)||{};const m
  </div>`}
 function buildPublicCard(st,items,stats){
  const fl=st.visibility.fields;const a=st.analysis;const g=livingGem(st);
- const card={v:1,updatedAt:Date.now(),gem:g,gemName:gemName(g),stage:stageOf(st,stats),
+ const card={v:1,updatedAt:Date.now(),gem:fl.tags?g:(({rings,...r})=>r)(g||{}),gemName:gemName(g),stage:stageOf(st,stats),
   sentence:fl.sentence?displaySentence(a):"",keywords:fl.keywords?displayKeywords(a):[],
   axes:fl.hexagon?visibleAxes(a).map(x=>({name:x.name,level:x.level})):visibleAxes(a).map(x=>({name:x.name})),
   showHex:!!fl.hexagon,badges:fl.badges?showcaseBadges(st,stats,8):[],title:equipped(st,stats).title,frame:equipped(st,stats).frame,
@@ -326,7 +326,7 @@ function PublishSheet({st,items,stats,update,onClose,toast,demo,meName,uid,me,on
  const card=buildPublicCard(st,items,stats);const can=!demo;const aud=st.visibility.audience||"all";
  const setF=(k,v)=>update(s=>{s.visibility.fields[k]=v});
  async function publish(on){setBusy(true);try{if(on){await api.publishCard(uid,card,aud)}else{await api.unpublishCard(uid)}const first=on&&!st.visibility.public;update(s=>{s.visibility.public=on});track(on?"publish":"unpublish",{aud});if(first)api.postFeed("publish",{aud});toast(on?"카드를 공개했습니다.":"공개를 멈췄습니다. 이제 나만 봅니다.")}catch(e){toast("공개 상태를 바꾸지 못했습니다. 잠시 후 다시 시도해 주세요.")}finally{setBusy(false)}}
- const OPTS=[["sentence","한 문장","AI 해석 문장, 또는 내가 다듬은 문장"],["keywords","키워드","세 단어"],["hexagon","육각형 눈금","축 이름은 늘 보이고, 눈금은 고를 때만"],["badges","배지","받은 배지 목록"],["items","대표 아이템 요약","카드 안에 이름·기간·사연만 (사진 없이)"],["shelf","선반 공개","사진과 사연까지 선반 전체를 보여 줘요. 아래에서 숨길 아이템을 고르세요"],["words","한 단어 추천사 받기","사람들이 나에게 한 단어를 남길 수 있음"],["tags","MBTI·혈액형·별자리","공개 카드와 카드 이미지에 태그와 별자리를 함께 보여요"]];
+ const OPTS=[["sentence","한 문장","AI 해석 문장, 또는 내가 다듬은 문장"],["keywords","키워드","세 단어"],["hexagon","육각형 눈금","축 이름은 늘 보이고, 눈금은 고를 때만"],["badges","배지","받은 배지 목록"],["items","대표 아이템 요약","카드 안에 이름·기간·사연만 (사진 없이)"],["shelf","선반 공개","사진과 사연까지 선반 전체를 보여 줘요. 아래에서 숨길 아이템을 고르세요"],["words","한 단어 추천사 받기","사람들이 나에게 한 단어를 남길 수 있음"],["tags","MBTI·혈액형·별자리·연륜","공개 카드와 카드 이미지에 태그·별자리와 젬의 연륜 결을 함께 보여요 (나이 숫자는 어디에도 나오지 않아요)"]];
  return html`<${Sheet} title="공개할 모습" onClose=${onClose}>
   <p className="muted small">처음엔 모두 비공개입니다. 젬과 보석 이름은 공개 카드의 기본이고, 나머지는 항목별로 고릅니다. 원본 기록과 근거는 공개되지 않습니다.</p>
   <div className="field"><span className="lbl">누구에게 보일까요?</span><div className="segs" role="group" aria-label="공개 범위">${[["all","CBT 1기 전체"],["friends","친구만"]].map(([k,t])=>html`<button key=${k} aria-pressed=${aud===k} onClick=${()=>update(s=>{s.visibility.audience=k})}>${t}</button>`)}</div><span className="hint">${aud==="all"?"함께 테스트하는 1기 참여자 누구나 볼 수 있어요.":"서로 친구를 맺은 사람만 볼 수 있어요."}</span></div>
