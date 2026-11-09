@@ -104,9 +104,12 @@ function App(){
  function replayBadge(id){pushFx([{type:"badge",ids:[id],replay:true}])}
  function previewEvo(){const base=st&&st.analysis?livingGem(st):{stone:"비취",lightName:"새벽빛",light:"물결",form:"덩이",texture:"맑음",symbol:"산",hardness:2,grain:1,facets:8};const from=gemSnap(base,2);const to={...from,stage:3,hardness:Math.min(5,(from.hardness||1)+1),facets:Math.min(14,(from.facets||8)+1),form:from.form==="군집"?"결정":"군집"};const changes=evoDiff(from,to);pushFx(fxOf({from,to,changes,head:evoHeadline(changes,["step7"],{active:7})},["step7"]))}
 
+ // shared shelf: an item is visible to others when the shelf is on and the item isn't hidden
+ useEffect(()=>{if(demo||!uid||!st||!loaded.current)return;const on=!!(st.visibility.fields.shelf);const diff=items.filter(i=>!!i._shared!==(on&&!i.private));if(!diff.length)return;
+  Promise.all(diff.map(i=>api.setItemShared(uid,i.id,on&&!i.private).then(()=>i.id).catch(()=>null))).then(ids=>{const ok=ids.filter(Boolean);if(ok.length)setItems(list=>list.map(i=>ok.includes(i.id)?{...i,_shared:on&&!i.private}:i))})},[items,st&&st.visibility.fields.shelf,demo,uid]);
  // keep the public card fresh
  const pubT=useRef(null);
- useEffect(()=>{if(demo||!uid||!st||!st.visibility.public||!st.analysis||!loaded.current)return;clearTimeout(pubT.current);pubT.current=setTimeout(()=>{api.publishCard(uid,buildPublicCard(st,items,stats),st.visibility.audience||"all").catch(()=>{})},1500);return()=>clearTimeout(pubT.current)},[st&&JSON.stringify([st.analysis,st.visibility,st.gemOverride,st.featured,activeDays(st),st.quick&&st.quick.answers&&[st.quick.answers.mbti,st.quick.answers.blood],st.flags&&[st.flags.title,st.flags.frame,st.flags.pins,st.flags.marks,(st.flags.badgesSeen||[]).length]]),items.length,stats&&stageOf(st,stats),stats&&stats.connections]);
+ useEffect(()=>{if(demo||!uid||!st||!st.visibility.public||!st.analysis||!loaded.current)return;clearTimeout(pubT.current);pubT.current=setTimeout(()=>{api.publishCard(uid,buildPublicCard(st,items,stats),st.visibility.audience||"all").catch(()=>{})},1500);return()=>clearTimeout(pubT.current)},[st&&JSON.stringify([st.analysis,st.visibility,st.gemOverride,st.featured,activeDays(st),st.quick&&st.quick.answers&&[st.quick.answers.mbti,st.quick.answers.blood],st.flags&&[st.flags.title,st.flags.frame,st.flags.pins,st.flags.marks,(st.flags.badgesSeen||[]).length]]),items.length,items.filter(i=>i.private).length,stats&&stageOf(st,stats),stats&&stats.connections]);
 
  const update=useCallback(fn=>setSt(s=>{const n=clone(s);fn(n);return n}),[]);
  useEffect(()=>{try{window.scrollTo(0,0)}catch(e){}},[route,tab]);
@@ -141,6 +144,7 @@ function App(){
   const exists=items.some(i=>i.id===item.id);
   try{const body=await api.saveItem(uid,item);const view={...body,id:item.id,thumbUrl:item.thumb||(items.find(i=>i.id===item.id)||{}).thumbUrl,photoUrl:item.photo||(items.find(i=>i.id===item.id)||{}).photoUrl};setItems(list=>exists?list.map(i=>i.id===item.id?view:i):[view,...list]);track(exists?"item_edit":"item_add",{cat:item.category,photo:!!body.photoPath});toast(exists?"아이템을 저장했습니다.":"선반에 담았습니다.");setSheet("shelf")}catch(e){toast("저장하지 못했습니다. 사진이 너무 크면 다른 사진으로 시도해 주세요.")}
  }
+ async function setItemPrivate(item,priv){if(demo)return;try{const clean={...item,private:priv,photo:"",thumb:""};delete clean._shared;await api.saveItem(uid,clean);setItems(list=>list.map(i=>i.id===item.id?{...i,private:priv}:i));track("item_private",{on:priv})}catch(e){toast("바꾸지 못했습니다.")}}
  async function deleteItem(id){const it=items.find(i=>i.id===id);try{await api.deleteItem(uid,it||{id});setItems(list=>list.filter(i=>i.id!==id));update(s=>{s.featured=(s.featured||[]).filter(x=>x!==id)});track("item_delete");toast("선반에서 뺐습니다.");setSheet("shelf")}catch(e){toast("지우지 못했습니다.")}}
  async function wipe(){try{await tracker.flush();if(profile&&profile.avatar==="photo")await api.removeAvatarPhoto(uid).catch(()=>{});await api.deleteMe();await api.logout();setSt(null);setItems([]);setProfile(null);setSession(null);setSheet(null);setRoute("gate");setGateMsg("계정과 모든 기록을 지웠습니다. 함께해 주셔서 고맙습니다.")}catch(e){toast("일부를 지우지 못했습니다. 다시 시도해 주세요.")}}
  async function logout(){await tracker.flush();await api.logout();setSheet(null);setSt(null);setProfile(null);setSession(null);setRoute("gate");tracker.uid=null}
@@ -214,7 +218,7 @@ function App(){
   else if(sheet==="shelf")sheetEl=html`<${ShelfSheet} st=${st} items=${items} onOpen=${openSheet} onClose=${close}/>`;
   else if(sheet.startsWith("item:")){const id=sheet.slice(5);const it=id==="new"?null:items.find(i=>i.id===id);sheetEl=html`<${ItemEditor} key=${sheet} item=${it} st=${st} canAI=${canAI} demo=${demo} toast=${toast} onSave=${saveItem} onDelete=${deleteItem} onClose=${()=>setSheet("shelf")}/>`}
   else if(sheet==="achieve"||sheet==="badgebox")sheetEl=html`<${AchieveSheet} st=${st} stats=${stats} update=${update} meName=${profile.nickname} start=${sheet==="badgebox"?"box":"book"} onClose=${close} onReplay=${replayBadge}/>`;
-  else if(sheet==="publish")sheetEl=html`<${PublishSheet} st=${st} items=${items} stats=${stats} update=${update} onClose=${close} toast=${toast} demo=${demo} meName=${profile.nickname} uid=${uid} me=${profile}/>`;
+  else if(sheet==="publish")sheetEl=html`<${PublishSheet} st=${st} items=${items} stats=${stats} update=${update} onClose=${close} toast=${toast} demo=${demo} meName=${profile.nickname} uid=${uid} me=${profile} onItemPrivate=${setItemPrivate}/>`;
   else if(sheet==="mine")sheetEl=demo?null:html`<${MineSheet} uid=${uid} soc=${soc} names=${names} profile=${profile} onClose=${close} openUser=${openUser} ensureNames=${ensureNames}/>`;
   else if(sheet==="cardimg"||sheet==="week")sheetEl=html`<${ShareImageSheet} kind=${sheet==="week"?"week":"card"} st=${st} stats=${stats} profile=${profile} onClose=${close} toast=${toast} exitDone=${stats.exitDone} onExit=${()=>setSheet("exit")}/>`;
   else if(sheet==="exit")sheetEl=html`<${ExitSurvey} onClose=${close} stats=${stats} toast=${toast} onDone=${()=>{close();reloadSoc()}}/>`;

@@ -36,7 +36,10 @@ const api={
  async loadStateRow(uid){return Q(sb.from("app_state").select("data,updated_at").eq("user_id",uid).maybeSingle())},
  async stateStamp(uid){const r=await Q(sb.from("app_state").select("updated_at").eq("user_id",uid).maybeSingle());return r?r.updated_at:null},
  async saveState(uid,data){const r=await Q(sb.from("app_state").upsert({user_id:uid,data},{onConflict:"user_id"}).select("updated_at").maybeSingle());return r?r.updated_at:null},
- async loadItems(uid){const r=await Q(sb.from("items").select("id,data,created_at").eq("user_id",uid).order("created_at",{ascending:false}));return r.map(x=>({...x.data,id:x.id}))},
+ async loadItems(uid){const r=await Q(sb.from("items").select("id,data,created_at,shared").eq("user_id",uid).order("created_at",{ascending:false}));return r.map(x=>({...x.data,id:x.id,_shared:!!x.shared}))},
+ async setItemShared(uid,id,shared){return Q(sb.from("items").update({shared}).eq("id",id).eq("user_id",uid))},
+ // someone else's shared shelf: RLS returns only items they share, and only while their card is visible to me
+ async sharedShelf(owner){const r=await Q(sb.from("items").select("id,data,created_at").eq("user_id",owner).eq("shared",true).order("created_at",{ascending:false}));const items=(r||[]).map(x=>({...x.data,id:x.id}));const paths=items.flatMap(i=>[i.thumbPath,i.photoPath]).filter(Boolean);let m={};if(paths.length){try{const u=await Q(sb.storage.from("item-photos").createSignedUrls(paths,3600));(u||[]).forEach(x=>{if(x.signedUrl)m[x.path]=x.signedUrl})}catch(e){}}return items.map(i=>({...i,thumbUrl:m[i.thumbPath]||null,photoUrl:m[i.photoPath]||null}))},
  async saveItem(uid,item){
   const body={...item};const v=Date.now();
   if(body.photo&&body.photo.startsWith("data:")){

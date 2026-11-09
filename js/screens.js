@@ -225,13 +225,14 @@ function AttrsSheet({st,update,onClose}){
 const CATS=[["장비","카메라"],["자격","자격"],["반려","발자국"]];
 function ItemTile({item,featured,onClick}){
  const gl=item.glyph||(CATS.find(c=>c[0]===item.category)||[0,"선반"])[1];
- return html`<button className="item" onClick=${onClick}><div className="ph">${(item.thumbUrl||item.photo)?html`<img src=${item.thumbUrl||item.photo} alt=${item.name}/>`:html`<${Glyph} name=${gl} size=${44}/>`}${featured&&html`<span className="star">대표</span>`}</div><div className="meta"><b>${item.name}</b><span>${item.category} · ${sinceText(item.since)||"기간 미정"}</span><span>${item.verify||"내가 적은 이야기"}</span></div></button>`;
+ return html`<button className="item" onClick=${onClick}><div className="ph">${(item.thumbUrl||item.photo)?html`<img src=${item.thumbUrl||item.photo} alt=${item.name}/>`:html`<${Glyph} name=${gl} size=${44}/>`}${featured&&html`<span className="star">대표</span>`}${item.private&&html`<span className="star lock" title="공개 선반에서 숨김">숨김</span>`}</div><div className="meta"><b>${item.name}</b><span>${item.category} · ${sinceText(item.since)||"기간 미정"}</span><span>${item.verify||"내가 적은 이야기"}</span></div></button>`;
 }
 function ShelfSheet({st,items,onOpen,onClose}){
  const [cat,setCat]=useState("전체");const list=items.filter(i=>cat==="전체"||i.category===cat);
  return html`<${Sheet} title="나의 선반" onClose=${onClose}>
   <p className="serif" style=${{color:"var(--accent)",fontSize:"17px"}}>"얼마짜리인가"가 아니라 "얼마나 함께했는가".</p>
   <p className="small muted">실제로 가지고, 쓰고, 돌보는 것을 담습니다. 가격·시세 칸은 없고, 소유물은 젬의 크기나 밝기에 반영되지 않습니다.</p>
+  <div className="panel tint small row between" style=${{alignItems:"center"}}><span>${st.visibility.public&&st.visibility.fields.shelf?html`<b>선반 공개 중</b> · ${items.filter(i=>!i.private).length}개 보임${items.some(i=>i.private)?` · ${items.filter(i=>i.private).length}개 숨김`:""}`:html`<b>선반은 나만 보기</b> · 카드 공개 설정에서 켤 수 있어요`}</span><button className="linkbtn small" onClick=${()=>onOpen("publish")}>공개 설정</button></div>
   <div className="segs" role="group" aria-label="카테고리">${["전체","장비","자격","반려"].map(c=>html`<button key=${c} aria-pressed=${cat===c} onClick=${()=>setCat(c)}>${c}</button>`)}</div>
   ${list.length?html`<div className="shelf">${list.map(i=>html`<${ItemTile} key=${i.id} item=${i} featured=${(st.featured||[]).includes(i.id)} onClick=${()=>onOpen("item:"+i.id)}/>`)}</div>`:html`<div className="panel tint small">아직 담은 아이템이 없습니다. 오래 쓴 카메라, 함께 사는 반려견, 준비해서 딴 자격증처럼 나와 함께한 것을 하나 담아 보세요.</div>`}
   <button className="btn block" onClick=${()=>onOpen("item:new")}>아이템 담기</button>
@@ -255,6 +256,7 @@ function ItemEditor({item,st,canAI,onSave,onDelete,onClose,toast,demo}){
   <div className="field"><label htmlFor="it-since">함께하기 시작한 때</label><input type="month" id="it-since" value=${f.since} onChange=${e=>setF(x=>({...x,since:e.target.value}))}/>${f.since&&html`<span className="hint">${sinceText(f.since)}</span>`}</div>
   <div className="field"><label htmlFor="it-story">사연 한 줄</label><input type="text" id="it-story" value=${f.story} maxLength="60" onChange=${e=>setF(x=>({...x,story:e.target.value}))} placeholder="예) 아버지께 물려받아 첫 출사를 함께한 카메라"/></div>
   <label className="checkline"><input type="checkbox" id="it-feat" checked=${featured} onChange=${e=>onSave(f,{feature:e.target.checked},true)} disabled=${isNew||demo}/><span><b>대표 아이템</b><br/><span className="small muted">카드 아래와 공개 카드에 최대 3개까지 보입니다.</span></span></label>
+  <label className="checkline"><input type="checkbox" id="it-private" checked=${!!f.private} onChange=${e=>setF(x=>({...x,private:e.target.checked}))} disabled=${demo}/><span><b>공개 선반에서 숨기기</b><br/><span className="small muted">선반을 공개해도 이 아이템은 나만 봅니다. 저장을 눌러야 반영돼요.</span></span></label>
   <div className="panel tint small">인증 표시 · <b>${f.verify}</b><br/><span className="muted">이번 CBT는 '내가 적은 이야기'와 '사진 첨부', 방금 찍은 사진이면 '사진 인증'까지 표시합니다. 서류·기관 인증은 다음 버전입니다.</span></div>
   <button className="btn block" disabled=${!valid||busy||demo} onClick=${()=>onSave({...f,name:f.name.trim(),story:f.story.trim(),at:f.at||Date.now(),photo:(f.photo||"").startsWith("data:")?f.photo:"",thumb:(f.thumb||"").startsWith("data:")?f.thumb:""},{},false)}>${demo?"예시 모드에서는 저장하지 않습니다":isNew?"선반에 담기":"저장"}</button>
   ${!isNew&&!demo&&(confirmDel?html`<div className="panel stack"><span>이 아이템을 선반에서 지울까요? 되돌릴 수 없습니다.</span><div className="row"><button className="btn ghost grow" onClick=${()=>setConfirmDel(false)}>취소</button><button className="btn danger grow" onClick=${()=>onDelete(f.id)}>지우기</button></div></div>`:html`<button className="btn ghost block" onClick=${()=>setConfirmDel(true)}>선반에서 빼기</button>`)}
@@ -262,6 +264,25 @@ function ItemEditor({item,st,canAI,onSave,onDelete,onClose,toast,demo}){
 }
 
 /* ───────── publish ───────── */
+/* per-item: show or hide on the shared shelf */
+function ShelfPicker({items,onToggle}){
+ if(!items.length)return html`<div className="tag-editor small faint">선반에 담은 아이템이 아직 없어요.</div>`;
+ return html`<div className="tag-editor stack small"><span className="muted">탭해서 보이기/숨기기 · 숨긴 아이템은 나만 봅니다</span><div className="shelf-pick">${items.map(i=>html`<button key=${i.id} className=${"sp-item"+(i.private?" off":"")} aria-pressed=${!i.private} onClick=${()=>onToggle&&onToggle(i,!i.private)}><span className="sp-ph">${i.thumbUrl?html`<img src=${i.thumbUrl} alt=""/>`:html`<${Glyph} name=${(CATS.find(c=>c[0]===i.category)||[0,"선반"])[1]} size=${22}/>`}</span><span className="sp-nm">${i.name}</span><span className="sp-st">${i.private?"숨김":"보임"}</span></button>`)}</div></div>`;
+}
+function SharedShelf({owner,name}){
+ const [list,setList]=useState(null);const [open,setOpen]=useState(null);
+ useEffect(()=>{let alive=true;api.sharedShelf(owner).then(r=>alive&&setList(r)).catch(()=>alive&&setList([]));return()=>{alive=false}},[owner]);
+ if(list===null)return html`<p className="small faint">선반을 불러오는 중…</p>`;
+ if(!list.length)return null;
+ const it=open&&list.find(i=>i.id===open);
+ return html`<div className="stack" style=${{gap:"8px"}}><h3 className="h3">${name}님의 선반 <span className="small faint">${list.length}</span></h3><div className="shelf">${list.map(i=>html`<${ItemTile} key=${i.id} item=${i} onClick=${()=>{setOpen(i.id);track("view_shared_item")}}/>`)}</div>
+  ${it&&html`<${Sheet} title=${it.name} onClose=${()=>setOpen(null)}><div className="stack">
+   ${it.photoUrl||it.thumbUrl?html`<img className="item-photo-lg" src=${it.photoUrl||it.thumbUrl} alt=${it.name}/>`:html`<div className="item-photo-lg ph-empty"><${Glyph} name=${(CATS.find(c=>c[0]===it.category)||[0,"선반"])[1]} size=${64}/></div>`}
+   <div className="row" style=${{gap:"6px"}}><span className="chip">${it.category}</span>${it.since&&html`<span className="chip plain">${sinceText(it.since)}</span>`}<span className="chip plain">${it.verify||"내가 적은 이야기"}</span></div>
+   ${it.story?html`<p className="serif" style=${{fontSize:"17px",lineHeight:1.7}}>${it.story}</p>`:html`<p className="small faint">사연은 아직 적지 않았어요.</p>`}
+  </div><//>`}
+ </div>`;
+}
 /* MBTI·blood type the person chose in quick start (only complete answers) */
 function cardTags(st){const a=(st&&st.quick&&st.quick.answers)||{};const t=[];if(typeof a.mbti==="string"&&/^[EI][NS][FT][JP]$/.test(a.mbti))t.push(a.mbti);if(["A형","B형","O형","AB형"].includes(a.blood))t.push(a.blood);return t}
 function TagEditor({st,update}){const a=(st.quick&&st.quick.answers)||{};const m=typeof a.mbti==="string"&&a.mbti.length===4?a.mbti.split(""):[null,null,null,null];
@@ -278,6 +299,7 @@ function buildPublicCard(st,items,stats){
   sentence:fl.sentence?displaySentence(a):"",keywords:fl.keywords?displayKeywords(a):[],
   axes:fl.hexagon?visibleAxes(a).map(x=>({name:x.name,level:x.level})):visibleAxes(a).map(x=>({name:x.name})),
   showHex:!!fl.hexagon,badges:fl.badges?showcaseBadges(st,stats,8):[],title:equipped(st,stats).title,frame:equipped(st,stats).frame,
+  shelf:fl.shelf?items.filter(i=>!i.private).length:0,
   items:fl.items?items.filter(i=>(st.featured||[]).includes(i.id)).slice(0,3).map(i=>({name:i.name,category:i.category,since:i.since||"",story:i.story||"",verify:i.verify||""})):[],
   acceptWords:!!fl.words,tags:fl.tags?cardTags(st):[]};
  return card;
@@ -291,16 +313,16 @@ function PublicCardView({card,name,compact,who}){
   ${(card.badges||[]).length>0&&!compact&&html`<div className="minibadges">${card.badges.slice(0,6).map(id=>{const b=BADGES.find(x=>x.id===id);return b?html`<${Medal} key=${id} b=${b} earned=${true} size=${30}/>`:null})}</div>`}
  </div>`;
 }
-function PublishSheet({st,items,stats,update,onClose,toast,demo,meName,uid,me}){
+function PublishSheet({st,items,stats,update,onClose,toast,demo,meName,uid,me,onItemPrivate}){
  const fl=st.visibility.fields;const [seen,setSeen]=useState(false);const [busy,setBusy]=useState(false);
  const card=buildPublicCard(st,items,stats);const can=!demo;const aud=st.visibility.audience||"all";
  const setF=(k,v)=>update(s=>{s.visibility.fields[k]=v});
  async function publish(on){setBusy(true);try{if(on){await api.publishCard(uid,card,aud)}else{await api.unpublishCard(uid)}const first=on&&!st.visibility.public;update(s=>{s.visibility.public=on});track(on?"publish":"unpublish",{aud});if(first)api.postFeed("publish",{aud});toast(on?"카드를 공개했습니다.":"공개를 멈췄습니다. 이제 나만 봅니다.")}catch(e){toast("공개 상태를 바꾸지 못했습니다. 잠시 후 다시 시도해 주세요.")}finally{setBusy(false)}}
- const OPTS=[["sentence","한 문장","AI 해석 문장, 또는 내가 다듬은 문장"],["keywords","키워드","세 단어"],["hexagon","육각형 눈금","축 이름은 늘 보이고, 눈금은 고를 때만"],["badges","배지","받은 배지 목록"],["items","대표 아이템","사진 없이 이름·기간·사연만"],["words","한 단어 추천사 받기","사람들이 나에게 한 단어를 남길 수 있음"],["tags","MBTI·혈액형 태그","내 카드와 공개 카드에 작은 태그로 (재미로)"]];
+ const OPTS=[["sentence","한 문장","AI 해석 문장, 또는 내가 다듬은 문장"],["keywords","키워드","세 단어"],["hexagon","육각형 눈금","축 이름은 늘 보이고, 눈금은 고를 때만"],["badges","배지","받은 배지 목록"],["items","대표 아이템 요약","카드 안에 이름·기간·사연만 (사진 없이)"],["shelf","선반 공개","사진과 사연까지 선반 전체를 보여 줘요. 아래에서 숨길 아이템을 고르세요"],["words","한 단어 추천사 받기","사람들이 나에게 한 단어를 남길 수 있음"],["tags","MBTI·혈액형 태그","내 카드와 공개 카드에 작은 태그로 (재미로)"]];
  return html`<${Sheet} title="공개할 모습" onClose=${onClose}>
   <p className="muted small">처음엔 모두 비공개입니다. 젬과 보석 이름은 공개 카드의 기본이고, 나머지는 항목별로 고릅니다. 원본 기록과 근거는 공개되지 않습니다.</p>
   <div className="field"><span className="lbl">누구에게 보일까요?</span><div className="segs" role="group" aria-label="공개 범위">${[["all","CBT 1기 전체"],["friends","친구만"]].map(([k,t])=>html`<button key=${k} aria-pressed=${aud===k} onClick=${()=>update(s=>{s.visibility.audience=k})}>${t}</button>`)}</div><span className="hint">${aud==="all"?"함께 테스트하는 1기 참여자 누구나 볼 수 있어요.":"서로 친구를 맺은 사람만 볼 수 있어요."}</span></div>
-  <div>${OPTS.map(([k,t,d])=>html`<label className="checkline" key=${k}><input type="checkbox" id=${"pub-"+k} checked=${!!fl[k]} onChange=${e=>setF(k,e.target.checked)}/><span><b>${t}</b><br/><span className="small muted">${d}</span></span></label>${k==="tags"&&fl.tags&&html`<${TagEditor} st=${st} update=${update}/>`}`)}</div>
+  <div>${OPTS.map(([k,t,d])=>html`<label className="checkline" key=${k}><input type="checkbox" id=${"pub-"+k} checked=${!!fl[k]} onChange=${e=>setF(k,e.target.checked)}/><span><b>${t}</b><br/><span className="small muted">${d}</span></span></label>${k==="tags"&&fl.tags&&html`<${TagEditor} st=${st} update=${update}/>`}${k==="shelf"&&fl.shelf&&html`<${ShelfPicker} items=${items} onToggle=${onItemPrivate}/>`}`)}</div>
   <div className="stack"><div className="eyebrow">공개 미리보기 — 다른 사람에게 이렇게 보입니다</div><${PublicCardView} card=${card} name=${meName} who=${me}/></div>
   ${!can?html`<div className="panel tint small">예시 모드에서는 공개하지 않습니다.</div>`:st.visibility.public?html`<div className="stack"><button className="btn block" disabled=${busy} onClick=${()=>publish(true)}>공개 카드 새로 고치기</button><button className="btn ghost block" disabled=${busy} onClick=${()=>publish(false)}>공개 멈추기</button></div>`:html`<div className="stack"><label className="checkline"><input type="checkbox" id="pub-seen" checked=${seen} onChange=${e=>setSeen(e.target.checked)}/><span>미리보기를 확인했어요</span></label><button className="btn block" disabled=${!seen||busy} onClick=${()=>publish(true)}>공개하기</button></div>`}
  <//>`;
