@@ -293,17 +293,18 @@ function ShelfPicker({items,onToggle}){
  if(!items.length)return html`<div className="tag-editor small faint">선반에 담은 아이템이 아직 없어요.</div>`;
  return html`<div className="tag-editor stack small"><span className="muted">탭해서 보이기/숨기기 · 숨긴 아이템은 나만 봅니다</span><div className="shelf-pick">${items.map(i=>html`<button key=${i.id} className=${"sp-item"+(i.private?" off":"")} aria-pressed=${!i.private} onClick=${()=>onToggle&&onToggle(i,!i.private)}><span className="sp-ph">${i.thumbUrl?html`<img src=${i.thumbUrl} alt=""/>`:html`<${Glyph} name=${(CATS.find(c=>c[0]===i.category)||[0,"선반"])[1]} size=${22}/>`}</span><span className="sp-nm">${i.name}</span><span className="sp-st">${i.private?"숨김":"보임"}</span></button>`)}</div></div>`;
 }
-function SharedShelf({owner,name}){
+function SharedShelf({owner,name,bare,like}){
  const [list,setList]=useState(null);const [open,setOpen]=useState(null);
  useEffect(()=>{let alive=true;api.sharedShelf(owner).then(r=>alive&&setList(r)).catch(()=>alive&&setList([]));return()=>{alive=false}},[owner]);
  if(list===null)return html`<p className="small faint">선반을 불러오는 중…</p>`;
  if(!list.length)return null;
  const it=open&&list.find(i=>i.id===open);
- return html`<div className="stack" style=${{gap:"8px"}}><h3 className="h3">${name}님의 선반 <span className="small faint">${list.length}</span></h3><div className="shelf">${list.map(i=>html`<${ItemTile} key=${i.id} item=${i} onClick=${()=>{setOpen(i.id);track("view_shared_item")}}/>`)}</div>
+ return html`<div className="stack" style=${{gap:"8px"}}>${!bare&&html`<h3 className="h3">${name}님의 선반 <span className="small faint">${list.length}</span></h3>`}<div className="shelf">${list.map(i=>html`<${ItemTile} key=${i.id} item=${i} onClick=${()=>{setOpen(i.id);track("view_shared_item")}}/>`)}</div>
   ${it&&html`<${Sheet} title=${it.name} onClose=${()=>setOpen(null)}><div className="stack">
    ${it.photoUrl||it.thumbUrl?html`<img className="item-photo-lg" src=${it.photoUrl||it.thumbUrl} alt=${it.name}/>`:html`<div className="item-photo-lg ph-empty"><${Glyph} name=${(CATS.find(c=>c[0]===it.category)||[0,"선반"])[1]} size=${64}/></div>`}
    <div className="row" style=${{gap:"6px"}}><span className="chip">${it.category}</span>${it.since&&html`<span className="chip plain">${sinceText(it.since)}</span>`}<span className="chip plain">${it.verify||"내가 적은 이야기"}</span></div>
    ${it.story?html`<p className="serif" style=${{fontSize:"17px",lineHeight:1.7}}>${it.story}</p>`:html`<p className="small faint">사연은 아직 적지 않았어요.</p>`}
+   ${like&&html`<div className="row" style=${{justifyContent:"flex-end"}}>${like(it)}</div>`}
   </div><//>`}
  </div>`;
 }
@@ -323,7 +324,7 @@ function buildPublicCard(st,items,stats){
  const card={v:1,updatedAt:Date.now(),gem:(x=>fl.crests===false?(({idm,...r})=>r)(x):x)(fl.tags?g:(({rings,...r})=>r)(g||{})),gemName:gemName(g),stage:stageOf(st,stats),
   sentence:fl.sentence?displaySentence(a):"",keywords:fl.keywords?displayKeywords(a):[],
   axes:fl.hexagon?visibleAxes(a).map(x=>({name:x.name,level:x.level})):visibleAxes(a).map(x=>({name:x.name})),
-  showHex:!!fl.hexagon,badges:fl.badges?showcaseBadges(st,stats,12).filter(id=>fl.tags||(badgeById(id)||{}).g!=="연륜").slice(0,8):[],...(()=>{const e=equipped(st,stats);const src=id=>BADGES.find(b=>b.title===id);const hideT=!fl.tags&&e.title&&(src(e.title)||{}).g==="연륜";return {title:hideT?"":e.title,frame:!fl.tags&&e.frame==="ring"?"":e.frame}})(),
+  showHex:!!fl.hexagon,badgesAll:fl.badges?earnedIds(st,stats).filter(id=>fl.tags||(badgeById(id)||{}).g!=="연륜"):[],badges:fl.badges?showcaseBadges(st,stats,12).filter(id=>fl.tags||(badgeById(id)||{}).g!=="연륜").slice(0,8):[],...(()=>{const e=equipped(st,stats);const src=id=>BADGES.find(b=>b.title===id);const hideT=!fl.tags&&e.title&&(src(e.title)||{}).g==="연륜";return {title:hideT?"":e.title,frame:!fl.tags&&e.frame==="ring"?"":e.frame}})(),
   shelf:fl.shelf?items.filter(i=>!i.private).length:0,
   items:fl.items?items.filter(i=>(st.featured||[]).includes(i.id)).slice(0,4).map(i=>({name:i.name,category:i.category,since:i.since||"",story:i.story||"",verify:i.verify||""})):[],
   acceptWords:!!fl.words,tags:fl.tags?cardTags(st):[],crests:fl.crests!==false?shownCrests(st).map(publicCrest):[],motto:fl.crests!==false?idLine(st):"",zodiac:fl.tags&&myZodiac(st)?myZodiac(st).k:null};
