@@ -168,7 +168,7 @@ async function renderShareImage(kind,{st,stats,profile}){
   if(typeof drawConstellation==="function")drawConstellation(x,myZodiac(st));
   const g=await svgImage(gemSVG(now,st.createdAt,"s0"),520,559);x.drawImage(g,(W-520)/2,170);
   x.fillStyle="#173D3B";x.font=`700 60px ${SERIF}`;x.fillText(gemName(now),W/2,800);
-  const CR=typeof shownCrests==="function"?shownCrests(st):[];const ML=typeof idLine==="function"?idLine(st):"";const IDL=CR.length>0||!!ML;
+  const CR=typeof shownCrests==="function"?shownCrests(st):[];const ML=(()=>{const I=st.identity||{};return I.lineOff?"":(I.motto||"").trim()})();const IDL=CR.length>0||!!ML;
   x.fillStyle="#1F2A28";x.font=`500 40px ${SERIF}`;wrapLines(x,displaySentence(a),W-220,IDL?2:3).forEach((l,i)=>x.fillText(l,W/2,880+i*60));
   const kw=displayKeywords(a).map(t=>({t,tag:false})).concat((st.visibility.fields.tags?cardTags(st):[]).map(t=>({t,tag:true})));x.font=`700 30px ${SANS}`;let tot=kw.reduce((s,k)=>s+x.measureText(k.t).width+60,0)-16;let cx=(W-tot)/2;kw.forEach(({t,tag})=>{const w=x.measureText(t).width+44;x.beginPath();const KY=IDL?975:1080;x.roundRect?x.roundRect(cx,KY,w,56,28):x.rect(cx,KY,w,56);if(tag){x.strokeStyle="#A7B5A1";x.lineWidth=2.5;x.stroke()}else{x.fillStyle="#E4E9DF";x.fill()}x.fillStyle=tag?"#465250":"#173D3B";x.textAlign="center";x.fillText(t,cx+w/2,KY+38);cx+=w+16});
   if(IDL)await drawCrestRow(x,CR,ML,{top:1060});

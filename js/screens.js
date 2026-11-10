@@ -328,7 +328,7 @@ function buildPublicCard(st,items,stats){
   showHex:!!fl.hexagon,badgesAll:fl.badges?earnedIds(st,stats).filter(id=>fl.tags||(badgeById(id)||{}).g!=="연륜"):[],badges:fl.badges?showcaseBadges(st,stats,12).filter(id=>fl.tags||(badgeById(id)||{}).g!=="연륜").slice(0,8):[],...(()=>{const e=equipped(st,stats);const src=id=>BADGES.find(b=>b.title===id);const hideT=!fl.tags&&e.title&&(src(e.title)||{}).g==="연륜";return {title:hideT?"":e.title,frame:!fl.tags&&e.frame==="ring"?"":e.frame}})(),
   shelf:fl.shelf?items.filter(i=>!i.private).length:0,
   items:fl.items?items.filter(i=>(st.featured||[]).includes(i.id)).slice(0,4).map(i=>({name:i.name,category:i.category,since:i.since||"",story:i.story||"",verify:i.verify||""})):[],
-  acceptWords:!!fl.words,tags:fl.tags?cardTags(st):[],crests:fl.crests!==false?shownCrests(st).map(publicCrest):[],motto:fl.crests!==false?idLine(st):"",zodiac:fl.tags&&myZodiac(st)?myZodiac(st).k:null};
+  acceptWords:!!fl.words,tags:fl.tags?cardTags(st):[],crests:fl.crests!==false?shownCrests(st).map(publicCrest):[],motto:fl.crests!==false?idLine(st):"",mottoOwn:!!((st.identity||{}).motto||"").trim(),zodiac:fl.tags&&myZodiac(st)?myZodiac(st).k:null};
  return card;
 }
 function PublicCardView({card,name,compact,who}){

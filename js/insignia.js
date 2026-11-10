@@ -51,7 +51,7 @@ function idMarks(st){const S=idStats(st);const E=idOf(st);if(!E.length)return nu
 
 /* ───────── 대표 한 줄 ───────── */
 const ORG_VERB={"직장":["에서 일하고","에서 일하는"],"학교":["에 다니고","에 다니는"],"교회":["에 다니고","에 다니는"]};
-function autoLine(st){const E=idOf(st);const parts=[];
+function autoLine(st){const E=idOf(st).filter(e=>!e.hidden);const parts=[];
  const root=E.find(e=>e.cat==="root"&&e.type==="태어난 곳")||E.find(e=>e.cat==="root"&&e.type==="자란 곳")||E.find(e=>e.cat==="root");
  if(root){const p=String(root.name).split(/[,·]/)[0].trim();parts.push(root.type==="지낸 곳"?[`${p}에서 지내고`,`${p}에서 지낸`]:[`${p}에서 나고 자라`,`${p}에서 나고 자란`])}
  const sc=[...E.filter(e=>e.cat==="school")].sort((a,b)=>(SCHOOL_RANK[b.type]||0)-(SCHOOL_RANK[a.type]||0))[0];
@@ -61,7 +61,7 @@ function autoLine(st){const E=idOf(st);const parts=[];
  if(!parts.length)return "";
  return parts.map((p,i)=>i<parts.length-1?p[0]:p[1]).join(" ")+" 사람"}
 function idLine(st){const I=(st&&st.identity)||{};if(I.lineOff)return "";return (I.motto||"").trim()||autoLine(st)}
-const shownCrests=st=>idOf(st).filter(e=>e.display).sort((a,b)=>(a.shownAt||0)-(b.shownAt||0)).slice(0,ID_MAX_SHOW);
+const shownCrests=st=>idOf(st).filter(e=>e.display&&!e.hidden).sort((a,b)=>(a.shownAt||0)-(b.shownAt||0)).slice(0,ID_MAX_SHOW);
 /* what other people get: never coordinates, never the dong for 터전, never links */
 function publicCrest(e){const o={sym:e.sym||"auto",cat:e.cat,type:e.type,name:e.cat==="home"?areaOf(e.verify):e.name,tier:e.tier||"",year:e.year||""};if(e.cat==="home"){o.lv=homeLv(homeDays(e));o.type="터전"}if(e.cat==="school"||e.cat==="org")o.extra="";return o}
 function crestLabel(e,pub){const c=e.cat;
@@ -181,10 +181,11 @@ function IdentitySheet({st,update,onClose,toast,demo,focus}){
  const C=idCat(cat);const list=E.filter(e=>e.cat===cat);
  const put=fn=>{if(demo){toast("예시 모드에서는 저장하지 않아요.");return false}update(s=>{const I={entries:[],useAI:true,...(s.identity||{})};I.entries=[...(I.entries||[])];fn(I);s.identity=I});return true};
  function save(){const f=form;if(!f)return;if(f.cat!=="home"&&!String(f.name||"").trim()){toast("이름을 적어 주세요.");return}
-  const e={id:f.id||rid(),sym:f.sym||"auto",cat:f.cat,type:f.type,name:String(f.name||"").trim().slice(0,40),extra:String(f.extra||"").trim().slice(0,40),year:String(f.year||"").trim().slice(0,9),tier:f.tier||"",display:!!f.display,shownAt:f.shownAt||0,verify:f.verify||null,at:f.at||Date.now()};
+  const e={id:f.id||rid(),hidden:!!f.hidden,sym:f.sym||"auto",cat:f.cat,type:f.type,name:String(f.name||"").trim().slice(0,40),extra:String(f.extra||"").trim().slice(0,40),year:String(f.year||"").trim().slice(0,9),tier:f.tier||"",display:!!f.display,shownAt:f.shownAt||0,verify:f.verify||null,at:f.at||Date.now()};
   if(e.cat==="honor"&&!e.tier)e.tier=tierSet(e.type)[0];
   if(put(I=>{const i=I.entries.findIndex(x=>x.id===e.id);if(i>=0)I.entries[i]=e;else{if(!I.entries.some(x=>x.display)&&I.entries.filter(x=>x.display).length<ID_MAX_SHOW){e.display=true;e.shownAt=Date.now()}I.entries.push(e)}})){track("id_add",{cat:e.cat,type:e.type});toast(f.id?"휘장을 고쳤어요.":`'${idCat(e.cat).n}' 휘장이 새겨졌어요.`);setForm(null)}}
- function toggleShow(e){const on=!e.display;if(on&&S.shown>=ID_MAX_SHOW){toast(`진열은 ${ID_MAX_SHOW}개까지예요. 하나를 내린 뒤 걸어 주세요.`);return}put(I=>{I.entries=I.entries.map(x=>x.id===e.id?{...x,display:on,shownAt:on?Date.now():0}:x)});track("id_show",{on})}
+ function toggleHide(e){const h=!e.hidden;put(I=>{I.entries=I.entries.map(x=>x.id===e.id?{...x,hidden:h,display:h?false:x.display,shownAt:h?0:x.shownAt}:x)});track("id_hide",{on:h});toast(h?"비공개로 바꿨어요. 대표 한 줄과 진열, AI 해석 문장에는 나오지 않고 젬에는 그대로 반영돼요.":"다시 공개로 바꿨어요.")}
+ function toggleShow(e){if(e.hidden){toast("비공개 휘장은 진열할 수 없어요. 먼저 비공개를 풀어 주세요.");return}const on=!e.display;if(on&&S.shown>=ID_MAX_SHOW){toast(`진열은 ${ID_MAX_SHOW}개까지예요. 하나를 내린 뒤 걸어 주세요.`);return}put(I=>{I.entries=I.entries.map(x=>x.id===e.id?{...x,display:on,shownAt:on?Date.now():0}:x)});track("id_show",{on})}
  function del(e){if(!confirm(`'${crestLabel(e).t}' 휘장을 지울까요?`))return;put(I=>{I.entries=I.entries.filter(x=>x.id!==e.id)})}
  async function verifyNew(){setBusy("v");try{const r=await regionHere();setForm(f=>({...f,verify:{...r,days:[dayKey()],first:Date.now()}}))}catch(x){toast(GEO_MSG[x.code]||"지금 있는 곳을 확인하지 못했어요. 잠시 후 다시 시도해 주세요.")}finally{setBusy("")}}
  async function reverify(e){setBusy(e.id);try{const r=await regionHere();
@@ -200,11 +201,11 @@ function IdentitySheet({st,update,onClose,toast,demo,focus}){
   <div className="id-stats">${ID_CATS.map(c=>html`<button key=${c.k} className=${"id-stat"+(cat===c.k?" on":"")} onClick=${()=>{setCat(c.k);setForm(null)}}><b>${c.n}</b><span className="pips">${[1,2,3,4,5].map(i=>html`<i key=${i} className=${i<=S.lv[c.k]?"on":""}></i>`)}</span><small>${S.n[c.k]?S.n[c.k]+"개":"비어 있음"} · ${c.eff}</small></button>`)}</div>
   <div className="id-display"><div className="row between"><b>진열대</b><span className="small faint">메인 카드 · 카드 이미지 · 공개 카드 · ${shown.length}/${ID_MAX_SHOW}</span></div>
    <div className="crest-row">${shown.map(e=>html`<${Crest} key=${e.id} e=${e} size=${50} on=${true} onClick=${()=>toggleShow(e)}/>`)}${[...Array(Math.max(0,ID_MAX_SHOW-shown.length))].map((_,i)=>html`<div key=${"x"+i} className="crest empty" style=${{width:78}}><span className="crest-ic" style=${{width:50,height:56}}></span><span className="crest-s">빈 자리</span></div>`)}</div>
-   <span className="small faint">휘장 옆 ☆를 눌러 걸고 내려요. 터전은 다른 사람에게 시·구까지만 보여요.</span></div>
+   <span className="small faint">휘장 옆 ☆를 눌러 걸고 내려요. 터전은 다른 사람에게 시·구까지만 보여요. '비공개'로 둔 휘장은 대표 한 줄·진열·AI 해석 문장에 나오지 않고, 젬의 모양과 스탯에만 반영돼요.</span></div>
   <div className="id-cat"><div className="row between"><b className="serif" style=${{fontSize:"18px"}}>${C.n} <span className="small muted" style=${{fontWeight:500}}>· ${C.q}</span></b></div>
-   ${list.length?html`<div className="id-list">${list.map(e=>{const L=crestLabel(e);return html`<div key=${e.id} className="id-row"><${Crest} e=${e} size=${40}/><span className="grow"><b>${L.t}</b><br/><span className="small muted">${L.s}${e.extra?" · "+e.extra:""}${e.year&&e.cat!=="honor"&&e.cat!=="media"?" · "+e.year:""}</span>
+   ${list.length?html`<div className="id-list">${list.map(e=>{const L=crestLabel(e);return html`<div key=${e.id} className=${"id-row"+(e.hidden?" hidden":"")}><${Crest} e=${e} size=${40}/><span className="grow"><b>${L.t}</b><br/><span className="small muted">${L.s}${e.extra?" · "+e.extra:""}${e.year&&e.cat!=="honor"&&e.cat!=="media"?" · "+e.year:""}</span>
      ${e.cat==="home"&&html`<br/><button className="btn quiet sm" disabled=${busy===e.id} onClick=${()=>reverify(e)}>${busy===e.id?"확인하는 중…":((e.verify||{}).days||[]).includes(dayKey())?"✓ 오늘 인증함":"📍 오늘 인증하기"}</button>`}</span>
-     <span className="id-acts"><button className=${"id-star"+(e.display?" on":"")} aria-pressed=${!!e.display} aria-label=${(e.display?"진열 내리기 ":"진열하기 ")+L.t} onClick=${()=>toggleShow(e)}>${e.display?"★":"☆"}</button>${e.cat!=="home"&&html`<button className="linkbtn small" onClick=${()=>setForm({...e})}>고치기</button>`}<button className="linkbtn small" onClick=${()=>del(e)}>지우기</button></span></div>`})}</div>`:html`<p className="small muted">${C.ask}</p>`}
+     <span className="id-acts"><label className="id-hide"><input type="checkbox" checked=${!!e.hidden} onChange=${()=>toggleHide(e)}/>비공개</label><button className=${"id-star"+(e.display?" on":"")+(e.hidden?" off":"")} aria-pressed=${!!e.display} aria-label=${(e.display?"진열 내리기 ":"진열하기 ")+L.t} onClick=${()=>toggleShow(e)}>${e.display?"★":"☆"}</button>${e.cat!=="home"&&html`<button className="linkbtn small" onClick=${()=>setForm({...e})}>고치기</button>`}<button className="linkbtn small" onClick=${()=>del(e)}>지우기</button></span></div>`})}</div>`:html`<p className="small muted">${C.ask}</p>`}
    ${form&&form.cat===cat?html`<div className="panel stack id-form">
      <div className="segs stay-cats" role="group" aria-label="갈래">${C.types.map(t=>html`<button key=${t} aria-pressed=${form.type===t} onClick=${()=>setForm({...form,type:t,tier:cat==="honor"?tierSet(t)[0]:form.tier})}>${t}</button>`)}</div>
      ${cat==="home"?html`${form.verify?html`<div className="id-found"><span className="eyebrow">지금 있는 곳</span><b>${areaOf(form.verify)} ${form.verify.dong||""}</b><span className="small muted">이 자리에서 '${form.type}'(으)로 인증해요. 다른 사람에게는 '${areaOf(form.verify)}'까지만 보여요.</span></div>`

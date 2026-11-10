@@ -15,7 +15,7 @@ async function renderPublicCardImage(card,name){
  if(typeof drawConstellation==="function"&&d.zodiac)drawConstellation(x,zodiacByKey(d.zodiac));
  const g=await svgImage(gemSVG(d.gem||{},d.gemName||name,"pc"),520,559);x.drawImage(g,(W-520)/2,170);
  x.fillStyle="#173D3B";x.font=`700 60px ${SERIF}`;x.fillText(d.gemName||"",W/2,800);
- const CR=d.crests||[],ML=d.motto||"",IDL=CR.length>0||!!ML;
+ const CR=d.crests||[],ML=(d.sample||d.mottoOwn)?(d.motto||""):"",IDL=CR.length>0||!!ML;
  if(d.sentence){x.fillStyle="#1F2A28";x.font=`500 40px ${SERIF}`;wrapLines(x,d.sentence,W-220,IDL?2:3).forEach((l,i)=>x.fillText(l,W/2,880+i*60))}
  const kw=(d.keywords||[]).map(t=>({t,tag:false})).concat((d.tags||[]).map(t=>({t,tag:true})));
  if(kw.length){x.font=`700 30px ${SANS}`;const tot=kw.reduce((s,k)=>s+x.measureText(k.t).width+60,0)-16;let cx=(W-tot)/2;kw.forEach(({t,tag})=>{const w=x.measureText(t).width+44;x.beginPath();const KY=IDL?975:1080;x.roundRect?x.roundRect(cx,KY,w,56,28):x.rect(cx,KY,w,56);if(tag){x.strokeStyle="#A7B5A1";x.lineWidth=2.5;x.stroke()}else{x.fillStyle="#E4E9DF";x.fill()}x.fillStyle=tag?"#465250":"#173D3B";x.textAlign="center";x.fillText(t,cx+w/2,KY+38);cx+=w+16})}
@@ -70,7 +70,7 @@ function GemPopup({id,card,names,onClose,openUser,toast}){useBackLayer(onClose);
  return html`<div className="gp" role="dialog" aria-modal="true" aria-label=${name+"의 카드"} onClick=${onClose}>
   <div className="gp-in" onClick=${e=>e.stopPropagation()}>
    ${card?html`${url?html`<img className="gp-img" src=${url} alt=${name+"의 젬 카드: "+(card.data.gemName||"")}/>`:html`<div className="gp-loading"><div className="pulse"><${GemView} g=${card.data.gem} seed=${card.data.gemName} size=${200}/></div><span>카드를 펼치는 중…</span></div>`}
-     <div className="gp-actions"><button className="btn" onClick=${()=>openUser(id)}>아뜰리에로 ›</button><button className="btn ghost" onClick=${onClose}>닫기</button></div>`
+     <div className="gp-actions"><button className="btn" onClick=${()=>openUser(id)}>아틀리에로 ›</button><button className="btn ghost" onClick=${onClose}>닫기</button></div>`
    :html`<div className="gp-sealed"><${GemView} g=${UNCUT} seed=${id} size=${200} className="float"/><b className="serif">${name}님의 원석</b><span>아직 카드를 공개하지 않았어요. 공개하면 이 원석이 젬으로 빛나요.</span>
      <div className="gp-actions"><button className="btn" disabled=${asked} onClick=${ask}>${asked?"요청을 보냈어요":"카드 공개 요청하기"}</button><button className="btn ghost" onClick=${()=>openUser(id)}>프로필 보기</button><button className="btn ghost" onClick=${onClose}>닫기</button></div></div>`}
   </div>

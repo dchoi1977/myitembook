@@ -82,7 +82,7 @@ function Avatar({p,url,size=40,ring}){
  else if(av&&av.startsWith("char:"))inner=html`<span style=${{display:"block",width:"100%",height:"100%"}} dangerouslySetInnerHTML=${{__html:avatarCharSVG(av.slice(5))}}></span>`;
  else inner=html`<span style=${{display:"block",width:"100%",height:"100%"}} dangerouslySetInnerHTML=${{__html:avatarDefaultSVG(p&&p.id)}}></span>`;
  const can=!!(p&&p.id&&typeof window!=="undefined"&&window.__openUser&&p.id!==window.__uid&&/^[0-9a-f-]{36}$/.test(String(p.id)));const go=e=>{if(!can||e.currentTarget.closest("button,label,a"))return;e.stopPropagation();window.__openUser(p.id)};
- return html`<span className=${"avatar"+(can?" av-link":"")} role=${can?"link":"img"} tabIndex=${can?0:undefined} onClick=${go} onKeyDown=${e=>{if(e.key==="Enter")go(e)}} aria-label=${((p&&p.nickname)||"참여자")+(can?"의 아뜰리에로":" 프로필")} style=${{width:size,height:size,boxShadow:ring?"0 0 0 2px var(--paper),0 0 0 3.5px var(--gold)":undefined}}>${inner}</span>`;
+ return html`<span className=${"avatar"+(can?" av-link":"")} role=${can?"link":"img"} tabIndex=${can?0:undefined} onClick=${go} onKeyDown=${e=>{if(e.key==="Enter")go(e)}} aria-label=${((p&&p.nickname)||"참여자")+(can?"의 아틀리에로":" 프로필")} style=${{width:size,height:size,boxShadow:ring?"0 0 0 2px var(--paper),0 0 0 3.5px var(--gold)":undefined}}>${inner}</span>`;
 }
 
 /* signed photo urls, keyed by "<id>:<avatar_v>" — filled by the app, read by <Avatar> */
@@ -119,5 +119,5 @@ function AvatarSheet({profile,uid,onClose,onSaved,toast}){
  <//>`;
 }
 
-/* 이름을 누르면 그 사람의 아뜰리에로 */
+/* 이름을 누르면 그 사람의 아틀리에로 */
 function UName({id,names,className}){const n=nick(names,id);const can=typeof window!=="undefined"&&window.__openUser&&id&&id!==window.__uid;if(!can)return html`<b className=${className}>${n}</b>`;return html`<button className=${"uname "+(className||"")} onClick=${e=>{e.stopPropagation();window.__openUser(id)}}>${n}</button>`}
