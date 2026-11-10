@@ -136,14 +136,27 @@ function Reveal({st,onConfirm,onEdit,onDiffer,onOpen}){
 }
 
 /* ───────── home: me ───────── */
-function LifeCard({st,items,stats,onOpen}){
- const a=st.analysis;const g=livingGem(st);const [back,setBack]=useState(false);
+function LifeCard({st,items,stats,onOpen,me}){
+ const desk=useDesktop();const a=st.analysis;const g=livingGem(st);const [back,setBack]=useState(false);
  const earned=BADGES.filter(b=>isEarned(st,stats,b));const stage=stageOf(st,stats);
  const prev=(st.axesHistory||[]).length?st.axesHistory[st.axesHistory.length-1].axes:null;
  const eq=equipped(st,stats);const show=showcaseBadges(st,stats).map(badgeById);
  return html`<div className=${"lifecard"+(eq.frame?" frame-"+eq.frame:"")} data-age=${g&&g.rings?g.rings:undefined}>
-  <div className="row between"><span className="row" style=${{gap:"6px"}}><span className="chip gold">연마 ${stage}단계 · ${STAGES[stage]}</span>${eq.title&&html`<span className="chip plain title-chip">${eq.title}</span>`}</span><button className="linkbtn small" onClick=${()=>setBack(b=>!b)} aria-pressed=${back}>${back?"앞면 보기":"뒷면 · 육각형"}</button></div>
-  ${!back?html`<div className="stack" style=${{alignItems:"center"}}>
+  <div className="row between"><span className="row" style=${{gap:"6px"}}><span className="chip gold">연마 ${stage}단계 · ${STAGES[stage]}</span>${eq.title&&html`<span className="chip plain title-chip">${eq.title}</span>`}</span><span className="row" style=${{gap:"10px"}}><button className="g3-btn" onClick=${()=>onOpen("gem3d")} aria-label="젬 3D로 보기">◇ 3D</button><button className="linkbtn small" onClick=${()=>setBack(b=>!b)} aria-pressed=${back}>${back?"앞면 보기":"뒷면 · 육각형"}</button></span></div>
+  ${!back&&desk?html`<div className="lc-split"><div className="lc-gem">
+   <${ZodiacSky} z=${myZodiac(st)} size=${210}/>
+   <${GemView} g=${g} seed=${st.createdAt} size=${210}/>
+   <div className="gemname">${gemName(g)}</div>
+   ${(()=>{const I=gemIdentity(g,st.createdAt);return html`<div className="gemfeat"><span className="gf-id">${I.rareVariant?"✦ ":""}${I.variant} · ${I.cut}${I.pattern?" · "+I.pattern:""}</span>${I.feats.map(k=>html`<span key=${k} title=${INCLUSIONS[k].desc}>✧ ${INCLUSIONS[k].name}</span>`)}${(I.aw||[]).map(x=>html`<span key=${x.k} className=${"aw t"+x.t} title=${AW_TIERS[x.t][0]+" 발현 · 연마 "+x.at+"단계"}>✺ ${x.n}</span>`)}</div>`})()}
+   <span className="lc-cap">기록이 쌓일수록 달라지는 나의 결</span>
+  </div><div className="lc-story"><span className="eyebrow">THE STORY OF</span>
+   <div className="lc-who">${me&&html`<${Avatar} p=${me} size=${46}/>`}<b className="serif">${(me&&me.nickname)||"나"}</b><span>의 결</span></div>
+   <p className="sentence">${displaySentence(a)}</p>
+   <div className="kw">${displayKeywords(a).map(k=>html`<span className="chip" key=${k}>${k}</span>`)}${st.visibility.fields.tags&&cardTags(st).map(t=>html`<span className="chip plain tagchip" key=${"t"+t}>${t}</span>`)}</div>
+   <${AiLabel} status=${a.status}/>
+   <${CrestShelf} st=${st} onOpen=${onOpen}/>
+
+  </div></div>`:!back?html`<div className="stack" style=${{alignItems:"center"}}>
    <${ZodiacSky} z=${myZodiac(st)} size=${210}/>
    <${GemView} g=${g} seed=${st.createdAt} size=${210}/>
    <div className="gemname">${gemName(g)}</div>
@@ -152,6 +165,7 @@ function LifeCard({st,items,stats,onOpen}){
    <div className="kw">${displayKeywords(a).map(k=>html`<span className="chip" key=${k}>${k}</span>`)}${st.visibility.fields.tags&&cardTags(st).map(t=>html`<span className="chip plain tagchip" key=${"t"+t}>${t}</span>`)}</div>
    <${AiLabel} status=${a.status}/>
    <${CrestShelf} st=${st} onOpen=${onOpen}/>
+
   </div>`:html`<div className="stack" style=${{alignItems:"center"}}>
    <div className="eyebrow">나만의 육각형</div>
    <${Hexagon} axes=${visibleAxes(a)} prev=${prev} size=${290}/>
@@ -164,14 +178,14 @@ function LifeCard({st,items,stats,onOpen}){
   </div>
  </div>`;
 }
-function MeTab({st,items,soc,stats,onOpen,names,top,mid}){
+function MeTab({st,items,soc,stats,onOpen,names,top,mid,me}){
  const desk=useDesktop();
  const featured=items.filter(i=>(st.featured||[]).includes(i.id)).slice(0,4);
  const rows=[["evidence","눈","이렇게 읽은 이유","사실과 AI 해석을 나눠 보고, 맞다·숨기기"],["attrs","별","젬의 8가지 속성","결·색·빛·형·질·강·상·각"],["shelf","선반","나의 선반",`실제로 가진 것 ${items.length}개 · 얼마나 함께했는가`],["publish","문","공개할 모습",st.visibility.public?(st.visibility.audience==="friends"?"친구에게 공개 중":"CBT 1기에 공개 중")+" · 항목별로 고르기":"지금은 나만 보기"],["reread","새싹","새 기록 더하기",`나를 다시 읽기 · 지금까지 ${st.analyses||1}번`]];
  const achN=earnedIds(st,stats).length;rows.splice(2,0,["achieve","별","업적 도감 · 배지 보관함",`배지 ${achN}/${BADGES.length} · 칭호와 대표 배지 고르기`]);rows.splice(3,0,["identity","왕관","나의 휘장",(()=>{const I=idStats(st);return I.total?`휘장 ${I.total}개 · 진열 ${I.shown}/${ID_MAX_SHOW} · 뿌리·터전·배움·소속·영예·조명`:"뿌리·터전·배움·소속·영예·조명을 새겨 진열하기"})()]);
  return html`<div className="main wrap">
   ${top}
-  <${LifeCard} st=${st} items=${items} stats=${stats} onOpen=${onOpen}/>
+  <${LifeCard} st=${st} items=${items} stats=${stats} onOpen=${onOpen} me=${me}/>
   <button className="btn block cardview-btn" onClick=${()=>onOpen("cardview")}><span aria-hidden="true">✦</span> 카드 보기 · 앞면과 뒷면</button>
   <div className="row"><button className="btn quiet sm grow" onClick=${()=>onOpen("cardimg")}><${Ico} n="share"/>카드 이미지 저장</button><button className="btn quiet sm grow" onClick=${()=>onOpen("mine")}><${Ico} n="chat"/>받은 공감 ${stats.reactionsReceived+stats.wordsReceived}</button></div>
   ${(()=>{const ns=nextStage(st,stats);if(!ns)return html`<p className="note" style=${{textAlign:"center"}}>명품 단계에 이르렀어요.</p>`;const DT={3:3,4:5,5:7};const tgt=DT[ns.to];const cur=tgt?Math.min(stats.active,tgt):(stats.confirmed?1:0);const max=tgt||1;const pct=Math.round(cur/max*100);

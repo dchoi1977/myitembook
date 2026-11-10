@@ -211,7 +211,7 @@ function App(){
  else if(route==="reading")body=html`<${Reading} status=${reading.status} chars=${reading.chars} error=${reading.error} onStop=${stopAnalysis} onRetry=${()=>runAnalysis()} onBack=${()=>setRoute(st.analysis?"connect":"quickdone")} onDemo=${startDemo}/>`;
  else if(route==="reveal"&&st.analysis)body=html`<${Reveal} st=${st} onOpen=${openSheet} onConfirm=${()=>{update(s=>{s.analysis.status="yes"});track("reveal_yes")}} onEdit=${(sent,kw)=>{update(s=>{s.analysis.editSentence=sent||s.analysis.sentence;s.analysis.editKeywords=kw.length?kw:s.analysis.keywords;s.analysis.status="edited";s.flags.edited=true});track("reveal_edit")}} onDiffer=${fb=>{track("reveal_differ");runAnalysis(fb)}}/>`;
  else if(st.analysis){
-  if(tab==="me")body=html`<${MeTab} st=${st} items=${items} soc=${demo?EMPTY_SOC:soc} stats=${stats} onOpen=${openSheet} names=${names} top=${desk?null:top} mid=${desk?null:mid}/>`;
+  if(tab==="me")body=html`<${MeTab} me=${profile} st=${st} items=${items} soc=${demo?EMPTY_SOC:soc} stats=${stats} onOpen=${openSheet} names=${names} top=${desk?null:top} mid=${desk?null:mid}/>`;
   else if(tab==="step")body=html`<${StepTab} st=${st} update=${update} stats=${stats} canAI=${canAI} toast=${toast} onOpen=${openSheet} demo=${demo}/>`;
   else if(tab==="feed")body=html`<${FeedTab} uid=${uid} soc=${soc} names=${names} openUser=${openUser} toast=${toast} demo=${demo} reloadSoc=${reloadSoc} ensureNames=${ensureNames}/>`;
   else body=html`<${FriendsTab} uid=${uid} st=${st} soc=${soc} names=${names} reloadSoc=${reloadSoc} openUser=${openUser} toast=${toast} profile=${profile} demo=${demo} ensureNames=${ensureNames}/>`;
@@ -232,6 +232,7 @@ function App(){
   else if(sheet==="asks")sheetEl=html`<${AnswersSheet} stat=${askStat} names=${names} onClose=${close} openUser=${openUser}/>`;
   else if(sheet==="answer"||sheet.startsWith("answer:"))sheetEl=html`<${AnswerSheet} incoming=${asksMe} names=${names} focus=${+sheet.split(":")[1]||null} toast=${toast} onClose=${close} onDone=${reloadSoc}/>`;
   else if(sheet==="updates")sheetEl=html`<${UpdatesSheet} st=${st} update=${update} onClose=${close} onOpen=${k=>setSheet(k)}/>`;
+  else if(sheet==="gem3d"&&st&&st.analysis)sheetEl=html`<${Gem3DView} g=${livingGem(st)} seed=${st.createdAt} name=${profile.nickname} onClose=${close}/>`;
   else if(sheet==="identity"||sheet.startsWith("identity:"))sheetEl=html`<${IdentitySheet} key=${sheet} st=${st} update=${update} onClose=${close} toast=${toast} demo=${demo} focus=${sheet.split(":")[1]||null}/>`;
   else if(sheet==="stay")sheetEl=html`<${StaySheet} st=${st} update=${update} onClose=${close} toast=${toast} demo=${demo} onOpen=${k=>setSheet(k)}/>`;
   else if(sheet==="stays")sheetEl=html`<${StaysSheet} st=${st} update=${update} onClose=${close}/>`;
