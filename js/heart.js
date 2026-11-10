@@ -24,13 +24,27 @@ function hqOrder(seed){const R=rng("hq|"+seed);const by={};HQ.filter(q=>!HQ_FIRS
  if(by.review)by.review.sort((a,b)=>{const x=HQ_KEEP.indexOf(a.id),y=HQ_KEEP.indexOf(b.id);return (x<0?99:x)-(y<0?99:y)});
  const out=HQ_FIRST.map(id=>HQ.find(q=>q.id===id));const cats=HQ_CATS.map(c=>c[0]);const NC=cats.length;let k=Math.floor(R()*NC);for(let guard=0;guard<400&&Object.values(by).some(a=>a.length);guard++){const c=cats[k%NC];k++;if(by[c]&&by[c].length)out.push(by[c].shift())}return out}
 /* 오늘 낼 질문: 이미 답한 날이면 null. swaps = 오늘 '다른 질문'을 누른 횟수 */
-function hqToday(st){const t=dayKey();const H=(st&&st.heart)||{};const all=hqList(st);if(all.some(x=>x.day===t&&x.a))return null;
+/* 완급 조절 — 오늘 몇 개까지 낼지를 그 사람의 쓰는 모습으로 정한다(1~5개).
+   꾸준히 답하고, 이유까지 적고, 더 달라고 하면 늘리고 / 한동안 쉬었거나 '하나 더'를 거듭 지나치면 줄인다. */
+function hqPace(st){const H=(st&&st.heart)||{};const A=hqAnswered(st);const t=dayKey();const today=A.filter(x=>x.day===t);const past=A.filter(x=>x.day!==t);
+ const days=[...new Set(past.map(x=>x.day))].sort();const last=days[days.length-1];const gap=last?daysBetween(last,t):null;let max=1;const why=[];
+ if(!past.length){max=2;why.push("첫날이라 넉넉히 열어 뒀어요")}
+ else if(gap>=3){why.push("오랜만이에요. 오늘은 가볍게 하나만 준비했어요")}
+ else{
+  if(days.filter(d=>daysBetween(d,t)<=4).length>=3){max++;why.push("꾸준히 답해 주셔서")}
+  const r6=past.slice(-6);if(r6.length>=3&&r6.filter(x=>x.why).length/r6.length>=.5){max++;why.push("이유까지 들려주셔서")}
+  const d3=days.filter(d=>daysBetween(d,t)<=3);if(d3.length&&past.filter(x=>daysBetween(x.day,t)<=3).length/d3.length>=2){max++;why.push("요즘 여러 개씩 답하셔서")}
+  const off=(H.offers||[]).filter(o=>o.day!==t).slice(-2);if(off.length===2&&off.every(o=>!o.taken)&&max>1){max--;why.length=0;why.push("요즘은 하나씩이 편하신 것 같아 속도를 늦췄어요")}
+ }
+ if(today.length>=1&&today.every(x=>x.why||x.a.length>=10)&&max<5&&!(gap>=3)){max++;if(today.length>=max-1)why.unshift("오늘 대답이 깊어서")}
+ max=clamp(max,1,5);return {max,todayN:today.length,left:Math.max(0,max-today.length),why:why[0]||""}}
+function hqToday(st,more){const t=dayKey();const H=(st&&st.heart)||{};const all=hqList(st);const nToday=all.filter(x=>x.day===t&&x.a).length;if(nToday&&!(more&&nToday<hqPace(st).max))return null;const nAll=all.filter(x=>x.a).length;
  const used=new Set(all.map(x=>x.id));const sk=(H.skip&&H.skip.day===t)?H.skip.ids||[]:[];
- if(H.aiq&&H.aiq.day===t&&H.aiq.q&&!used.has(H.aiq.id)&&!sk.includes(H.aiq.id))return {...H.aiq,ai:true};
+ if(H.aiq&&H.aiq.n===nAll&&H.aiq.q&&!used.has(H.aiq.id)&&!sk.includes(H.aiq.id))return {...H.aiq,ai:true};
  const ord=hqOrder(st.createdAt||0);let q=ord.find(x=>!used.has(x.id)&&!sk.includes(x.id));
  if(!q){const round=Math.floor(all.filter(x=>x.a).length/HQ.length)+1;q=ord.map(x=>({...x,id:x.id+"#"+round,q:x.q.replace(/\?$/,"")+" (요즘은?)"})).find(x=>!used.has(x.id)&&!sk.includes(x.id))||null}
  return q}
-const hqWantsAI=st=>{const n=hqAnswered(st).length;const H=(st&&st.heart)||{};const t=dayKey();return n>=4&&n%5===4&&!(H.aiq&&H.aiq.day===t)&&!hqList(st).some(x=>x.day===t&&x.a)};
+const hqWantsAI=st=>{const n=hqAnswered(st).length;const H=(st&&st.heart)||{};const t=dayKey();return n>=4&&n%5===4&&!(H.aiq&&H.aiq.n===n)};
 async function hqMakeAI(st){const prev=hqAnswered(st).slice(-12).map(x=>`- ${x.q} → ${x.a}`).join("\n");const asked=hqList(st).slice(-40).map(x=>x.q).join(" / ");
  const j=await api.aiJSON({task:"quick",prompt:`아래는 한 사람이 '오늘의 인터뷰'에 남긴 최근 대답이다. 이 사람에게 오늘 건넬 다음 질문 하나를 지어 JSON으로만 답한다.
 {"q":"한 문장 질문, 30자 이내, 물음표로 끝남","cat":"impress|treasure|joy|taste|wish|memory|feel|review 중 하나","ph":"대답 칸에 흐리게 보일 짧은 안내(12자 이내)"}
@@ -43,7 +57,7 @@ async function hqMakeAI(st){const prev=hqAnswered(st).slice(-12).map(x=>`- ${x.q
 ${prev}
 [이미 물은 질문] ${asked}`});
  const q=String(j&&j.q||"").replace(/\s+/g," ").trim().slice(0,44);if(q.length<6||!/\?$/.test(q))throw {code:"invalid_json"};
- return {id:"ai_"+dayKey(),day:dayKey(),q,cat:HQ_CATS.some(c=>c[0]===j.cat)?j.cat:"feel",ph:String(j.ph||"").slice(0,16)}}
+ const n=hqAnswered(st).length;return {id:"ai_"+n+"_"+dayKey(),day:dayKey(),n,q,cat:HQ_CATS.some(c=>c[0]===j.cat)?j.cat:"feel",ph:String(j.ph||"").slice(0,16)}}
 function hqStats(st){const A=hqAnswered(st);const by={};HQ_CATS.forEach(c=>by[c[0]]=0);A.forEach(x=>{by[x.cat]=(by[x.cat]||0)+1});const days=[...new Set(A.map(x=>x.day))].sort();let best=0,run=0,prev=null;days.forEach(d=>{run=prev&&daysBetween(prev,d)===1?run+1:1;best=Math.max(best,run);prev=d});
  return {hq:A.length,hqDays:days.length,hqCats:Object.values(by).filter(v=>v>0).length,hqStreak:best,hqWhy:A.filter(x=>x.why).length,hqBy:by}}
 function hqPromptBlock(st){const A=hqAnswered(st);if(!A.length)return "";return `[오늘의 인터뷰 — 본인이 직접 답한 감정·경험·기억·취향, 최근 ${Math.min(A.length,40)}개]\n`+A.slice(-40).map(x=>`- (${hqCat(x.cat)[1]}) ${x.q} ${x.a}${x.why?" — "+x.why:""}`).join("\n")+`\n→ 본인이 스스로 꺼낸 말이다. 무엇에 마음이 움직이고, 무엇을 아끼고, 무엇을 바라는지에서 가치(values)와 한 문장, 결(axes)의 근거를 찾는다. evidence에는 [질문]으로 표시한다. 대답을 평가하거나 감정 상태를 진단하지 않는다. '돌아봄'의 뿌듯함·잘한 일·스스로에 대한 칭찬은 이 사람이 무엇을 이뤘다고 느끼는지, 후회와 과거의 나에게 건넨 말은 무엇을 소중히 여기는지를 보여 준다. 후회를 탓하거나 약점으로 쓰지 않고, 살아온 길의 전환점(turningPoints)과 가치의 근거로만 읽는다.`}
@@ -54,24 +68,29 @@ function hqTitleOf(x){if(!x||!x.a)return "";const a=String(x.a).trim();if(a.leng
 const hqTitleById=(st,tid)=>{const id=String(tid||"").replace(/^hq:/,"");return hqTitleOf(hqAnswered(st).find(x=>x.id===id))};
 
 function HeartCard({st,update,toast,demo,canAI,onOpen}){
- const q=hqToday(st);const [txt,setTxt]=useState("");const [why,setWhy]=useState("");const [busy,setBusy]=useState(false);const S=hqStats(st);const t=dayKey();
- const swaps=(st.heart&&st.heart.skip&&st.heart.skip.day===t)?(st.heart.skip.ids||[]).length:0;
- useEffect(()=>{let live=true;if(demo||!canAI||!hqWantsAI(st))return;setBusy(true);hqMakeAI(st).then(a=>{if(live)update(s=>{s.heart={a:[],...(s.heart||{})};s.heart.aiq=a})}).catch(()=>{update(s=>{s.heart={a:[],...(s.heart||{})};s.heart.aiq={day:dayKey(),q:"",id:""}})}).finally(()=>{if(live)setBusy(false)});return()=>{live=false}},[S.hq,canAI]);
+ const [more,setMore]=useState(false);const P=hqPace(st);const q=hqToday(st,more);const [txt,setTxt]=useState("");const [why,setWhy]=useState("");const [busy,setBusy]=useState(false);const S=hqStats(st);const t=dayKey();
+ const swaps=(st.heart&&st.heart.skip&&st.heart.skip.day===t)?(st.heart.skip.ids||[]).length:0;const swapMax=P.max+1;const offer=!q&&P.todayN>=1&&P.left>0;
+ useEffect(()=>{if(demo||!offer)return;if(((st.heart&&st.heart.offers)||[]).some(o=>o.day===t))return;update(s=>{const H={a:[],...(s.heart||{})};H.offers=[...(H.offers||[]),{day:t,taken:false}].slice(-6);s.heart=H})},[offer]);
+ function takeMore(){if(demo)return;setMore(true);update(s=>{const H={a:[],...(s.heart||{})};H.offers=[...(H.offers||[]).filter(o=>o.day!==t),{day:t,taken:true}].slice(-6);s.heart=H});track("heart_more",{n:P.todayN,max:P.max})}
+ useEffect(()=>{let live=true;if(demo||!canAI||!hqWantsAI(st))return;setBusy(true);hqMakeAI(st).then(a=>{if(live)update(s=>{s.heart={a:[],...(s.heart||{})};s.heart.aiq=a})}).catch(()=>{update(s=>{s.heart={a:[],...(s.heart||{})};s.heart.aiq={day:dayKey(),n:hqAnswered(st).length,q:"",id:""}})}).finally(()=>{if(live)setBusy(false)});return()=>{live=false}},[S.hq,canAI]);
  function save(){if(demo||!q)return;const a=txt.replace(/\s+/g," ").trim().slice(0,60);if(!a)return;const w=why.replace(/\s+/g," ").trim().slice(0,100);const before=S.hqCats;
   update(s=>{const H={a:[],...(s.heart||{})};H.a=[...(H.a||[]).filter(x=>x.id!==q.id),{id:q.id,cat:q.cat,q:q.q,a,why:w,day:t,at:Date.now(),...(q.ai?{ai:true}:{})}].slice(-400);s.heart=H});
-  setTxt("");setWhy("");track("heart_answer",{cat:q.cat,ai:!!q.ai,why:!!w});const first=(S.hqBy[q.cat]||0)===0;toast(first?`'${hqCat(q.cat)[1]}' 갈래가 처음 켜졌어요 · ${before+1}/${HQ_CATS.length}`:"오늘의 대답을 담았어요. 내일 새 질문이 기다려요.")}
- function swap(){if(demo||!q||swaps>=2)return;update(s=>{const H={a:[],...(s.heart||{})};const cur=(H.skip&&H.skip.day===t)?H.skip.ids||[]:[];H.skip={day:t,ids:[...cur,q.id]};s.heart=H});setTxt("");setWhy("");track("heart_swap",{cat:q.cat})}
+  setTxt("");setWhy("");setMore(false);track("heart_answer",{cat:q.cat,ai:!!q.ai,why:!!w,nth:P.todayN+1,max:P.max});const first=(S.hqBy[q.cat]||0)===0;toast(first?`'${hqCat(q.cat)[1]}' 갈래가 처음 켜졌어요 · ${before+1}/${HQ_CATS.length}`:"대답을 담았어요.")}
+ function swap(){if(demo||!q||swaps>=swapMax)return;update(s=>{const H={a:[],...(s.heart||{})};const cur=(H.skip&&H.skip.day===t)?H.skip.ids||[]:[];H.skip={day:t,ids:[...cur,q.id]};s.heart=H});setTxt("");setWhy("");track("heart_swap",{cat:q.cat})}
  const last=hqAnswered(st).slice(-1)[0];
  return html`<div className="panel stack heart">
   <div className="row between"><span className="eyebrow">오늘의 인터뷰 · DAILY INTERVIEW</span><button className="linkbtn small" onClick=${()=>onOpen("heart")}>${S.hq?`지난 대답 ${S.hq}개 ›`:"어떻게 쓰이나요 ›"}</button></div>
   <div className="hq-spec" style=${{gridTemplateColumns:`repeat(${HQ_CATS.length},1fr)`}} role="img" aria-label=${"마음 스펙트럼: "+HQ_CATS.map(c=>c[1]+" "+(S.hqBy[c[0]]||0)).join(", ")}>${HQ_CATS.map(c=>html`<span key=${c[0]} className=${"hq-dot"+(S.hqBy[c[0]]?" on":"")} style=${{"--c":c[2]}}><i style=${{height:Math.min(100,18+(S.hqBy[c[0]]||0)*16)+"%"}}></i><small>${c[1]}</small></span>`)}</div>
   ${q?html`<div className="stack" style=${{gap:"8px"}}>
+    ${P.todayN===0&&P.why&&P.max!==1&&html`<span className="small faint">${P.why} · 오늘은 ${P.max}개까지</span>`}${P.todayN===0&&P.max===1&&/오랜만/.test(P.why)&&html`<span className="small faint">${P.why}</span>`}${P.todayN>0&&html`<span className="small faint">오늘 ${P.todayN+1}번째 · ${P.max}개까지</span>`}
     <b className="serif hq-q"><span className="hq-tag" style=${{"--c":hqCat(q.cat)[2]}}>${hqCat(q.cat)[1]}</span>${busy&&!q.ai?"":q.q}${q.ai&&html`<span className="hq-ai">지난 대답에서 이어진 질문</span>`}</b>
     <input type="text" id="hq-a" aria-label=${q.q} value=${txt} maxLength="60" placeholder=${q.ph||"한 줄로 적어 주세요"} onChange=${e=>setTxt(e.target.value)}/>
     ${txt.trim()&&html`<input type="text" id="hq-why" aria-label="이유 (선택)" value=${why} maxLength="100" placeholder="왜 그런가요? (선택) — 적으면 젬이 더 깊이 읽어요" onChange=${e=>setWhy(e.target.value)}/>`}
-    <div className="row"><button className="btn sm grow" disabled=${!txt.trim()||demo} onClick=${save}>대답 담기</button>${swaps<2&&html`<button className="btn ghost sm" disabled=${demo} onClick=${swap}>다른 질문</button>`}</div>
+    <div className="row"><button className="btn sm grow" disabled=${!txt.trim()||demo} onClick=${save}>대답 담기</button>${swaps<swapMax&&html`<button className="btn ghost sm" disabled=${demo} onClick=${swap}>다른 질문</button>`}</div>
    </div>`
-  :html`<div className="stack" style=${{gap:"4px"}}><p className="small muted" style=${{margin:0}}>오늘의 질문에 답했어요. 내일 새 질문이 열려요.</p>${last&&html`<p className="small" style=${{margin:0}}><span className="faint">${last.q}</span> <b>${last.a}</b></p>`}</div>`}
+  :html`<div className="stack" style=${{gap:"6px"}}>${last&&html`<p className="small" style=${{margin:0}}><span className="faint">${last.q}</span> <b>${last.a}</b></p>`}
+    ${offer?html`<div className="hq-more"><span className="small"><b>하나 더 준비했어요</b> · 오늘 ${P.todayN}/${P.max}${P.why?html`<br/><span className="faint">${P.why}</span>`:""}</span><button className="btn sm" disabled=${demo} onClick=${takeMore}>하나 더 답하기</button></div>`
+    :html`<p className="small muted" style=${{margin:0}}>${P.max>1?`오늘의 인터뷰 ${P.todayN}개를 모두 마쳤어요. 내일 새 질문이 열려요.`:"오늘의 질문에 답했어요. 내일 새 질문이 열려요."}</p>`}</div>`}
  </div>`;
 }
 function HeartSheet({st,update,onClose,toast,demo,onAddItems,onReread,items}){
@@ -96,6 +115,6 @@ function HeartSheet({st,update,onClose,toast,demo,onAddItems,onReread,items}){
      <span className="grow"></span>${del===x.id?html`<button className="linkbtn small" style=${{color:"var(--danger)"}} onClick=${()=>{update(s=>{s.heart.a=s.heart.a.filter(y=>y.id!==x.id);if(s.flags.title==="hq:"+x.id)s.flags.title=""});setDel(null)}}>정말 지우기</button>`:html`<button className="linkbtn small" style=${{color:"var(--ink-3)"}} disabled=${demo} onClick=${()=>setDel(x.id)}>지우기</button>`}
     </div></div>`})}</div>`
   :html`<div className="panel tint small">${A.length?"이 갈래에는 아직 대답이 없어요.":"아직 대답이 없어요. '나' 탭의 '오늘의 인터뷰'에 오늘의 대답을 남겨 보세요."}</div>`}
-  <p className="note">건강·종교·정치·재산 같은 것은 묻지 않아요. 대답은 공개 카드에 나가지 않고, '칭호로 달기'를 누른 한 줄만 닉네임 앞에 보여요. 다섯 번에 한 번은 지난 대답을 이어받아 AI가 나만의 질문을 지어요.</p>
+  <p className="note">건강·종교·정치·재산 같은 것은 묻지 않아요. 대답은 공개 카드에 나가지 않고, '칭호로 달기'를 누른 한 줄만 닉네임 앞에 보여요. 다섯 번에 한 번은 지난 대답을 이어받아 AI가 나만의 질문을 지어요. 질문은 하루 하나가 기본이고, 꾸준히·깊이 답할수록 하루 다섯 개까지 늘어나요. 한동안 쉬었거나 '하나 더'를 지나치면 다시 천천히 가요.</p>
  <//>`;
 }
