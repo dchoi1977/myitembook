@@ -5,6 +5,7 @@ const MIB_CONFIG={
  key:"sb_publishable_IUI-eAkx00yraU-JTHUPaw_qKzvgBdb",
  fn:"https://zhkltyckrbqusdemegzu.supabase.co/functions/v1/mib-api",
  fnPub:"https://zhkltyckrbqusdemegzu.supabase.co/functions/v1/mib-pub",
+ fnPage:"https://zhkltyckrbqusdemegzu.supabase.co/functions/v1/mib-page",
  fnLink:"https://zhkltyckrbqusdemegzu.supabase.co/functions/v1/mib-link",
  cohort:"CBT 1기",
  days:7,

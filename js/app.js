@@ -151,8 +151,8 @@ function App(){
   const exists=items.some(i=>i.id===item.id);
   try{const body=await api.saveItem(uid,item);const old=items.find(i=>i.id===item.id)||{};const view={...body,id:item.id,_shared:old._shared,thumbUrl:item._removePhoto?null:(item.thumb||old.thumbUrl),photoUrl:item._removePhoto?null:(item.photo||old.photoUrl)};setItems(list=>exists?list.map(i=>i.id===item.id?view:i):[view,...list]);track(exists?"item_edit":"item_add",{cat:item.category,photo:!!body.photoPath});toast(exists?"아이템을 저장했습니다.":"선반에 담았습니다.");setSheet("shelf")}catch(e){toast("저장하지 못했습니다. 사진이 너무 크면 다른 사진으로 시도해 주세요.")}
  }
- async function addItems(list){if(demo||!list.length)return;const done=[];for(const it of list){try{const body=await api.saveItem(uid,it);done.push({...body,id:it.id})}catch(e){}}
-  if(done.length){setItems(cur=>[...done.reverse(),...cur]);track("item_add_bulk",{n:done.length});toast(done.length<list.length?`${done.length}개를 담았어요. ${list.length-done.length}개는 담지 못했어요.`:`${done.length}개를 선반에 담았어요.`);setSheet("shelf")}else toast("담지 못했습니다. 잠시 뒤 다시 시도해 주세요.")}
+ async function addItems(list,opt){if(demo||!list.length)return;const done=[];for(const it of list){try{const body=await api.saveItem(uid,it);done.push({...body,id:it.id})}catch(e){}}
+  if(done.length){setItems(cur=>[...done.reverse(),...cur]);track("item_add_bulk",{n:done.length});toast(done.length<list.length?`${done.length}개를 담았어요. ${list.length-done.length}개는 담지 못했어요.`:`${done.length}개를 선반에 담았어요.`);if(!(opt&&opt.stay))setSheet("shelf")}else if(!(opt&&opt.stay))toast("담지 못했습니다. 잠시 뒤 다시 시도해 주세요.")}
  async function setItemPrivate(item,priv){if(demo)return;try{const clean={...item,private:priv,photo:"",thumb:""};delete clean._shared;await api.saveItem(uid,clean);setItems(list=>list.map(i=>i.id===item.id?{...i,private:priv}:i));track("item_private",{on:priv})}catch(e){toast("바꾸지 못했습니다.")}}
  async function deleteItem(id){const it=items.find(i=>i.id===id);try{await api.deleteItem(uid,it||{id});setItems(list=>list.filter(i=>i.id!==id));update(s=>{s.featured=(s.featured||[]).filter(x=>x!==id)});track("item_delete");toast("선반에서 뺐습니다.");setSheet("shelf")}catch(e){toast("지우지 못했습니다.")}}
  async function wipe(){try{await tracker.flush();if(profile&&profile.avatar==="photo")await api.removeAvatarPhoto(uid).catch(()=>{});await api.deleteMe();await api.logout();setSt(null);setItems([]);setProfile(null);setSession(null);setSheet(null);setRoute("gate");setGateMsg("계정과 모든 기록을 지웠습니다. 함께해 주셔서 고맙습니다.")}catch(e){toast("일부를 지우지 못했습니다. 다시 시도해 주세요.")}}
@@ -238,7 +238,8 @@ function App(){
   else if(sheet==="updates")sheetEl=html`<${UpdatesSheet} st=${st} update=${update} onClose=${close} onOpen=${k=>setSheet(k)}/>`;
   else if(sheet==="gemwhy"&&st&&st.analysis)sheetEl=html`<${GemWhySheet} g=${livingGem(st)} seed=${st.createdAt} own=${true} onClose=${close}/>`;
   else if(sheet==="gem3d"&&st&&st.analysis)sheetEl=html`<${Gem3DView} g=${livingGem(st)} seed=${st.createdAt} name=${profile.nickname} onClose=${close}/>`;
-  else if(sheet==="identity"||sheet.startsWith("identity:"))sheetEl=html`<${IdentitySheet} key=${sheet} st=${st} update=${update} onClose=${close} toast=${toast} demo=${demo} focus=${sheet.split(":")[1]||null}/>`;
+  else if(sheet==="identityproof"&&typeof ProofScan==="function")sheetEl=html`<${ProofScan} st=${st} update=${update} onAddItems=${addItems} canAI=${canAI} demo=${demo} toast=${toast} onClose=${()=>setSheet("identity")}/>`;
+  else if(sheet==="identity"||sheet.startsWith("identity:"))sheetEl=html`<${IdentitySheet} key=${sheet} st=${st} update=${update} onClose=${close} toast=${toast} demo=${demo} focus=${sheet.split(":")[1]||null} onProof=${()=>setSheet("identityproof")}/>`;
   else if(sheet==="stay")sheetEl=html`<${StaySheet} st=${st} update=${update} onClose=${close} toast=${toast} demo=${demo} onOpen=${k=>setSheet(k)}/>`;
   else if(sheet==="stays")sheetEl=html`<${StaysSheet} st=${st} update=${update} onClose=${close}/>`;
   else if(sheet==="achieve"||sheet==="badgebox")sheetEl=html`<${AchieveSheet} st=${st} stats=${stats} update=${update} meName=${profile.nickname} start=${sheet==="badgebox"?"box":"book"} onClose=${close} onReplay=${replayBadge}/>`;
