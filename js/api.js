@@ -65,6 +65,7 @@ const api={
  async profiles(ids){ids=[...new Set(ids.filter(Boolean))];if(!ids.length)return {};const r=await Q(sb.from("profiles").select("id,nickname,joined_at,role,avatar,avatar_scope,avatar_v").in("id",ids));const m={};r.forEach(p=>m[p.id]=p);return m},
  async searchProfiles(q){q=String(q||"").trim().replace(/[%_,()]/g,"");if(!q)return [];return Q(sb.from("profiles").select("id,nickname,joined_at,role,avatar,avatar_scope,avatar_v").ilike("nickname",`%${q}%`).limit(12))},
  async profileByNickname(n){return Q(sb.from("profiles").select("id,nickname,joined_at,role,avatar,avatar_scope,avatar_v").eq("nickname",n).maybeSingle())},
+ async pulse(uid,fids){const ids=(fids||[]).filter(Boolean);const [c,f]=await Promise.all([ids.length?Q(sb.from("cards").select("user_id,updated_at").in("user_id",ids).order("updated_at",{ascending:false}).limit(1)):Promise.resolve([]),Q(sb.from("feed_events").select("created_at").neq("user_id",uid).order("created_at",{ascending:false}).limit(1))]);return {card:c&&c[0]?Date.parse(c[0].updated_at):0,feed:f&&f[0]?Date.parse(f[0].created_at):0}},
  async social(uid){
   const [fr,wTo,wFrom,rTo,rFrom,fb]=await Promise.all([
    Q(sb.from("friendships").select("*").or(`requester.eq.${uid},addressee.eq.${uid}`)),
