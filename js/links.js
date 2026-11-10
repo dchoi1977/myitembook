@@ -5,7 +5,7 @@
      ① 내 화면 캡처 ② 공식 '내 정보 내려받기' 파일 ③ 직접 적기 가운데 하나로 건넨다.
    파일은 이 기기 안에서만 풀고, 서버와 AI에는 '요약'만 간다. 팔로워·좋아요·조회수, 메시지,
    다른 사람의 아이디는 읽지 않는다. */
-const LINK_MAX=8;
+const LINK_MAX=14;
 const LINK_SVCS=[
  {k:"instagram",n:"인스타그램",m:"wall",mono:"Ig",col:"#B4567A",modes:["cap","file","paste"],
   guide:["인스타그램 앱 → 프로필 → ☰ → 계정 센터","내 정보 및 권한 → 내 정보 내보내기(정보 다운로드)","내보내기 만들기 → 기기로 내보내기","정보 맞춤 설정에서 '게시물'과 '개인 정보'만 고르기","형식 JSON · 미디어 품질 낮음 → 내보내기 시작","준비되면 알림이 와요(몇 분~며칠). 받은 zip을 여기에 올려 주세요"]},
@@ -34,8 +34,9 @@ const LINK_SVCS=[
  {k:"netflix",n:"넷플릭스 시청 기록",u:"시청",v:"봄",passive:true,m:"wall",mono:"Nf",col:"#A8423D",modes:["file","paste"],
   guide:["넷플릭스(웹) → 계정 → 프로필 → 시청 기록","맨 아래 '모두 다운로드' → CSV 파일이 바로 받아져요","받은 CSV를 여기에 올려 주세요"]},
  {k:"rss",n:"그 밖의 블로그·팟캐스트",m:"feed",mono:"＋",col:"#6F7C78",ph:"홈페이지 주소 또는 RSS 주소",hint:"워드프레스·개인 블로그·뉴스레터·팟캐스트처럼 RSS가 있는 곳이면 돼요."}];
-const linkSvc=k=>LINK_SVCS.find(s=>s.k===String(k||"").split(":")[0])||LINK_SVCS[LINK_SVCS.length-1];
-const LINK_VIA={feed:"주소로 읽음",file:"내 정보 파일",cap:"화면 캡처",paste:"직접 적음"};
+const linkSvc=k=>LINK_SVCS.find(s=>s.k===String(k||"").split(":")[0])||LINK_SVCS.find(s=>s.k==="rss");
+const linkIsAccount=l=>{const m=linkSvc(l.kind).m;return m==="feed"||m==="wall"};
+const LINK_VIA={feed:"주소로 읽음",file:"내 정보 파일",cap:"화면 캡처",paste:"직접 적음",device:"이 기기에서 읽음"};
 const LINK_ERR={link_invalid:"주소를 확인해 주세요. 내 계정 홈 주소나 아이디를 그대로 넣으면 돼요.",link_not_found:"그 주소에서 계정을 찾지 못했어요. 공개 계정인지, 주소가 맞는지 확인해 주세요.",link_empty:"공개된 글이 아직 없어요. 글이 올라온 뒤 다시 시도해 주세요.",link_no_feed:"그 주소에서 읽을 수 있는 목록(RSS)을 찾지 못했어요. RSS 주소를 직접 넣어 보세요.",link_blocked:"그쪽 서비스가 지금 읽기를 막고 있어요. 잠시 뒤 다시 시도하거나 '직접 적기'를 써 주세요.",link_unavailable:"지금은 읽어오지 못했어요. 잠시 뒤 다시 시도해 주세요.",link_limit:"오늘 읽어올 수 있는 횟수를 다 썼어요. 내일 다시 시도해 주세요.",network:"인터넷 연결을 확인해 주세요.",unauthorized:"다시 로그인한 뒤 시도해 주세요.",
  file_none:"읽을 수 있는 파일을 찾지 못했어요. 내려받은 zip을 그대로 올리거나, 그 안의 JSON·CSV 파일을 골라 주세요.",file_html:"HTML 형식으로 받은 파일이에요. 내보낼 때 형식을 'JSON'으로 골라 다시 받아 주세요.",file_empty:"파일은 맞는데 그 안에 읽을 게시물이 없어요.",file_big:"파일이 너무 커요. 내보낼 때 '게시물'만 고르고 미디어 품질을 낮춰 다시 받아 주세요.",zip_load:"압축을 푸는 도구를 불러오지 못했어요. 연결을 확인하거나, zip을 직접 푼 뒤 그 안의 JSON·CSV 파일을 올려 주세요.",
  cap_not_profile:"계정 화면으로 보이지 않아요. 내 프로필(소개와 게시물 목록이 보이는 화면)을 캡처해 주세요.",daily_limit:"오늘 AI 읽기 횟수를 다 썼어요. 내일 다시 시도하거나 '직접 적기'를 써 주세요.",ai_not_configured:"AI 읽기는 운영자가 준비 중이에요. '직접 적기'를 써 주세요.",image_rejected:"그 이미지는 읽지 못했어요. 다른 캡처로 시도해 주세요.",refused:"그 화면은 읽지 못했어요. 다른 캡처로 시도해 주세요."};
@@ -88,7 +89,7 @@ const linkList=src=>Array.isArray(src&&src.links)?src.links.filter(l=>l&&l.id&&l
 /* 연결된 계정이 젬 계산에 주는 바닥값: 가장 오래 이어 온 햇수, 주당 반복 */
 function linkFloors(links){const L=(links||[]).filter(l=>l&&l.via!=="paste"&&!linkSvc(l.kind).passive);if(!L.length)return null;return {years:Math.max(0,...L.map(l=>Number(l.years)||0)),perWeek:Math.min(7,lkR1(L.reduce((s,l)=>s+(Number(l.pw)||0),0))),records:L.reduce((s,l)=>s+(Number(l.total)||Number(l.n)||0),0)}}
 function linkStats(st){const s=(st&&st.sources)||{};const L=linkList(s);const yt=(s.youtube||"").trim()&&s.youtubeChannel?1:0;return {links:L.length+yt,linkRecords:L.reduce((a,l)=>a+(Number(l.total)||Number(l.n)||0),0)+(yt?Number(s.youtubeChannel.count)||0:0),linkKinds:new Set(L.map(l=>l.kind)).size+yt}}
-function linkPromptBlocks(links){const L=linkList({links});if(!L.length)return [];const per=Math.max(1400,Math.min(3400,Math.floor(18000/L.length)));
+function linkPromptBlocks(links){const L=linkList({links});if(!L.length)return [];const per=Math.max(1100,Math.min(3400,Math.floor(18000/L.length)));
  const out=L.map(l=>`[연결한 계정 — ${linkSvc(l.kind).n} · 근거 표시는 [${linkSvc(l.kind).n.split(" ")[0]}]]\n${String(l.text).slice(0,per)}`);
  out.push(`[연결한 계정을 읽는 법]\n위 계정들은 본인이 직접 연결한, 자기가 쌓아 온 기록이다. 게시 수와 기간, 올리는 주기와 시간대, 반복되는 주제와 형식에서 관심 영역(domains), 한 곳에 쏠린 정도(focus), 생활의 밀도와 계획성(pace·structure), 영향이 퍼지는 방식(influence), 오래 이어 온 햇수(years)와 주당 반복(perWeek)을 읽는다. 여러 계정에서 겹치는 주제는 더 강한 근거로, 한 계정에만 있는 주제는 그 사람의 다른 면으로 본다. 처음 무렵과 최근의 차이가 뚜렷하면 전환점(turningPoints)으로 본다. 팔로워·좋아요·조회수 같은 반응의 크기는 주어지지 않았고 추정하지도 않는다. 글 속에 나오는 다른 사람은 언급하지 않는다.`);
  return out}
@@ -181,14 +182,14 @@ async function linkFromCaptures(svc,files){
 
 /* ── UI ── */
 function LinkMono({svc,size=34}){return html`<span className="lk-mono" style=${{width:size,height:size,background:svc.col,fontSize:Math.round(size*.4)}} aria-hidden="true">${svc.mono}</span>`}
-function linkSummary(l){const p=[];if(l.total)p.push(`${linkSvc(l.kind).u||"게시"} ${Number(l.total).toLocaleString()}건`);if(l.first&&l.last){const a=new Date(l.first).getFullYear(),b=new Date(l.last).getFullYear();p.push(a===b?`${a}년`:`${a}~${b}년`)}if(l.pw)p.push(`요즘 주 ${l.pw}회`);return p.join(" · ")||LINK_VIA[l.via]}
+function linkSummary(l){if(l.sum)return l.sum;const p=[];if(l.total)p.push(`${linkSvc(l.kind).u||"게시"} ${Number(l.total).toLocaleString()}건`);if(l.first&&l.last){const a=new Date(l.first).getFullYear(),b=new Date(l.last).getFullYear();p.push(a===b?`${a}년`:`${a}~${b}년`)}if(l.pw)p.push(`요즘 주 ${l.pw}회`);return p.join(" · ")||LINK_VIA[l.via]}
 function LinkSource({s,setDraft,toast}){
- const links=linkList(s);const [sel,setSel]=useState(null);const [busyId,setBusyId]=useState(null);const [seen,setSeen]=useState(null);
+ const links=linkList(s).filter(linkIsAccount);const ACC_MAX=8;const [sel,setSel]=useState(null);const [busyId,setBusyId]=useState(null);const [seen,setSeen]=useState(null);
  const put=l=>setDraft(d=>{const cur=linkList(d.sources).filter(x=>x.id!==l.id);return {...d,sources:{...d.sources,links:[...cur,l].slice(-LINK_MAX)}}});
  const drop=id=>setDraft(d=>({...d,sources:{...d.sources,links:linkList(d.sources).filter(x=>x.id!==id)}}));
  async function refresh(l,quiet){const svc=linkSvc(l.kind);setBusyId(l.id);try{const r=await api.link(l.kind,l.ref);const nl=makeLink(svc,"feed",l.ref,{...r.profile,total:r.total},r.items);put(nl);const more=(nl.last||0)>(l.last||0);if(!quiet||more)toast(more?`${nl.title} · 새 기록을 읽어왔어요`:`${nl.title} · 새로 올라온 건 없어요`);track("link_refresh",{kind:l.kind,more})}catch(e){if(!quiet)toast(LINK_ERR[e&&e.code]||LINK_ERR.link_unavailable)}finally{setBusyId(null)}}
  useEffect(()=>{let live=true;(async()=>{const old=links.filter(l=>l.via==="feed"&&Date.now()-(l.at||0)>12*36e5).slice(0,4);for(const l of old){if(!live)return;await refresh(l,true)}})();return()=>{live=false}},[]);
- const full=links.length>=LINK_MAX;
+ const full=links.length>=ACC_MAX;
  return html`<div className="stack">
   ${links.length>0&&html`<div className="lk-list">${links.map(l=>{const svc=linkSvc(l.kind);return html`<div key=${l.id} className="lk-row">
     <div className="row" style=${{flexWrap:"nowrap",gap:"10px"}}><${LinkMono} svc=${svc}/><span className="grow" style=${{minWidth:0}}><b className="lk-t">${l.title}</b><br/><span className="small faint">${svc.n} · ${linkSummary(l)}</span></span>
@@ -196,8 +197,8 @@ function LinkSource({s,setDraft,toast}){
     <div className="lk-acts"><button className="linkbtn small lk-peek" aria-expanded=${seen===l.id} onClick=${()=>setSeen(seen===l.id?null:l.id)}>${seen===l.id?"접기":"읽어온 내용 보기"}</button><span className="grow"></span>${l.via==="feed"&&html`<button className="linkbtn small" disabled=${busyId===l.id} onClick=${()=>refresh(l)}>${busyId===l.id?"읽는 중…":"새로 읽기"}</button>`}<button className="linkbtn small" onClick=${()=>{drop(l.id);track("link_drop",{kind:l.kind})}}>빼기</button></div>
     ${seen===l.id&&html`<pre className="lk-pre">${l.text}</pre>`}
    </div>`})}</div>`}
-  <div><div className="small muted" style=${{marginBottom:"8px"}}>${full?`계정은 ${LINK_MAX}곳까지 연결할 수 있어요. 하나를 빼면 더 넣을 수 있어요.`:"연결할 곳을 골라 주세요"}</div>
-   <div className="lk-grid">${LINK_SVCS.map(svc=>{const on=links.some(l=>l.kind===svc.k);return html`<button key=${svc.k} className=${"lk-tile"+(sel===svc.k?" sel":"")+(on?" on":"")} aria-pressed=${sel===svc.k} disabled=${full&&!on} onClick=${()=>setSel(sel===svc.k?null:svc.k)}><${LinkMono} svc=${svc} size=${30}/><span className="lk-n">${svc.n}</span>${on?html`<span className="lk-on">연결됨</span>`:html`<span className="lk-how">${svc.m==="feed"?"주소로 바로":svc.modes[0]==="cap"?"캡처·파일":"파일"}</span>`}</button>`})}</div></div>
+  <div><div className="small muted" style=${{marginBottom:"8px"}}>${full?`계정은 ${ACC_MAX}곳까지 연결할 수 있어요. 하나를 빼면 더 넣을 수 있어요.`:"연결할 곳을 골라 주세요"}</div>
+   <div className="lk-grid">${LINK_SVCS.filter(x=>x.m==="feed"||x.m==="wall").map(svc=>{const on=links.some(l=>l.kind===svc.k);return html`<button key=${svc.k} className=${"lk-tile"+(sel===svc.k?" sel":"")+(on?" on":"")} aria-pressed=${sel===svc.k} disabled=${full&&!on} onClick=${()=>setSel(sel===svc.k?null:svc.k)}><${LinkMono} svc=${svc} size=${30}/><span className="lk-n">${svc.n}</span>${on?html`<span className="lk-on">연결됨</span>`:html`<span className="lk-how">${svc.m==="feed"?"주소로 바로":svc.modes[0]==="cap"?"캡처·파일":"파일"}</span>`}</button>`})}</div></div>
   ${sel&&html`<${LinkPanel} key=${sel} svc=${linkSvc(sel)} cur=${links.find(l=>l.kind===sel)} onDone=${l=>{put(l);setSel(null);toast(`${l.title} · 연결했어요`);track("link_add",{kind:l.kind,via:l.via,n:l.n})}} onClose=${()=>setSel(null)}/>`}
   <div className="reads"><b>읽는 것</b><span>내가 올린 것의 제목·글 첫머리·날짜, 올린 수와 주기, 반복되는 주제</span><b>읽지 않음</b><span>팔로워·좋아요·조회수, 메시지, 친구 목록, 다른 사람의 아이디, 사진·영상 원본</span><b>보관</b><span>요약만 내 계정에 저장하고 AI 해석에 건네요. '읽어온 내용 보기'에서 그대로 확인하고, 언제든 뺄 수 있어요</span></div>
  </div>`;

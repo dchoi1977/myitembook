@@ -31,8 +31,8 @@ function Connect({draft,setDraft,rt,onNext,onBack,hasItems,allowEmpty,nextLabel,
  const canPhotos=true;
  const urls=useMemo(()=>draft.photos.map(f=>URL.createObjectURL(f)),[draft.photos]);
  useEffect(()=>()=>urls.forEach(u=>URL.revokeObjectURL(u)),[urls]);
- const nLinks=typeof linkList==="function"?linkList(s).length:0;
- const any=s.youtube.trim()||s.calendar.trim()||s.story.trim()||draft.photos.length||nLinks;
+ const allLinks=typeof linkList==="function"?linkList(s):[];const nLinks=allLinks.filter(linkIsAccount).length;const nShots=allLinks.filter(l=>linkSvc(l.kind).m==="shot").length,nTraces=allLinks.filter(l=>linkSvc(l.kind).m==="trace").length;
+ const any=s.youtube.trim()||s.calendar.trim()||s.story.trim()||draft.photos.length||allLinks.length;
  const tog=k=>setOpen(o=>o===k?null:k);
  return html`<div className="main wrap">
   <${Progress} n=${1}/>
@@ -46,6 +46,12 @@ function Connect({draft,setDraft,rt,onNext,onBack,hasItems,allowEmpty,nextLabel,
    <//>
    ${typeof LinkSource==="function"&&html`<${SourceCard} icon="link" title="SNS·블로그 계정 연결" desc=${nLinks?`${nLinks}곳 연결됨 · 인스타그램·네이버 블로그·링크드인 등`:"인스타그램·페이스북·링크드인·틱톡·네이버 블로그 등 20곳"} open=${open==="links"} onToggle=${()=>tog("links")} filled=${nLinks>0}>
     <${LinkSource} s=${s} setDraft=${setDraft} toast=${toast||(()=>{})}/>
+   <//>`}
+   ${typeof ShotSource==="function"&&html`<${SourceCard} icon="photo" title="화면 한 장으로 읽기" desc=${nShots?`${nShots}가지 읽음 · 스크린 타임·홈 화면·알람·결산`:"스크린 타임·홈 화면·알람·연말 결산을 캡처 한 장으로"} open=${open==="shots"} onToggle=${()=>tog("shots")} filled=${nShots>0}>
+    <${ShotSource} s=${s} setDraft=${setDraft} toast=${toast||(()=>{})}/>
+   <//>`}
+   ${typeof TraceSource==="function"&&html`<${SourceCard} icon="data" title="폰·PC 속 흔적" desc=${nTraces?`${nTraces}가지 읽음 · 사진첩의 리듬·나와의 채팅·북마크`:"사진첩의 찍은 시각·장소, 카카오톡 나와의 채팅, 북마크"} open=${open==="traces"} onToggle=${()=>tog("traces")} filled=${nTraces>0}>
+    <${TraceSource} s=${s} setDraft=${setDraft} toast=${toast||(()=>{})}/>
    <//>`}
    <${SourceCard} icon="cal" title="캘린더" desc="반복 일정이나 지난 한 달의 일정" open=${open==="calendar"} onToggle=${()=>tog("calendar")} filled=${!!s.calendar.trim()}>
     <div className="field"><label htmlFor="src-cal">일정 붙여 넣기</label><textarea id="src-cal" value=${s.calendar} onChange=${e=>set("calendar",e.target.value)} placeholder=${"예)\n매주 토 07:00 등산 모임\n화·목 20:00 영어 스터디\n11/3 후배 이력서 봐 주기"}></textarea></div>
@@ -190,7 +196,7 @@ function LifeCard({st,items,stats,onOpen,me}){
 function MeTab({st,items,soc,stats,onOpen,names,top,mid,me}){
  const desk=useDesktop();
  const featured=items.filter(i=>(st.featured||[]).includes(i.id)).slice(0,4);
- const rows=[["evidence","눈","이렇게 읽은 이유","사실과 AI 해석을 나눠 보고, 맞다·숨기기"],["attrs","별","젬의 8가지 속성","결·색·빛·형·질·강·상·각"],["shelf","선반","나의 선반",`실제로 가진 것 ${items.length}개 · 얼마나 함께했는가`],["publish","문","공개할 모습",st.visibility.public?(st.visibility.audience==="friends"?"친구에게 공개 중":"CBT 1기에 공개 중")+" · 항목별로 고르기":"지금은 나만 보기"],["reread","새싹","새 기록 더하기",(()=>{const n=typeof linkStats==="function"?linkStats(st).links:0;return `${n?`계정 ${n}곳 연결됨`:"SNS·블로그 계정 연결"} · 나를 다시 읽기 · 지금까지 ${st.analyses||1}번`})()]];
+ const rows=[["evidence","눈","이렇게 읽은 이유","사실과 AI 해석을 나눠 보고, 맞다·숨기기"],["attrs","별","젬의 8가지 속성","결·색·빛·형·질·강·상·각"],["shelf","선반","나의 선반",`실제로 가진 것 ${items.length}개 · 얼마나 함께했는가`],["publish","문","공개할 모습",st.visibility.public?(st.visibility.audience==="friends"?"친구에게 공개 중":"CBT 1기에 공개 중")+" · 항목별로 고르기":"지금은 나만 보기"],["reread","새싹","새 기록 더하기",(()=>{const n=typeof linkStats==="function"?linkStats(st).links:0;return `${n?`기록 ${n}갈래 이어짐`:"계정·화면·폰 속 흔적 잇기"} · 나를 다시 읽기 · 지금까지 ${st.analyses||1}번`})()]];
  const achN=earnedIds(st,stats).length;rows.splice(2,0,["achieve","별","업적 도감 · 배지 보관함",`배지 ${achN}/${BADGES.length} · 칭호와 대표 배지 고르기`]);rows.splice(3,0,["identity","왕관","나의 휘장",(()=>{const I=idStats(st);return I.total?`휘장 ${I.total}개 · 진열 ${I.shown}/${ID_MAX_SHOW} · 뿌리·터전·배움·소속·영예·조명`:"뿌리·터전·배움·소속·영예·조명을 새겨 진열하기"})()]);
  return html`<div className="main wrap">
   ${top}
@@ -257,7 +263,7 @@ function ItemTile({item,featured,onClick}){
  const gl=item.glyph||(CATS.find(c=>c[0]===item.category)||[0,"선반"])[1];
  return html`<button className="item" onClick=${onClick}><div className="ph">${(item.thumbUrl||item.photo)?html`<img src=${item.thumbUrl||item.photo} alt=${item.name}/>`:html`<${Glyph} name=${gl} size=${44}/>`}${featured&&html`<span className="star">대표</span>`}${item.private&&html`<span className="star lock" title="공개 선반에서 숨김">숨김</span>`}</div><div className="meta"><b>${item.name}</b><span>${item.category} · ${sinceText(item.since)||"기간 미정"}</span><span>${item.verify||"내가 적은 이야기"}</span></div></button>`;
 }
-function ShelfSheet({st,items,onOpen,onClose}){
+function ShelfSheet({st,items,onOpen,onClose,canAI}){
  const [cat,setCat]=useState("전체");const list=items.filter(i=>cat==="전체"||i.category===cat);
  return html`<${Sheet} title="나의 선반" onClose=${onClose}>
   <p className="serif" style=${{color:"var(--accent)",fontSize:"17px"}}>"얼마짜리인가"가 아니라 "얼마나 함께했는가".</p>
@@ -265,7 +271,7 @@ function ShelfSheet({st,items,onOpen,onClose}){
   <div className="panel tint small row between" style=${{alignItems:"center"}}><span>${st.visibility.public&&st.visibility.fields.shelf?html`<b>선반 공개 중</b> · ${items.filter(i=>!i.private).length}개 보임${items.some(i=>i.private)?` · ${items.filter(i=>i.private).length}개 숨김`:""}`:html`<b>선반은 나만 보기</b> · 카드 공개 설정에서 켤 수 있어요`}</span><button className="linkbtn small" onClick=${()=>onOpen("publish")}>공개 설정</button></div>
   <div className="segs" role="group" aria-label="카테고리">${["전체","장비","자격","반려"].map(c=>html`<button key=${c} aria-pressed=${cat===c} onClick=${()=>setCat(c)}>${c}</button>`)}</div>
   ${list.length?html`<div className="shelf">${list.map(i=>html`<${ItemTile} key=${i.id} item=${i} featured=${(st.featured||[]).includes(i.id)} onClick=${()=>onOpen("item:"+i.id)}/>`)}</div>`:html`<div className="panel tint small">아직 담은 아이템이 없습니다. 오래 쓴 카메라, 함께 사는 반려견, 준비해서 딴 자격증처럼 나와 함께한 것을 하나 담아 보세요.</div>`}
-  <button className="btn block" onClick=${()=>onOpen("item:new")}>아이템 담기</button>
+  <div className="row"><button className="btn grow" onClick=${()=>onOpen("item:new")}>아이템 담기</button>${typeof ShelfScan==="function"&&html`<button className="btn quiet grow" onClick=${()=>onOpen("shelfscan")}>사진 한 장으로 여러 개</button>`}</div>
   <p className="note">CBT에서는 장비·자격·반려 세 카테고리를 엽니다. 공간·이동·컬렉션·디지털 자산·기억의 물건은 다음 버전에서 열립니다.</p>
  <//>`;
 }
@@ -375,7 +381,7 @@ function DataSheet({st,items,profile,onClose,onWipe,onReread,onLogout,toast,demo
   <div className="panel stack small"><b>${profile.nickname} · ${MIB_CONFIG.cohort}</b><span>${demo?"예시 모드 · 저장하지 않음":"기록은 내 계정에만 보이는 서버 저장소에 보관됩니다. 운영 화면에는 원문 기록이 나타나지 않고, 테스트 지표는 사용 횟수만 집계합니다."}</span></div>
   <div className="stack"><h2 className="h3">연결 지도</h2>
    <div className="list">${[["yt","유튜브 채널",src.youtube],["cal","캘린더",src.calendar],["pen","나의 이야기",src.story]].map(([ic,t,v])=>html`<div className="list-row" key=${t} style=${{cursor:"default"}}><span className="ico"><${Ico} n=${ic}/></span><span className="grow"><span className="t">${t}</span><br/><span className="d">${(v||"").trim()?(ic==="yt"&&src.youtubeChannel?`${src.youtubeChannel.title} · 영상 ${src.youtubeChannel.count}편 · 해석에 사용`:`${v.trim().length.toLocaleString()}자 · 해석에 사용`):"연결 안 함"}</span></span></div>`)}
-   ${typeof linkList==="function"&&linkList(src).map(l=>html`<div className="list-row" key=${l.id} style=${{cursor:"default"}}><span className="ico"><${Ico} n="link"/></span><span className="grow"><span className="t">${linkSvc(l.kind).n} · ${l.title}</span><br/><span className="d">${linkSummary(l)} · ${LINK_VIA[l.via]} · 해석에 사용</span></span></div>`)}
+   ${typeof linkList==="function"&&linkList(src).map(l=>html`<div className="list-row" key=${l.id} style=${{cursor:"default"}}><span className="ico"><${Ico} n="link"/></span><span className="grow"><span className="t">${linkSvc(l.kind).n}${l.title&&l.title!==linkSvc(l.kind).n?" · "+l.title:""}</span><br/><span className="d">${linkSummary(l)} · ${LINK_VIA[l.via]} · 해석에 사용</span></span></div>`)}
    <div className="list-row" style=${{cursor:"default"}}><span className="ico"><${Ico} n="photo"/></span><span className="grow"><span className="t">사진 갤러리</span><br/><span className="d">${src.photos?`${src.photos}장 · 해석에만 쓰고 저장 안 함`:"연결 안 함"}</span></span></div></div>
    <p className="note">마지막으로 읽은 때: ${src.at?new Date(src.at).toLocaleString("ko-KR"):"없음"}</p>
   </div>
