@@ -404,7 +404,8 @@ const BADGES=[
  {id:"hq_wish",g:"속마음",rar:"common",name:"바라는 것이 있는",glyph:"비행기",desc:"바라는 것 세 가지를 적었어요.",cond:"'바람' 갈래 질문 3개 답하기",title:"바라는 것이 있는",test:s=>((s.hqBy||{}).wish||0)>=3,prog:s=>BP((s.hqBy||{}).wish,3)},
  {id:"hq_memory",g:"속마음",rar:"common",name:"기억을 꺼내는",glyph:"카메라",desc:"오래된 기억 세 가지를 꺼냈어요.",cond:"'기억' 갈래 질문 3개 답하기",title:"기억을 꺼내는",test:s=>((s.hqBy||{}).memory||0)>=3,prog:s=>BP((s.hqBy||{}).memory,3)},
  {id:"hq_feel",g:"속마음",rar:"common",name:"마음을 들여다보는",glyph:"하트",desc:"요즘의 마음 세 가지를 들여다봤어요.",cond:"'마음' 갈래 질문 3개 답하기",title:"마음을 들여다보는",test:s=>((s.hqBy||{}).feel||0)>=3,prog:s=>BP((s.hqBy||{}).feel,3)},
- {id:"hq_all",g:"속마음",rar:"epic",name:"일곱 빛깔 마음",glyph:"별",desc:"일곱 갈래 모두에 대답을 남겼어요.",cond:"일곱 갈래 모두 한 번 이상 답하기",title:"일곱 빛깔의",test:s=>(s.hqCats||0)>=7,prog:s=>BP(s.hqCats,7)},
+ {id:"hq_review",g:"속마음",rar:"rare",name:"나를 돌아보는",glyph:"산",desc:"살아온 길을 세 번 돌아봤어요.",cond:"'돌아봄' 갈래 질문 3개 답하기",title:"걸어온 길을 돌아보는",test:s=>((s.hqBy||{}).review||0)>=3,prog:s=>BP((s.hqBy||{}).review,3)},
+ {id:"hq_all",g:"속마음",rar:"epic",name:"여덟 갈래의 마음",glyph:"별",desc:"여덟 갈래 모두에 대답을 남겼어요.",cond:"여덟 갈래 모두 한 번 이상 답하기",title:"온 마음을 꺼낸",test:s=>(s.hqCats||0)>=8,prog:s=>BP(s.hqCats,8)},
  {id:"hq_why",g:"속마음",rar:"rare",name:"이유를 아는",glyph:"펜",desc:"대답 다섯 개에 '왜'를 덧붙였어요.",cond:"대답에 이유 5번 적기",title:"이유를 아는",test:s=>(s.hqWhy||0)>=5,prog:s=>BP(s.hqWhy,5)},
  {id:"link1",g:"물길",rar:"common",name:"첫 물길",glyph:"고리",desc:"다른 곳에 쌓아 온 기록을 처음 이어 왔어요.",cond:"'새 기록 더하기'에서 계정·화면·흔적 가운데 하나를 잇고 다시 읽기",title:"물길을 튼",test:s=>(s.links||0)>=1,prog:s=>BP(s.links,1)},
  {id:"link3",g:"물길",rar:"rare",name:"세 갈래 물길",glyph:"별",desc:"세 곳의 기록이 하나의 젬으로 모였어요.",cond:"계정·화면·흔적 3갈래 잇기",title:"세 물길이 모이는",test:s=>(s.links||0)>=3,prog:s=>BP(s.links,3)},
@@ -426,7 +427,7 @@ const BADGES=[
  {id:"allweek",g:"비밀",rar:"legend",secret:true,hint:"일곱 날, 하루도 빠짐없이",name:"일곱 빛깔",glyph:"별",desc:"일곱 날 모두 한 걸음이나 한 줄을 남겼어요.",cond:"활동한 날 7일 채우기",title:"일곱 날을 채운",frame:"seven",test:s=>s.active>=7,prog:s=>BP(s.active,7)}
 ];
 GROUPS["비밀"]="#5B4A7A";GROUPS["물길"]="#3E7F8F";GROUPS["속마음"]="#A0567A";GROUPS["발자취"]="#4F6F8F";GROUPS["연륜"]="#8C6A3A";GROUPS["휘장"]="#7A1F2B";
-const GROUP_DESC={"속마음":"오늘의 인터뷰에 남긴 감정·경험·기억·취향","물길":"다른 곳에 쌓아 온 기록을 젬으로 이어 온 길","휘장":"내가 걸어온 길 — 뿌리·터전·배움·소속·영예·조명","연륜":"살아온 시간이 젬에 새긴 나이테","발자취":"머무른 곳이 남긴 길","지속":"꾸준히 이어 간 시간","도약":"나를 새로 발견한 순간","회복":"쉬고, 다듬고, 돌아온 일","함께":"사람들과 결을 주고받은 일","비밀":"조건이 숨겨진 업적"};
+const GROUP_DESC={"속마음":"오늘의 인터뷰에 남긴 감정·경험·기억·취향과 돌아봄","물길":"다른 곳에 쌓아 온 기록을 젬으로 이어 온 길","휘장":"내가 걸어온 길 — 뿌리·터전·배움·소속·영예·조명","연륜":"살아온 시간이 젬에 새긴 나이테","발자취":"머무른 곳이 남긴 길","지속":"꾸준히 이어 간 시간","도약":"나를 새로 발견한 순간","회복":"쉬고, 다듬고, 돌아온 일","함께":"사람들과 결을 주고받은 일","비밀":"조건이 숨겨진 업적"};
 function frameOf(days){return days>=100?4:days>=60?3:days>=30?2:days>=7?1:0}
 /* 배지 v2 — 희귀도마다 다른 테두리 모양, 금속 테와 에나멜, 양각 광택 */
 const EMBOSS=(id,k=.5)=>`<filter id="${id}" x="-15%" y="-15%" width="130%" height="130%"><feGaussianBlur in="SourceAlpha" stdDeviation="1.1" result="bl"/><feSpecularLighting in="bl" surfaceScale="3" specularConstant=".75" specularExponent="16" lighting-color="#FFFFFF" result="sp"><feDistantLight azimuth="225" elevation="52"/></feSpecularLighting><feComposite in="sp" in2="SourceAlpha" operator="in" result="sp2"/><feComposite in="SourceGraphic" in2="sp2" operator="arithmetic" k1="0" k2="1" k3="${k}" k4="0"/></filter>`;
