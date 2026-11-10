@@ -68,7 +68,9 @@ function sampleState(p,now){now=now||Date.now();const R=rng("sample|"+p.id);cons
  const gem={stone:p.stone,lightName:p.ln,light:p.light,form:p.form,texture:p.tex,symbol:p.sym,hardness:real?5:clamp(1+lv(active,[3,7,21,60]),1,5),grain:real?2:Math.min(4,Math.floor(day/5)),facets:clamp(8+stg-1,6,14),fp,polish:stg,marks,...(AGE_RINGS[p.age]?{rings:AGE_RINGS[p.age]}:{})};
  if(idm){gem.idm=idm;gem.facets=clamp(gem.facets+idm.facets,6,14)}
  const todayAct=real?"":p.acts[(day+off+30)%p.acts.length];const z=p.birth?(()=>{const [m,d]=p.birth.split("-").map(Number);return zodiacOf(m,d)})():null;
- const card={v:1,sample:true,gem,gemName:`${p.ln} ${p.stone}`,stage:stg,sentence:p.s,keywords:p.kw,axes:[],showHex:false,badges:[],title:"",frame:"",shelf:0,
+ const axes=(()=>{const A=rng("axes|"+p.id);const pool=["꾸준함","호기심","표현력","공감","몰입","실행력","관찰력","기록력","나눔","도전"].filter(n=>!p.kw.includes(n));const extra=[];while(!real&&extra.length<3&&pool.length){extra.push(pool.splice(Math.floor(A()*pool.length),1)[0])}
+  const grow=real?0:Math.min(.08,active*.004);return [...p.kw.slice(0,real?6:3).map(n=>({name:n,level:real?.9:+Math.min(.96,.7+A()*.2+grow).toFixed(2)})),...extra.map(n=>({name:n,level:real?.9:+Math.min(.9,.42+A()*.3+grow).toFixed(2)}))]})();
+ const card={v:1,sample:true,gem,gemName:`${p.ln} ${p.stone}`,stage:stg,sentence:p.s,keywords:p.kw,axes,showHex:true,badges:[],title:"",frame:"",shelf:0,
   items:(p.items||[]).map(([name,category,since])=>({name,category,since,story:"",verify:""})),tags:p.tags||[],zodiac:z?z.k:null,crests:ent.map(publicCrest),motto:real?"공개 자료로 만든 헌정 샘플 · 본인이 참여하지 않았어요":idLine(st)};
  return {p,day,active,stage:stg,friends,cheers,todayAct,card,logs:Math.floor(active*1.4)}}
 
