@@ -393,6 +393,19 @@ const BADGES=[
  {id:"bond1",g:"함께",rar:"common",name:"이름 붙인 사이",glyph:"하트",desc:"친구와 합의해 우리 사이에 이름을 붙였어요.",cond:"친구 1명과 관계 이름 확정하기",title:"이름 붙인 사이가 있는",test:s=>(s.bonds||0)>=1,prog:s=>BP(s.bonds,1)},
  {id:"bond3",g:"함께",rar:"rare",name:"여러 빛깔의 인연",glyph:"나비",desc:"서로 다른 세 가지 관계 이름을 가졌어요.",cond:"서로 다른 관계 이름 3가지 확정하기",title:"여러 빛깔의 인연을 가진",test:s=>(s.bondKinds||0)>=3,prog:s=>BP(s.bondKinds,3)},
  {id:"bond5",g:"함께",rar:"epic",name:"인연의 매듭",glyph:"무한",desc:"다섯 사람과 관계 이름을 맺었어요.",cond:"친구 5명과 관계 이름 확정하기",title:"인연의 매듭을 지은",test:s=>(s.bonds||0)>=5,prog:s=>BP(s.bonds,5)},
+ {id:"hq1",g:"속마음",rar:"common",name:"첫 대답",glyph:"말풍선",desc:"하루 한 질문에 처음 답했어요.",cond:"하루 한 질문 1번 답하기",title:"마음을 연",test:s=>(s.hq||0)>=1,prog:s=>BP(s.hq,1)},
+ {id:"hq7",g:"속마음",rar:"rare",name:"일곱 날의 대답",glyph:"책",desc:"일곱 날 동안 나에게 답했어요.",cond:"서로 다른 7일에 답하기",title:"나에게 묻는",test:s=>(s.hqDays||0)>=7,prog:s=>BP(s.hqDays,7)},
+ {id:"hq30",g:"속마음",rar:"epic",name:"서른 날의 대답",glyph:"산",desc:"서른 날의 대답이 쌓였어요.",cond:"서로 다른 30일에 답하기",title:"나를 아는",test:s=>(s.hqDays||0)>=30,prog:s=>BP(s.hqDays,30)},
+ {id:"hq_streak5",g:"속마음",rar:"rare",name:"닷새의 문답",glyph:"고리",desc:"닷새를 내리 답했어요.",cond:"5일 연속으로 답하기",title:"닷새를 이은",test:s=>(s.hqStreak||0)>=5,prog:s=>BP(s.hqStreak,5)},
+ {id:"hq_impress",g:"속마음",rar:"common",name:"감명을 모으는",glyph:"별",desc:"마음을 움직인 작품 세 가지를 남겼어요.",cond:"'감명' 갈래 질문 3개 답하기",title:"감명을 모으는",test:s=>((s.hqBy||{}).impress||0)>=3,prog:s=>BP((s.hqBy||{}).impress,3)},
+ {id:"hq_treasure",g:"속마음",rar:"common",name:"소중함을 아는",glyph:"열쇠",desc:"소중한 것 세 가지를 꺼내 놓았어요.",cond:"'소중' 갈래 질문 3개 답하기",title:"소중함을 아는",test:s=>((s.hqBy||{}).treasure||0)>=3,prog:s=>BP((s.hqBy||{}).treasure,3)},
+ {id:"hq_joy",g:"속마음",rar:"common",name:"행복을 기억하는",glyph:"새싹",desc:"행복했던 순간 세 가지를 떠올렸어요.",cond:"'행복' 갈래 질문 3개 답하기",title:"행복을 기억하는",test:s=>((s.hqBy||{}).joy||0)>=3,prog:s=>BP((s.hqBy||{}).joy,3)},
+ {id:"hq_taste",g:"속마음",rar:"rare",name:"취향이 또렷한",glyph:"꽃",desc:"좋아하는 것 다섯 가지가 또렷해졌어요.",cond:"'취향' 갈래 질문 5개 답하기",title:"취향이 또렷한",test:s=>((s.hqBy||{}).taste||0)>=5,prog:s=>BP((s.hqBy||{}).taste,5)},
+ {id:"hq_wish",g:"속마음",rar:"common",name:"바라는 것이 있는",glyph:"비행기",desc:"바라는 것 세 가지를 적었어요.",cond:"'바람' 갈래 질문 3개 답하기",title:"바라는 것이 있는",test:s=>((s.hqBy||{}).wish||0)>=3,prog:s=>BP((s.hqBy||{}).wish,3)},
+ {id:"hq_memory",g:"속마음",rar:"common",name:"기억을 꺼내는",glyph:"카메라",desc:"오래된 기억 세 가지를 꺼냈어요.",cond:"'기억' 갈래 질문 3개 답하기",title:"기억을 꺼내는",test:s=>((s.hqBy||{}).memory||0)>=3,prog:s=>BP((s.hqBy||{}).memory,3)},
+ {id:"hq_feel",g:"속마음",rar:"common",name:"마음을 들여다보는",glyph:"하트",desc:"요즘의 마음 세 가지를 들여다봤어요.",cond:"'마음' 갈래 질문 3개 답하기",title:"마음을 들여다보는",test:s=>((s.hqBy||{}).feel||0)>=3,prog:s=>BP((s.hqBy||{}).feel,3)},
+ {id:"hq_all",g:"속마음",rar:"epic",name:"일곱 빛깔 마음",glyph:"별",desc:"일곱 갈래 모두에 대답을 남겼어요.",cond:"일곱 갈래 모두 한 번 이상 답하기",title:"일곱 빛깔의",test:s=>(s.hqCats||0)>=7,prog:s=>BP(s.hqCats,7)},
+ {id:"hq_why",g:"속마음",rar:"rare",name:"이유를 아는",glyph:"펜",desc:"대답 다섯 개에 '왜'를 덧붙였어요.",cond:"대답에 이유 5번 적기",title:"이유를 아는",test:s=>(s.hqWhy||0)>=5,prog:s=>BP(s.hqWhy,5)},
  {id:"link1",g:"물길",rar:"common",name:"첫 물길",glyph:"고리",desc:"다른 곳에 쌓아 온 기록을 처음 이어 왔어요.",cond:"'새 기록 더하기'에서 계정·화면·흔적 가운데 하나를 잇고 다시 읽기",title:"물길을 튼",test:s=>(s.links||0)>=1,prog:s=>BP(s.links,1)},
  {id:"link3",g:"물길",rar:"rare",name:"세 갈래 물길",glyph:"별",desc:"세 곳의 기록이 하나의 젬으로 모였어요.",cond:"계정·화면·흔적 3갈래 잇기",title:"세 물길이 모이는",test:s=>(s.links||0)>=3,prog:s=>BP(s.links,3)},
  {id:"link5",g:"물길",rar:"epic",name:"다섯 물길의 합류",glyph:"산",desc:"다섯 곳의 기록이 모여 젬이 깊어졌어요.",cond:"계정·화면·흔적 5갈래 잇기",title:"물길을 모으는",test:s=>(s.links||0)>=5,prog:s=>BP(s.links,5)},
@@ -412,8 +425,8 @@ const BADGES=[
  {id:"dawn",g:"비밀",rar:"epic",secret:true,hint:"해가 뜨기 전, 하루를 먼저 연 사람에게",name:"새벽빛",glyph:"새싹",desc:"새벽 5~7시에 오늘의 한 줄을 남겼어요.",cond:"새벽 5~7시에 오늘의 한 줄 남기기",title:"새벽빛의",frame:"dawn",test:s=>!!s.dawn,prog:s=>BB(s.dawn)},
  {id:"allweek",g:"비밀",rar:"legend",secret:true,hint:"일곱 날, 하루도 빠짐없이",name:"일곱 빛깔",glyph:"별",desc:"일곱 날 모두 한 걸음이나 한 줄을 남겼어요.",cond:"활동한 날 7일 채우기",title:"일곱 날을 채운",frame:"seven",test:s=>s.active>=7,prog:s=>BP(s.active,7)}
 ];
-GROUPS["비밀"]="#5B4A7A";GROUPS["물길"]="#3E7F8F";GROUPS["발자취"]="#4F6F8F";GROUPS["연륜"]="#8C6A3A";GROUPS["휘장"]="#7A1F2B";
-const GROUP_DESC={"물길":"다른 곳에 쌓아 온 기록을 젬으로 이어 온 길","휘장":"내가 걸어온 길 — 뿌리·터전·배움·소속·영예·조명","연륜":"살아온 시간이 젬에 새긴 나이테","발자취":"머무른 곳이 남긴 길","지속":"꾸준히 이어 간 시간","도약":"나를 새로 발견한 순간","회복":"쉬고, 다듬고, 돌아온 일","함께":"사람들과 결을 주고받은 일","비밀":"조건이 숨겨진 업적"};
+GROUPS["비밀"]="#5B4A7A";GROUPS["물길"]="#3E7F8F";GROUPS["속마음"]="#A0567A";GROUPS["발자취"]="#4F6F8F";GROUPS["연륜"]="#8C6A3A";GROUPS["휘장"]="#7A1F2B";
+const GROUP_DESC={"속마음":"하루 한 질문에 남긴 감정·경험·기억·취향","물길":"다른 곳에 쌓아 온 기록을 젬으로 이어 온 길","휘장":"내가 걸어온 길 — 뿌리·터전·배움·소속·영예·조명","연륜":"살아온 시간이 젬에 새긴 나이테","발자취":"머무른 곳이 남긴 길","지속":"꾸준히 이어 간 시간","도약":"나를 새로 발견한 순간","회복":"쉬고, 다듬고, 돌아온 일","함께":"사람들과 결을 주고받은 일","비밀":"조건이 숨겨진 업적"};
 function frameOf(days){return days>=100?4:days>=60?3:days>=30?2:days>=7?1:0}
 /* 배지 v2 — 희귀도마다 다른 테두리 모양, 금속 테와 에나멜, 양각 광택 */
 const EMBOSS=(id,k=.5)=>`<filter id="${id}" x="-15%" y="-15%" width="130%" height="130%"><feGaussianBlur in="SourceAlpha" stdDeviation="1.1" result="bl"/><feSpecularLighting in="bl" surfaceScale="3" specularConstant=".75" specularExponent="16" lighting-color="#FFFFFF" result="sp"><feDistantLight azimuth="225" elevation="52"/></feSpecularLighting><feComposite in="sp" in2="SourceAlpha" operator="in" result="sp2"/><feComposite in="SourceGraphic" in2="sp2" operator="arithmetic" k1="0" k2="1" k3="${k}" k4="0"/></filter>`;
@@ -474,7 +487,7 @@ function displaySentence(a){return (a&&(a.editSentence||a.sentence))||""}
 function displayKeywords(a){return (a&&(a.editKeywords||a.keywords))||[]}
 function visibleAxes(a){if(!a)return [];return a.axes.map((x,i)=>({...x,i})).filter(x=>!(a.hiddenAxes||[]).includes(x.i))}
 const HARD_STEPS=[3,7,21,60];
-function activeDays(st){return new Set([...(st.steps.done||[]),...(st.logs||[]).map(l=>l.day),...(st.stays||[]).map(x=>x.day)]).size}
+function activeDays(st){return new Set([...((st.heart&&st.heart.a)||[]).filter(x=>x&&x.a).map(x=>x.day),...(st.steps.done||[]),...(st.logs||[]).map(l=>l.day),...(st.stays||[]).map(x=>x.day)]).size}
 function livingGem(st){
  const a=st.analysis;if(!a)return null;const g={...a.gem,...(st.gemOverride||{})};
  const days=activeDays(st);
@@ -484,6 +497,7 @@ function livingGem(st){
  g.fp=a.gem.fp||fingerprint(a);
  const mk=st.flags&&st.flags.marks;if(mk)g.marks={...mk};
  g.polish=clamp((st.flags&&st.flags.maxStage)||1,1,5);
+ if(typeof hqStats==="function"&&hqStats(st).hqCats>=5)g.facets=clamp(g.facets+1,6,14);
  if(typeof idMarks==="function"){const m=idMarks(st);if(m){g.idm=m;g.facets=clamp(g.facets+m.facets,6,14)}}
  if(typeof ringsOf==="function"){const r=ringsOf(st);if(r)g.rings=r;else delete g.rings}
  return g;
@@ -499,7 +513,7 @@ function daysWith(st){const t=(st.first&&st.first.at)||(st.analysis&&st.analysis
 function markValues(st,s){return {setting:daysWith(st),sat:s.connections||0,aura:(s.reactionsReceived||0)+(s.wordsReceived||0),stars:s.visitors||0}}
 function marksOf(st,s){const v=markValues(st,s),prev=(st.flags&&st.flags.marks)||{};const o={};MARKS.forEach(m=>{o[m.k]=Math.max(prev[m.k]||0,m.steps.filter(x=>v[m.k]>=x).length)});return o}
 function markNext(m,lv,val){const t=m.steps[lv];return t==null?null:{target:t,left:Math.max(0,t-val),pct:clamp(Math.round((val-(m.steps[lv-1]||0))/(t-(m.steps[lv-1]||0))*100),0,100)}}
-function statsOf(st,items,soc){soc=soc||{};return {...(typeof linkStats==="function"?linkStats(st):{}),days:st.steps.done.length,active:activeDays(st),logs:(st.logs||[]).length,rests:st.steps.rests.length,comebacks:st.steps.comebacks||0,confirmed:!!(st.analysis&&(st.analysis.status==="yes"||st.analysis.status==="edited")),analyses:st.analyses||0,items:items.length,edited:!!st.flags.edited,isPublic:!!st.visibility.public,wordsGiven:soc.wordsGiven||0,wordsReceived:soc.wordsReceived||0,connections:soc.friends||0,reactionsGiven:soc.reactionsGiven||0,reactionsReceived:soc.reactionsReceived||0,exitDone:!!soc.exitDone,bonds:soc.bonds||0,bondKinds:soc.bondKinds||0,knows:(st.know||[]).length,...(typeof idStats==="function"?(()=>{const I=idStats(st);return {idRoot:I.n.root,idHome:I.n.home,idHomeDays:I.homeDays,idSchool:I.n.school,idOrg:I.n.org,idHonor:I.n.honor,idMedia:I.n.media,idCats:I.cats,idShown:I.shown}})():{}),rings:(typeof ringsOf==="function"?ringsOf(st):0),...(typeof stayStats==='function'?(()=>{const z=stayStats(st);return {stays:z.stays,placesN:z.places,regular:z.regular,placeCats:z.cats,newPlaces:z.newPlaces}})():{}),returns:(st.flags&&st.flags.returns)||0,dawn:(st.logs||[]).some(l=>{if(!l.at)return false;const h=new Date(l.at).getHours();return h>=5&&h<7})}}
+function statsOf(st,items,soc){soc=soc||{};return {...(typeof linkStats==="function"?linkStats(st):{}),...(typeof hqStats==="function"?hqStats(st):{}),days:st.steps.done.length,active:activeDays(st),logs:(st.logs||[]).length,rests:st.steps.rests.length,comebacks:st.steps.comebacks||0,confirmed:!!(st.analysis&&(st.analysis.status==="yes"||st.analysis.status==="edited")),analyses:st.analyses||0,items:items.length,edited:!!st.flags.edited,isPublic:!!st.visibility.public,wordsGiven:soc.wordsGiven||0,wordsReceived:soc.wordsReceived||0,connections:soc.friends||0,reactionsGiven:soc.reactionsGiven||0,reactionsReceived:soc.reactionsReceived||0,exitDone:!!soc.exitDone,bonds:soc.bonds||0,bondKinds:soc.bondKinds||0,knows:(st.know||[]).length,...(typeof idStats==="function"?(()=>{const I=idStats(st);return {idRoot:I.n.root,idHome:I.n.home,idHomeDays:I.homeDays,idSchool:I.n.school,idOrg:I.n.org,idHonor:I.n.honor,idMedia:I.n.media,idCats:I.cats,idShown:I.shown}})():{}),rings:(typeof ringsOf==="function"?ringsOf(st):0),...(typeof stayStats==='function'?(()=>{const z=stayStats(st);return {stays:z.stays,placesN:z.places,regular:z.regular,placeCats:z.cats,newPlaces:z.newPlaces}})():{}),returns:(st.flags&&st.flags.returns)||0,dawn:(st.logs||[]).some(l=>{if(!l.at)return false;const h=new Date(l.at).getHours();return h>=5&&h<7})}}
 const STAGES=["","원석","초벌","연마","광택","명품"];
 /* stages rise strictly in order (CBT thresholds; the full service would use 7·30·60 days) */
 const STAGE_RULES=[null,
@@ -539,6 +553,7 @@ function buildPrompt({sources,answers,photoCount,items,feedback,prev,logs,stepsD
  const qa=QUESTIONS.map((q,i)=>(answers[i]||"").trim()?`Q. ${q}\nA. ${answers[i].trim()}`:"").filter(Boolean).join("\n");
  if(qa)P.push(`[성찰 질문 답변]\n${qa}`);
  {const ql=quickLines(quick);if(ql)P.push(ql);const kl=knowLines(know);if(kl)P.push(kl)}
+ if(typeof __promptHeart!=="undefined"&&__promptHeart)P.push(__promptHeart);
  if(logs&&logs.length)P.push(`[MIB에 남긴 오늘의 한 줄 — 최근 기록]\n`+logs.slice(-14).map(l=>`- ${l.day} ${l.text}`).join("\n"));
  {const ID=(typeof __promptIdentity!=="undefined"&&__promptIdentity)||null;if(ID&&ID.length){P.push(`[나의 휘장 — 본인이 직접 남긴 이력]\n${ID.join("\n")}\n→ 출신·배움·소속·영예·출연은 본인이 밝힌 사실이다. 이 사람이 걸어온 맥락(뿌리, 배움의 결, 함께하는 공동체, 인정받은 순간)을 읽는 근거로만 쓰고, 학벌·직함·지역·유명세로 사람을 서열화하거나 단정하지 않는다. 문장에 학교·회사 이름을 그대로 옮겨 적지 않는다.`)}}
  {const sts=(typeof __promptStays!=="undefined"&&__promptStays)||[];if(sts.length){const cats={},names={};sts.forEach(x=>{cats[x.place.cat]=(cats[x.place.cat]||0)+1;names[x.place.name]=(names[x.place.name]||0)+1});P.push(`[머무른 곳 — 본인이 고른 장소, 최근 ${sts.length}번]\n갈래: ${Object.entries(cats).sort((a,b)=>b[1]-a[1]).map(([k,v])=>k+" "+v).join(", ")}\n자주 간 곳: ${Object.entries(names).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([k,v])=>k+(v>1?"("+v+")":"")).join(", ")}\n→ 생활 반경과 리듬(관심 영역 domains, 생활 밀도 pace)을 읽는 근거로만 쓰고, 집·직장 위치를 추정하거나 언급하지 않는다.`)}}
@@ -563,7 +578,7 @@ function buildPrompt({sources,answers,photoCount,items,feedback,prev,logs,stepsD
   "symbol": "${SYMBOLS.join("|")} 중 이 사람을 대표하는 장면에 가장 가까운 하나",
   "reasons": {"결":"한 줄 근거","색":"한 줄","빛":"한 줄","형":"한 줄","질":"한 줄","강":"한 줄","상":"한 줄","각":"한 줄"}
  },
- "axes": [ 정확히 6개 {"name":"이 사람에게 두드러진 결 2~5자, 꾸준함 제외 (예: 관찰력, 설명력, 손끝 정성)","level":"0.3~1.0 숫자 또는 null","evidence":["기록 속 사실 1~2개, 앞에 [유튜브] [캘린더] [이야기] [사진] [답변] [선반] [선택] [알아가기] 또는 연결한 계정의 이름([인스타그램] [네이버] 등) 중 출처 표시"],"reading":"AI 해석 한 줄"} ],
+ "axes": [ 정확히 6개 {"name":"이 사람에게 두드러진 결 2~5자, 꾸준함 제외 (예: 관찰력, 설명력, 손끝 정성)","level":"0.3~1.0 숫자 또는 null","evidence":["기록 속 사실 1~2개, 앞에 [유튜브] [캘린더] [이야기] [사진] [답변] [선반] [선택] [알아가기] [질문] 또는 연결한 계정의 이름([인스타그램] [네이버] 등) 중 출처 표시"],"reading":"AI 해석 한 줄"} ],
  "firstStep": {"title":"내일 10분 안팎으로 할 수 있는 아주 작은 행동","minutes":"5~20 정수","why":"이 걸음이 이 사람의 결과 어떻게 이어지는지 한 줄"},
  "stepIdeas": ["다른 한 걸음 후보 3개, 각각 한 문장"],
  "turningPoints": ["기록에서 보이는 전환점·멈췄다 다시 시작한 순간 요약, 0~5개 (없으면 빈 배열)"]

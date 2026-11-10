@@ -137,6 +137,13 @@ textarea{min-height:110px;resize:vertical}
 .scan-row select{flex:0 0 auto;width:auto;max-width:86px;height:auto;font:inherit;font-size:13px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);padding:5px 6px}
 .scan-row .small{display:block;white-space:normal;word-break:keep-all}
 .proof-row{display:grid;gap:8px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--card)}.proof-row.off{opacity:.5}.proof-row input[type=checkbox]{width:20px;height:20px;flex:none;accent-color:var(--accent-bg)}
+.heart .hq-q{font-size:17px;color:var(--accent);line-height:1.45;display:block}
+.hq-tag{display:inline-block;font:700 11px/1.5 var(--sans,inherit);color:#fff;background:var(--c);border-radius:999px;padding:0 8px;margin-right:7px;vertical-align:2px;letter-spacing:.02em}
+.hq-ai{display:block;font:500 11.5px/1.4 var(--sans,inherit);color:var(--ink-3);margin-top:3px}
+.hq-spec{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;align-items:end;height:44px}
+.hq-dot{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:3px}.hq-dot i{display:block;width:100%;max-width:26px;border-radius:6px 6px 3px 3px;background:var(--line);min-height:5px;transition:height .5s}.hq-dot.on i{background:var(--c)}.hq-dot small{font-size:10.5px;color:var(--ink-3);line-height:1}.hq-dot.on small{color:var(--ink-2);font-weight:700}
+.hq-bars{display:grid;gap:6px}.hq-bar{display:grid;grid-template-columns:34px 1fr 20px;gap:8px;align-items:center;font-size:12.5px}.hq-bar b{text-align:right}
+.hq-list{display:grid;gap:8px}.hq-item{display:grid;gap:4px;border:1px solid var(--line);border-radius:14px;padding:10px 12px;background:var(--card)}.hq-item b.serif{font-size:16px}
 .lk-acts{display:flex;gap:14px;align-items:center;margin-top:2px}.lk-pre{margin:4px 0 0;padding:10px;border-radius:10px;background:var(--sage-soft);font:12px/1.55 ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap;word-break:break-word;max-height:240px;overflow:auto;color:var(--ink-2)}
 .lk-panel{border-color:var(--accent-bg)}.lk-mine{display:flex;gap:8px;align-items:center;font-size:13.5px;margin-top:8px;cursor:pointer}.lk-mine input{width:18px;height:18px;accent-color:var(--accent-bg)}
 .lk-guide{font-size:13px;border:1px dashed var(--line);border-radius:12px;padding:8px 12px}.lk-guide summary{cursor:pointer;font-weight:700}.lk-guide ol{margin:8px 0 6px;padding-left:20px;display:grid;gap:4px;line-height:1.5}
@@ -918,31 +925,32 @@ button.crest{cursor:pointer;border-radius:12px}button.crest:hover{background:rgb
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/htm@3.1.1/dist/htm.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
-<script src="js/config.js?v=84"></script>
-<script src="js/core.js?v=84"></script>
-<script src="js/zodiac.js?v=84"></script>
-<script src="js/api.js?v=84"></script>
-<script src="js/support.js?v=84"></script>
-<script src="js/avatars.js?v=84"></script>
-<script src="js/links.js?v=84"></script>
-<script src="js/traces.js?v=84"></script>
-<script src="js/google.js?v=84"></script>
-<script src="js/screens.js?v=84"></script>
-<script src="js/social.js?v=84"></script>
-<script src="js/ops.js?v=84"></script>
-<script src="js/quick.js?v=84"></script>
-<script src="js/evolve.js?v=84"></script>
-<script src="js/achieve.js?v=84"></script>
-<script src="js/bonds.js?v=84"></script>
-<script src="js/gems.js?v=84"></script>
-<script src="js/showcase.js?v=84"></script>
-<script src="js/ask.js?v=84"></script>
-<script src="js/places.js?v=84"></script>
-<script src="js/updates.js?v=84"></script>
-<script src="js/insignia.js?v=84"></script>
-<script src="js/gem3d.js?v=84"></script>
-<script src="js/gemwhy.js?v=84"></script>
-<script src="js/samples.js?v=84"></script>
-<script src="js/app.js?v=84"></script>
+<script src="js/config.js?v=85"></script>
+<script src="js/core.js?v=85"></script>
+<script src="js/zodiac.js?v=85"></script>
+<script src="js/api.js?v=85"></script>
+<script src="js/support.js?v=85"></script>
+<script src="js/avatars.js?v=85"></script>
+<script src="js/links.js?v=85"></script>
+<script src="js/traces.js?v=85"></script>
+<script src="js/google.js?v=85"></script>
+<script src="js/screens.js?v=85"></script>
+<script src="js/social.js?v=85"></script>
+<script src="js/ops.js?v=85"></script>
+<script src="js/quick.js?v=85"></script>
+<script src="js/heart.js?v=85"></script>
+<script src="js/evolve.js?v=85"></script>
+<script src="js/achieve.js?v=85"></script>
+<script src="js/bonds.js?v=85"></script>
+<script src="js/gems.js?v=85"></script>
+<script src="js/showcase.js?v=85"></script>
+<script src="js/ask.js?v=85"></script>
+<script src="js/places.js?v=85"></script>
+<script src="js/updates.js?v=85"></script>
+<script src="js/insignia.js?v=85"></script>
+<script src="js/gem3d.js?v=85"></script>
+<script src="js/gemwhy.js?v=85"></script>
+<script src="js/samples.js?v=85"></script>
+<script src="js/app.js?v=85"></script>
 </body>
 </html>

@@ -132,7 +132,7 @@ function App(){
  async function runAnalysis(feedback){
   ctl.current=new AbortController();setReading({status:"waiting",chars:0,error:null});setRoute("reading");
   const prev=st.analysis;const t0=Date.now();
-  const quick=draft.quick||st.quick||null;window.__promptStays=(st.stays||[]).slice(-60);window.__promptIdentity=(()=>{const I=st.identity||{};if(I.useAI===false)return null;const E=(I.entries||[]).filter(e=>e.cat!=="home"&&!e.hidden);return ID_CATS.filter(c=>c.k!=="home"&&!c.noAI).map(c=>{const L=E.filter(e=>e.cat===c.k);return L.length?`- ${c.n}(${c.q}): ${L.map(e=>[e.name,e.type,e.extra,e.tier,e.year].filter(Boolean).join(" · ")).join(" / ")}`:null}).filter(Boolean)})();const prompt=buildPrompt({quick,know:st.know,sources:draft.sources,answers:draft.answers,photoCount:draft.photos.length,items,feedback,prev,logs:prev?st.logs:null,stepsDone:prev?(st.steps.done.length?[(st.steps.current||prev.firstStep).title]:[]):null,reflections:prev?st.reflections:null});
+  const quick=draft.quick||st.quick||null;window.__promptStays=(st.stays||[]).slice(-60);window.__promptHeart=typeof hqPromptBlock==="function"?hqPromptBlock(st):"";window.__promptIdentity=(()=>{const I=st.identity||{};if(I.useAI===false)return null;const E=(I.entries||[]).filter(e=>e.cat!=="home"&&!e.hidden);return ID_CATS.filter(c=>c.k!=="home"&&!c.noAI).map(c=>{const L=E.filter(e=>e.cat===c.k);return L.length?`- ${c.n}(${c.q}): ${L.map(e=>[e.name,e.type,e.extra,e.tier,e.year].filter(Boolean).join(" · ")).join(" / ")}`:null}).filter(Boolean)})();const prompt=buildPrompt({quick,know:st.know,sources:draft.sources,answers:draft.answers,photoCount:draft.photos.length,items,feedback,prev,logs:prev?st.logs:null,stepsDone:prev?(st.steps.done.length?[(st.steps.current||prev.firstStep).title]:[]):null,reflections:prev?st.reflections:null});
   track("analysis_start",{re:!!prev,fb:!!feedback,photos:draft.photos.length,len:prompt.length});
   try{
    const images=[];for(const f of draft.photos.slice(0,4))images.push(await imageForAI(f));
@@ -199,6 +199,7 @@ function App(){
  const mid=!demo&&html`<div className="stack">
   <${IdPrompt} st=${st} update=${update} onOpen=${openSheet} day=${day}/>
   <${AskPanel} stat=${askStat} incoming=${asksMe} names=${names} onOpen=${openSheet} friendsCount=${friendIds(uid,soc.friendships).length}/>
+  ${typeof HeartCard==="function"&&html`<${HeartCard} st=${st} update=${update} toast=${toast} demo=${demo} canAI=${canAI} onOpen=${openSheet}/>`}
   <${KnowCard} st=${st} update=${update} toast=${toast} demo=${demo} onReread=${()=>openSheet("reread")}/>
   <${Missions} day=${day} stats=${stats} onOpen=${openSheet}/>
   ${day>=4&&stats.analyses<2&&html`<div className="panel tint stack"><b>중간 다시 읽기 · Day 4</b><span className="small muted">사흘 동안 남긴 한 줄과 한 걸음을 더해 나를 다시 읽어 보세요. 육각형에 지난 모습이 점선으로 겹쳐 보입니다.</span><button className="btn sm" onClick=${()=>openSheet("reread")}>새 기록 더해 다시 읽기</button></div>`}
@@ -238,6 +239,7 @@ function App(){
   else if(sheet==="updates")sheetEl=html`<${UpdatesSheet} st=${st} update=${update} onClose=${close} onOpen=${k=>setSheet(k)}/>`;
   else if(sheet==="gemwhy"&&st&&st.analysis)sheetEl=html`<${GemWhySheet} g=${livingGem(st)} seed=${st.createdAt} own=${true} onClose=${close}/>`;
   else if(sheet==="gem3d"&&st&&st.analysis)sheetEl=html`<${Gem3DView} g=${livingGem(st)} seed=${st.createdAt} name=${profile.nickname} onClose=${close}/>`;
+  else if(sheet==="heart"&&typeof HeartSheet==="function")sheetEl=html`<${HeartSheet} st=${st} update=${update} items=${items} demo=${demo} toast=${toast} onAddItems=${addItems} onReread=${()=>openSheet("reread")} onClose=${close}/>`;
   else if(sheet==="identityproof"&&typeof ProofScan==="function")sheetEl=html`<${ProofScan} st=${st} update=${update} onAddItems=${addItems} canAI=${canAI} demo=${demo} toast=${toast} onClose=${()=>setSheet("identity")}/>`;
   else if(sheet==="identity"||sheet.startsWith("identity:"))sheetEl=html`<${IdentitySheet} key=${sheet} st=${st} update=${update} onClose=${close} toast=${toast} demo=${demo} focus=${sheet.split(":")[1]||null} onProof=${()=>setSheet("identityproof")}/>`;
   else if(sheet==="stay")sheetEl=html`<${StaySheet} st=${st} update=${update} onClose=${close} toast=${toast} demo=${demo} onOpen=${k=>setSheet(k)}/>`;

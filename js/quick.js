@@ -65,7 +65,7 @@ function anchorGemInputs(g,quick,know){
 }
 function quickTint(quick){const c=quick&&quick.answers&&quick.answers.color;const f=QUICK_COLORS.find(x=>x[0]===c);return f?f[1]:null}
 function clarityOf(st){
- let v=0;if(st.quick&&st.quick.done)v+=30;const s=st.sources||{};if((s.story||"").trim())v+=12;if((s.youtube||"").trim())v+=15;if((s.calendar||"").trim())v+=10;if(s.photos)v+=8;v+=Math.min(20,(Array.isArray(s.links)?s.links.length:0)*5);
+ let v=0;if(st.quick&&st.quick.done)v+=30;const s=st.sources||{};if((s.story||"").trim())v+=12;if((s.youtube||"").trim())v+=15;if((s.calendar||"").trim())v+=10;if(s.photos)v+=8;v+=Math.min(20,(Array.isArray(s.links)?s.links.length:0)*5);v+=Math.min(16,((st.heart&&st.heart.a)||[]).filter(x=>x&&x.a).length*2);
  v+=Math.min(30,(st.know||[]).filter(k=>k.a).length*5);v+=Math.min(10,(st.logs||[]).length*2);if((st.analyses||0)>1)v+=5;return clamp(v,st.analysis?10:0,100);
 }
 
