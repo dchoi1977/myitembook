@@ -148,7 +148,7 @@ function LifeCard({st,items,stats,onOpen,me}){
    <${GemView} g=${g} seed=${st.createdAt} size=${210}/>
    <div className="gemname">${gemName(g)}</div>
    ${(()=>{const I=gemIdentity(g,st.createdAt);return html`<div className="gemfeat"><span className="gf-id">${I.rareVariant?"✦ ":""}${I.variant} · ${I.cut}${I.pattern?" · "+I.pattern:""}</span>${I.feats.map(k=>html`<span key=${k} title=${INCLUSIONS[k].desc}>✧ ${INCLUSIONS[k].name}</span>`)}${(I.aw||[]).map(x=>html`<span key=${x.k} className=${"aw t"+x.t} title=${AW_TIERS[x.t][0]+" 발현 · 연마 "+x.at+"단계"}>✺ ${x.n}</span>`)}</div>`})()}
-   <span className="lc-cap">기록이 쌓일수록 달라지는 나의 결</span>
+   <button className="linkbtn small" onClick=${()=>onOpen("gemwhy")}>왜 이런 모양일까 ›</button>
   </div><div className="lc-story"><span className="eyebrow">THE STORY OF</span>
    <div className="lc-who">${me&&html`<${Avatar} p=${me} size=${46}/>`}<b className="serif">${(me&&me.nickname)||"나"}</b><span>의 결</span></div>
    <p className="sentence">${displaySentence(a)}</p>
@@ -161,6 +161,7 @@ function LifeCard({st,items,stats,onOpen,me}){
    <${GemView} g=${g} seed=${st.createdAt} size=${210}/>
    <div className="gemname">${gemName(g)}</div>
    ${(()=>{const I=gemIdentity(g,st.createdAt);return html`<div className="gemfeat"><span className="gf-id">${I.rareVariant?"✦ ":""}${I.variant} · ${I.cut}${I.pattern?" · "+I.pattern:""}</span>${I.feats.map(k=>html`<span key=${k} title=${INCLUSIONS[k].desc}>✧ ${INCLUSIONS[k].name}</span>`)}${(I.aw||[]).map(x=>html`<span key=${x.k} className=${"aw t"+x.t} title=${AW_TIERS[x.t][0]+" 발현 · 연마 "+x.at+"단계"}>✺ ${x.n}</span>`)}</div>`})()}
+   <button className="linkbtn small" onClick=${()=>onOpen("gemwhy")}>왜 이런 모양일까 ›</button>
    <p className="sentence">${displaySentence(a)}</p>
    <div className="kw">${displayKeywords(a).map(k=>html`<span className="chip" key=${k}>${k}</span>`)}${st.visibility.fields.tags&&cardTags(st).map(t=>html`<span className="chip plain tagchip" key=${"t"+t}>${t}</span>`)}</div>
    <${AiLabel} status=${a.status}/>

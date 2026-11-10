@@ -573,6 +573,21 @@ label.btn{display:inline-flex;align-items:center;justify-content:center;cursor:p
 .lc-story .crest-shelf{align-items:flex-start}.lc-story .crest-row{justify-content:flex-start}.lc-story .motto{text-align:left}
 .av-link{cursor:pointer}.av-link:hover{filter:brightness(1.04)}.av-link:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .uname{background:none;border:0;padding:0;font:inherit;font-weight:700;color:inherit;cursor:pointer;text-decoration:underline;text-decoration-color:rgba(23,61,59,.3);text-underline-offset:3px}.uname.plain{font-weight:inherit}
+/* why this gem */
+.why{display:flex;flex-direction:column;gap:12px}
+.why-h{font-size:18px;color:var(--accent);margin:6px 0 0}
+.why-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.why-card{display:flex;flex-direction:column;gap:5px;padding:14px;border-radius:14px;border:1px solid var(--line);background:var(--card)}
+.why-k{font-size:11.5px;color:var(--ink-3,#66706E);letter-spacing:.04em}
+.why-card b{font-size:18px;color:var(--accent)}
+.why-card p{margin:0;font-size:13px;line-height:1.6;color:var(--ink-2)}
+.why-ev{padding-top:6px;border-top:1px dashed var(--line);color:#7A5E1E!important}
+.why-list{display:flex;flex-direction:column}
+.why-row{display:grid;grid-template-columns:minmax(110px,34%) 1fr;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px;line-height:1.55}
+.why-row b{color:var(--accent)}.why-row span{color:var(--ink-2)}
+.why-top{display:flex;align-items:center;gap:14px}.why-name{font-size:24px;color:var(--accent)}
+.why-fold summary{cursor:pointer;font-size:13.5px;font-weight:700;color:var(--accent);padding:6px 0}
+.sg-why{position:relative;z-index:95}
 /* bonds */
 .bond-ic{display:inline-block;vertical-align:middle;flex:none;filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.2))}.bond-ic svg{width:100%;height:100%;display:block}
 .bond-chip{display:inline-flex;align-items:center;gap:4px;padding:1px 8px 1px 2px;border-radius:999px;background:#FFF6E5;border:1px solid #F0DDB8;color:#7A5A1E;font-size:12px;font-weight:700;vertical-align:middle;white-space:nowrap}
@@ -878,27 +893,28 @@ button.crest{cursor:pointer;border-radius:12px}button.crest:hover{background:rgb
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/htm@3.1.1/dist/htm.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
-<script src="js/config.js?v=61"></script>
-<script src="js/core.js?v=61"></script>
-<script src="js/zodiac.js?v=61"></script>
-<script src="js/api.js?v=61"></script>
-<script src="js/support.js?v=61"></script>
-<script src="js/avatars.js?v=61"></script>
-<script src="js/screens.js?v=61"></script>
-<script src="js/social.js?v=61"></script>
-<script src="js/ops.js?v=61"></script>
-<script src="js/quick.js?v=61"></script>
-<script src="js/evolve.js?v=61"></script>
-<script src="js/achieve.js?v=61"></script>
-<script src="js/bonds.js?v=61"></script>
-<script src="js/gems.js?v=61"></script>
-<script src="js/showcase.js?v=61"></script>
-<script src="js/ask.js?v=61"></script>
-<script src="js/places.js?v=61"></script>
-<script src="js/updates.js?v=61"></script>
-<script src="js/insignia.js?v=61"></script>
-<script src="js/gem3d.js?v=61"></script>
-<script src="js/samples.js?v=61"></script>
-<script src="js/app.js?v=61"></script>
+<script src="js/config.js?v=63"></script>
+<script src="js/core.js?v=63"></script>
+<script src="js/zodiac.js?v=63"></script>
+<script src="js/api.js?v=63"></script>
+<script src="js/support.js?v=63"></script>
+<script src="js/avatars.js?v=63"></script>
+<script src="js/screens.js?v=63"></script>
+<script src="js/social.js?v=63"></script>
+<script src="js/ops.js?v=63"></script>
+<script src="js/quick.js?v=63"></script>
+<script src="js/evolve.js?v=63"></script>
+<script src="js/achieve.js?v=63"></script>
+<script src="js/bonds.js?v=63"></script>
+<script src="js/gems.js?v=63"></script>
+<script src="js/showcase.js?v=63"></script>
+<script src="js/ask.js?v=63"></script>
+<script src="js/places.js?v=63"></script>
+<script src="js/updates.js?v=63"></script>
+<script src="js/insignia.js?v=63"></script>
+<script src="js/gem3d.js?v=63"></script>
+<script src="js/gemwhy.js?v=63"></script>
+<script src="js/samples.js?v=63"></script>
+<script src="js/app.js?v=63"></script>
 </body>
 </html>

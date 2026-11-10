@@ -73,7 +73,7 @@ function sampleState(p,now){now=now||Date.now();const R=rng("sample|"+p.id);cons
  return {p,day,active,stage:stg,friends,cheers,todayAct,card,logs:Math.floor(active*1.4)}}
 
 function SampleGallery({onClose,toast}){
- const [age,setAge]=useState("전체");const [open,setOpen]=useState(null);const [g3,setG3]=useState(null);const now=Date.now();
+ const [age,setAge]=useState("전체");const [open,setOpen]=useState(null);const [g3,setG3]=useState(null);const [why,setWhy]=useState(null);const now=Date.now();
  const list=useMemo(()=>SAMPLE_PEOPLE.map(p=>sampleState(p,now)),[]);
  const shown=list.filter(x=>age==="전체"||x.p.age===age||(age==="50대+"&&["50대","60대"].includes(x.p.age)));
  useEffect(()=>{track("samples_open");const k=e=>{if(e.key==="Escape"&&!open&&!g3)onClose()};window.addEventListener("keydown",k);return()=>window.removeEventListener("keydown",k)},[open,g3]);
@@ -89,11 +89,12 @@ function SampleGallery({onClose,toast}){
     <div className="sg-gn">${x.card.gemName}<span className="small faint"> · 연마 ${x.stage}단계</span></div>
     <p className="sg-s serif">${x.p.s}</p>
     <div className="kw sg-kw">${x.p.kw.map(k=>html`<span key=${k} className="chip">${k}</span>`)}</div>
-    <div className="sg-foot"><span className="small faint">${x.p.real?html`공개 자료 기반 · 본인 참여 아님<br/><span className="sg-credit">사진: ${x.p.credit}</span>`:"오늘 · "+x.todayAct}</span><span className="row" style=${{gap:"8px"}}><button className="g3-btn" onClick=${()=>setG3(x)}>◇ 3D</button><button className="linkbtn small" onClick=${()=>setOpen(x)}>카드 보기 ›</button></span></div>
+    <div className="sg-foot"><span className="small faint">${x.p.real?html`공개 자료 기반 · 본인 참여 아님<br/><span className="sg-credit">사진: ${x.p.credit}</span>`:"오늘 · "+x.todayAct}</span><span className="row" style=${{gap:"8px"}}><button className="g3-btn" onClick=${()=>setWhy(x)}>왜?</button><button className="g3-btn" onClick=${()=>setG3(x)}>◇ 3D</button><button className="linkbtn small" onClick=${()=>setOpen(x)}>카드 보기 ›</button></span></div>
    </article>`)}</div>
    <p className="note" style=${{textAlign:"center"}}>가상 인물과 그 이야기는 지어낸 것이에요. 헌정 샘플은 공개 자료의 사실만 담았고, 해당 인물과 제휴·후원 관계가 없으며 CBT 기간에만 보여요.</p>
   </div>
   ${open&&html`<${CardShowcase} key=${open.p.id} faces=${otherCardFaces({data:open.card},open.p.name,null)} toast=${toast||(()=>{})} onClose=${()=>setOpen(null)}/>`}
+  ${why&&html`<div className="sg-why"><${GemWhySheet} g=${why.card.gem} seed=${why.card.gemName} name=${why.p.name} onClose=${()=>setWhy(null)}/></div>`}
   ${g3&&html`<${Gem3DView} g=${g3.card.gem} seed=${g3.card.gemName} name=${g3.p.name} onClose=${()=>setG3(null)}/>`}
  </div>`}
 

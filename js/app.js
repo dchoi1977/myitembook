@@ -233,6 +233,7 @@ function App(){
   else if(sheet==="asks")sheetEl=html`<${AnswersSheet} stat=${askStat} names=${names} onClose=${close} openUser=${openUser}/>`;
   else if(sheet==="answer"||sheet.startsWith("answer:"))sheetEl=html`<${AnswerSheet} incoming=${asksMe} names=${names} focus=${+sheet.split(":")[1]||null} toast=${toast} onClose=${close} onDone=${reloadSoc}/>`;
   else if(sheet==="updates")sheetEl=html`<${UpdatesSheet} st=${st} update=${update} onClose=${close} onOpen=${k=>setSheet(k)}/>`;
+  else if(sheet==="gemwhy"&&st&&st.analysis)sheetEl=html`<${GemWhySheet} g=${livingGem(st)} seed=${st.createdAt} own=${true} onClose=${close}/>`;
   else if(sheet==="gem3d"&&st&&st.analysis)sheetEl=html`<${Gem3DView} g=${livingGem(st)} seed=${st.createdAt} name=${profile.nickname} onClose=${close}/>`;
   else if(sheet==="identity"||sheet.startsWith("identity:"))sheetEl=html`<${IdentitySheet} key=${sheet} st=${st} update=${update} onClose=${close} toast=${toast} demo=${demo} focus=${sheet.split(":")[1]||null}/>`;
   else if(sheet==="stay")sheetEl=html`<${StaySheet} st=${st} update=${update} onClose=${close} toast=${toast} demo=${demo} onOpen=${k=>setSheet(k)}/>`;
