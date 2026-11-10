@@ -1,5 +1,6 @@
 "use strict";
 /* MIB CBT · profile avatars — default "원석" + 16 original characters (each wears a tiny gem) */
+const PEOPLE_AV=[...Array(24)].map((_,i)=>"p"+String(i+1).padStart(2,"0"));
 const AVATARS=[
  {id:"01",name:"고양이",bg:"#F6E3CF",c:"#E8A15A",c2:"#F7D9B5",ear:"cat",face:"cat",stripe:true,gem:"#B07AD6"},
  {id:"02",name:"강아지",bg:"#E9E1D4",c:"#B98552",c2:"#F1E2CC",ear:"flop",face:"muzzle",gem:"#5B976F"},
@@ -77,6 +78,7 @@ function avatarDefaultSVG(seed){
 function Avatar({p,url,size=40,ring}){
  const av=p&&p.avatar;if(url===undefined&&av==="photo")url=AVCACHE[avKey(p)];let inner;
  if(av==="photo"&&url)inner=html`<img src=${url} alt="" style=${{width:"100%",height:"100%",objectFit:"cover",display:"block"}}/>`;
+ else if(av&&/^char:p\d{2}$/.test(av))inner=html`<img src=${"img/avatars/"+av.slice(5)+".svg"} alt="" style=${{width:"100%",height:"100%",objectFit:"cover",display:"block"}}/>`;
  else if(av&&av.startsWith("char:"))inner=html`<span style=${{display:"block",width:"100%",height:"100%"}} dangerouslySetInnerHTML=${{__html:avatarCharSVG(av.slice(5))}}></span>`;
  else inner=html`<span style=${{display:"block",width:"100%",height:"100%"}} dangerouslySetInnerHTML=${{__html:avatarDefaultSVG(p&&p.id)}}></span>`;
  return html`<span className="avatar" role="img" aria-label=${((p&&p.nickname)||"참여자")+" 프로필"} style=${{width:size,height:size,boxShadow:ring?"0 0 0 2px var(--paper),0 0 0 3.5px var(--gold)":undefined}}>${inner}</span>`;
@@ -89,7 +91,7 @@ async function squareImage(file,size){const url=URL.createObjectURL(file);try{co
 
 function AvatarSheet({profile,uid,onClose,onSaved,toast}){
  const cur=profile.avatar||null;const [mode,setMode]=useState(cur==="photo"?"photo":cur?"char":"char");
- const [pick,setPick]=useState(cur&&cur.startsWith("char:")?cur.slice(5):null);
+ const [pick,setPick]=useState(cur&&cur.startsWith("char:")?cur.slice(5):null);const [cset,setCset]=useState(pick&&!/^p/.test(pick)?"animal":"people");
  const [photo,setPhoto]=useState(null);const [scope,setScope]=useState(profile.avatar_scope||"friends");const [busy,setBusy]=useState(false);
  const existingUrl=cur==="photo"?AVCACHE[avKey(profile)]:null;
  const preview=mode==="photo"?{...profile,avatar:(photo||existingUrl)?"photo":null}:mode==="char"&&pick?{...profile,avatar:"char:"+pick}:{...profile,avatar:null};
@@ -104,7 +106,9 @@ function AvatarSheet({profile,uid,onClose,onSaved,toast}){
  return html`<${Sheet} title="프로필 이미지" onClose=${onClose}>
   <div className="stack" style=${{alignItems:"center"}}><${Avatar} p=${preview} url=${mode==="photo"?(photo||existingUrl):null} size=${120} ring=${true}/><b className="serif" style=${{color:"var(--accent)",fontSize:"17px"}}>${profile.nickname}</b><span className="small faint">닉네임 옆 작은 원에 보여요. 카드의 주인공은 여전히 젬입니다.</span></div>
   <div className="segs" role="tablist">${[["char","캐릭터"],["photo","내 사진"],["none","기본 원석"]].map(([k,t])=>html`<button key=${k} role="tab" aria-pressed=${mode===k} onClick=${()=>setMode(k)}>${t}</button>`)}</div>
-  ${mode==="char"&&html`<div className="avgrid">${AVATARS.map(a=>html`<button key=${a.id} className="avpick" aria-pressed=${pick===a.id} aria-label=${a.name} onClick=${()=>setPick(a.id)}><span dangerouslySetInnerHTML=${{__html:avatarCharSVG(a.id)}}></span><small>${a.name}</small></button>`)}</div>`}
+  ${mode==="char"&&html`<div className="segs mini" role="group" aria-label="캐릭터 종류">${[["people","인물"],["animal","동물"]].map(([k,t])=>html`<button key=${k} aria-pressed=${cset===k} onClick=${()=>setCset(k)}>${t}</button>`)}</div>`}
+  ${mode==="char"&&cset==="people"&&html`<div className="avgrid">${PEOPLE_AV.map(id=>html`<button key=${id} className="avpick" aria-pressed=${pick===id} aria-label=${"인물 "+id} onClick=${()=>setPick(id)}><img src=${"img/avatars/"+id+".svg"} alt="" style=${{width:"100%",borderRadius:"50%",display:"block"}}/></button>`)}</div>`}
+  ${mode==="char"&&cset==="animal"&&html`<div className="avgrid">${AVATARS.map(a=>html`<button key=${a.id} className="avpick" aria-pressed=${pick===a.id} aria-label=${a.name} onClick=${()=>setPick(a.id)}><span dangerouslySetInnerHTML=${{__html:avatarCharSVG(a.id)}}></span><small>${a.name}</small></button>`)}</div>`}
   ${mode==="photo"&&html`<div className="stack">
    <label className="btn quiet filebtn">${photo||existingUrl?"다른 사진 고르기":"사진 고르기"}<input type="file" accept="image/jpeg,image/png,image/webp" onChange=${choose}/></label>
    <div className="field"><span className="lbl">누구에게 보일까요?</span><div className="segs" role="group">${[["friends","친구만"],["all","1기 전체"]].map(([k,t])=>html`<button key=${k} aria-pressed=${scope===k} onClick=${()=>setScope(k)}>${t}</button>`)}</div><span className="hint">${scope==="friends"?"친구가 아닌 사람에게는 기본 원석으로 보여요.":"함께 테스트하는 1기 참여자 모두에게 보여요."}</span></div>

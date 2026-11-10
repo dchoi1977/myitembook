@@ -18,7 +18,7 @@ function FriendButton({uid,other,soc,reloadSoc,toast,demo,small}){
  return html`<button className=${cls} disabled=${busy||demo} onClick=${()=>run(()=>api.friendRequest(other),"친구 요청을 보냈어요.","friend_request")}>친구 요청</button>`;
 }
 
-function FriendsTab({uid,st,soc,names,reloadSoc,openUser,toast,profile,demo,ensureNames}){
+function FriendsTab({uid,st,soc,names,reloadSoc,openUser,toast,profile,demo,ensureNames}){const [sampleOpen,setSampleOpen]=useState(false);
  const [q,setQ]=useState("");const [found,setFound]=useState(null);const [cards,setCards]=useState(null);const [busy,setBusy]=useState(false);
  const fids=friendIds(uid,soc.friendships);
  const incoming=(soc.friendships||[]).filter(f=>f.status==="pending"&&f.addressee===uid);
@@ -32,6 +32,8 @@ function FriendsTab({uid,st,soc,names,reloadSoc,openUser,toast,profile,demo,ensu
  const ranked=st.analysis?others.map(c=>({c,r:resonance(st.analysis,c.data)})).sort((x,y)=>y.r.score-x.r.score):others.map(c=>({c,r:{same:[],comp:[]}}));
  return html`<div className="main wrap">
   <div className="stack"><div className="eyebrow">친구 · ${MIB_CONFIG.cohort}</div><h1 className="h2">결이 맞는 사람</h1><p className="muted small">친구가 되면 서로의 소식과 '친구만' 공개한 카드를 볼 수 있어요. 순위나 점수는 없습니다.</p></div>
+  <${SampleStrip} onOpen=${()=>setSampleOpen(true)}/>
+  ${sampleOpen&&html`<${SampleGallery} onClose=${()=>setSampleOpen(false)} toast=${toast}/>`}
   <${MyGems} fids=${fids} cardOf=${cardOf} names=${names} soc=${soc} uid=${uid} openUser=${openUser} toast=${toast} onFind=${()=>{const el=document.querySelector('[aria-label="닉네임으로 찾기"]');if(el){el.scrollIntoView({block:"center"});el.focus()}}}/>
   <div className="panel stack"><div className="row between"><b>내 프로필 링크</b><span className="faint small">@${profile.nickname}</span></div><span className="small muted">1기 참여자에게 보내면 바로 내 카드로 와서 친구 요청을 할 수 있어요.</span><button className="btn quiet sm" onClick=${share}><${Ico} n="share"/>링크 보내기</button></div>
   <form className="row" onSubmit=${search} role="search"><input type="text" aria-label="닉네임으로 찾기" placeholder="닉네임으로 찾기" value=${q} onChange=${e=>setQ(e.target.value)} style=${{flex:1}}/><button className="btn sm" disabled=${busy||!q.trim()}><${Ico} n="search"/>찾기</button></form>

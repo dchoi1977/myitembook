@@ -5,7 +5,7 @@
 const JOIN_ERR={invalid_code:"초대 코드를 다시 확인해 주세요.",code_used:"이미 사용된 초대 코드입니다. 운영자에게 새 코드를 요청해 주세요.",full:"이번 CBT는 정원이 모두 찼습니다. 관심 가져 주셔서 고맙습니다.",nickname_taken:"이미 쓰고 있는 닉네임입니다. 다른 닉네임을 골라 주세요.",invalid_nickname:"닉네임은 한글·영문·숫자 2~12자로 정해 주세요.",email_taken:"이미 가입한 이메일입니다. '로그인'으로 들어와 주세요.",invalid_email:"이메일 형식을 확인해 주세요.",weak_password:"비밀번호는 8자 이상으로 정해 주세요.",consent_required:"필수 동의 항목을 확인해 주세요.",network:"인터넷 연결을 확인해 주세요."};
 function Gate({onSession,initialCode}){
  const [mode,setMode]=useState(initialCode?"join":"start");const [f,setF]=useState({code:initialCode||"",nickname:"",email:"",password:"",terms:false,privacy:false,ai:false,research:false});
- const [busy,setBusy]=useState(false);const [err,setErr]=useState("");
+ const [busy,setBusy]=useState(false);const [err,setErr]=useState("");const [samples,setSamples]=useState(false);
  const set=(k,v)=>setF(x=>({...x,[k]:v}));
  async function join(e){e.preventDefault();setErr("");setBusy(true);try{await api.join({code:f.code,nickname:f.nickname,email:f.email,password:f.password,agree:{terms:f.terms,privacy:f.privacy,ai:f.ai,research:f.research,version:"cbt-2"}});const s=await api.login(f.email,f.password);onSession(s,true)}catch(x){setErr(JOIN_ERR[x.code]||"가입을 마치지 못했습니다. 잠시 후 다시 시도해 주세요.")}finally{setBusy(false)}}
  async function login(e){e.preventDefault();setErr("");setBusy(true);try{const s=await api.login(f.email,f.password);onSession(s,false)}catch(x){setErr(x.code==="network"?JOIN_ERR.network:"이메일 또는 비밀번호가 맞지 않습니다.")}finally{setBusy(false)}}
@@ -25,7 +25,9 @@ function Gate({onSession,initialCode}){
    </div>
    <button className="btn block" onClick=${()=>setMode("join")}>초대 코드로 시작하기</button>
    <button className="btn ghost block" onClick=${()=>setMode("login")}>이미 가입했어요 · 로그인</button>
+   <button className="linkbtn block" style=${{marginTop:"4px"}} onClick=${()=>setSamples(true)}>먼저 둘러보기 · 가상 인물 16명의 아틀리에 ›</button>
   </div>`}
+  ${samples&&html`<${SampleGallery} onClose=${()=>setSamples(false)}/>`}
   ${mode==="join"&&html`<form className="stack" onSubmit=${join}>
    <h2 className="h2">CBT 참여 등록</h2>
    <div className="field"><label htmlFor="g-code">초대 코드</label><input type="text" id="g-code" value=${f.code} onChange=${e=>set("code",e.target.value.toUpperCase())} placeholder="MIB-XXXXX" autoComplete="off" autoCapitalize="characters"/></div>
