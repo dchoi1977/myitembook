@@ -151,6 +151,7 @@ function LifeCard({st,items,stats,onOpen}){
    <p className="sentence">${displaySentence(a)}</p>
    <div className="kw">${displayKeywords(a).map(k=>html`<span className="chip" key=${k}>${k}</span>`)}${st.visibility.fields.tags&&cardTags(st).map(t=>html`<span className="chip plain tagchip" key=${"t"+t}>${t}</span>`)}</div>
    <${AiLabel} status=${a.status}/>
+   <${CrestShelf} st=${st} onOpen=${onOpen}/>
   </div>`:html`<div className="stack" style=${{alignItems:"center"}}>
    <div className="eyebrow">나만의 육각형</div>
    <${Hexagon} axes=${visibleAxes(a)} prev=${prev} size=${290}/>
@@ -167,7 +168,7 @@ function MeTab({st,items,soc,stats,onOpen,names,top,mid}){
  const desk=useDesktop();
  const featured=items.filter(i=>(st.featured||[]).includes(i.id)).slice(0,4);
  const rows=[["evidence","눈","이렇게 읽은 이유","사실과 AI 해석을 나눠 보고, 맞다·숨기기"],["attrs","별","젬의 8가지 속성","결·색·빛·형·질·강·상·각"],["shelf","선반","나의 선반",`실제로 가진 것 ${items.length}개 · 얼마나 함께했는가`],["publish","문","공개할 모습",st.visibility.public?(st.visibility.audience==="friends"?"친구에게 공개 중":"CBT 1기에 공개 중")+" · 항목별로 고르기":"지금은 나만 보기"],["reread","새싹","새 기록 더하기",`나를 다시 읽기 · 지금까지 ${st.analyses||1}번`]];
- const achN=earnedIds(st,stats).length;rows.splice(2,0,["achieve","별","업적 도감 · 배지 보관함",`배지 ${achN}/${BADGES.length} · 칭호와 대표 배지 고르기`]);
+ const achN=earnedIds(st,stats).length;rows.splice(2,0,["achieve","별","업적 도감 · 배지 보관함",`배지 ${achN}/${BADGES.length} · 칭호와 대표 배지 고르기`]);rows.splice(3,0,["identity","왕관","나의 휘장",(()=>{const I=idStats(st);return I.total?`휘장 ${I.total}개 · 진열 ${I.shown}/${ID_MAX_SHOW} · 뿌리·터전·배움·소속·영예·조명`:"뿌리·터전·배움·소속·영예·조명을 새겨 진열하기"})()]);
  return html`<div className="main wrap">
   ${top}
   <${LifeCard} st=${st} items=${items} stats=${stats} onOpen=${onOpen}/>
@@ -304,13 +305,13 @@ function TagEditor({st,update}){const a=(st.quick&&st.quick.answers)||{};const m
  </div>`}
 function buildPublicCard(st,items,stats){
  const fl=st.visibility.fields;const a=st.analysis;const g=livingGem(st);
- const card={v:1,updatedAt:Date.now(),gem:fl.tags?g:(({rings,...r})=>r)(g||{}),gemName:gemName(g),stage:stageOf(st,stats),
+ const card={v:1,updatedAt:Date.now(),gem:(x=>fl.crests===false?(({idm,...r})=>r)(x):x)(fl.tags?g:(({rings,...r})=>r)(g||{})),gemName:gemName(g),stage:stageOf(st,stats),
   sentence:fl.sentence?displaySentence(a):"",keywords:fl.keywords?displayKeywords(a):[],
   axes:fl.hexagon?visibleAxes(a).map(x=>({name:x.name,level:x.level})):visibleAxes(a).map(x=>({name:x.name})),
   showHex:!!fl.hexagon,badges:fl.badges?showcaseBadges(st,stats,12).filter(id=>fl.tags||(badgeById(id)||{}).g!=="연륜").slice(0,8):[],...(()=>{const e=equipped(st,stats);const src=id=>BADGES.find(b=>b.title===id);const hideT=!fl.tags&&e.title&&(src(e.title)||{}).g==="연륜";return {title:hideT?"":e.title,frame:!fl.tags&&e.frame==="ring"?"":e.frame}})(),
   shelf:fl.shelf?items.filter(i=>!i.private).length:0,
   items:fl.items?items.filter(i=>(st.featured||[]).includes(i.id)).slice(0,4).map(i=>({name:i.name,category:i.category,since:i.since||"",story:i.story||"",verify:i.verify||""})):[],
-  acceptWords:!!fl.words,tags:fl.tags?cardTags(st):[],zodiac:fl.tags&&myZodiac(st)?myZodiac(st).k:null};
+  acceptWords:!!fl.words,tags:fl.tags?cardTags(st):[],crests:fl.crests!==false?shownCrests(st).map(publicCrest):[],motto:fl.crests!==false?idLine(st):"",zodiac:fl.tags&&myZodiac(st)?myZodiac(st).k:null};
  return card;
 }
 function PublicCardView({card,name,compact,who}){
@@ -318,6 +319,7 @@ function PublicCardView({card,name,compact,who}){
   ${!compact&&card.gem&&(()=>{const I=gemIdentity(card.gem,card.gemName);return html`<div className="gemfeat" style=${{justifyContent:"flex-start"}}><span className="gf-id">${I.rareVariant?"✦ ":""}${I.variant} · ${I.cut}</span>${(I.aw||[]).filter(x=>x.t>=2).map(x=>html`<span key=${x.k} className=${"aw t"+x.t}>✺ ${x.n}</span>`)}</div>`})()}
   ${card.sentence&&html`<p className="serif" style=${{fontSize:"15.5px",lineHeight:1.6}}>${card.sentence}</p>`}
   ${((card.keywords||[]).length>0||(card.tags||[]).length>0||card.zodiac)&&html`<div className="row">${(card.keywords||[]).map(k=>html`<span className="chip" key=${k}>${k}</span>`)}${(card.tags||[]).map(t=>html`<span className="chip plain tagchip" key=${"t"+t}>${t}</span>`)}${zodiacByKey(card.zodiac)&&html`<span className="chip plain tagchip zchip-c"><span aria-hidden="true">${zodiacByKey(card.zodiac).sym+"\uFE0E"}</span> ${zodiacByKey(card.zodiac).ko}</span>`}</div>`}
+  ${!compact&&html`<${PublicCrests} card=${card}/>`}
   ${card.showHex&&!compact&&html`<${Hexagon} axes=${card.axes} size=${240}/>`}
   ${(card.items||[]).length>0&&!compact&&html`<div className="row">${card.items.map((i,k)=>html`<span className="chip plain" key=${k}>${i.category} · ${i.name}${i.since?" · "+sinceText(i.since).replace("함께한 지 ",""):""}</span>`)}</div>`}
   ${(card.badges||[]).length>0&&!compact&&html`<div className="minibadges">${card.badges.slice(0,6).map(id=>{const b=BADGES.find(x=>x.id===id);return b?html`<${Medal} key=${id} b=${b} earned=${true} size=${30}/>`:null})}</div>`}
@@ -328,7 +330,7 @@ function PublishSheet({st,items,stats,update,onClose,toast,demo,meName,uid,me,on
  const card=buildPublicCard(st,items,stats);const can=!demo;const aud=st.visibility.audience||"all";
  const setF=(k,v)=>update(s=>{s.visibility.fields[k]=v});
  async function publish(on){setBusy(true);try{if(on){await api.publishCard(uid,card,aud)}else{await api.unpublishCard(uid)}const first=on&&!st.visibility.public;update(s=>{s.visibility.public=on});track(on?"publish":"unpublish",{aud});if(first)api.postFeed("publish",{aud});toast(on?"카드를 공개했습니다.":"공개를 멈췄습니다. 이제 나만 봅니다.")}catch(e){toast("공개 상태를 바꾸지 못했습니다. 잠시 후 다시 시도해 주세요.")}finally{setBusy(false)}}
- const OPTS=[["sentence","한 문장","AI 해석 문장, 또는 내가 다듬은 문장"],["keywords","키워드","세 단어"],["hexagon","육각형 눈금","축 이름은 늘 보이고, 눈금은 고를 때만"],["badges","배지","받은 배지 목록"],["items","대표 아이템 요약","카드 안에 이름·기간·사연만 (사진 없이)"],["shelf","선반 공개","사진과 사연까지 선반 전체를 보여 줘요. 아래에서 숨길 아이템을 고르세요"],["words","한 단어 추천사 받기","사람들이 나에게 한 단어를 남길 수 있음"],["tags","MBTI·혈액형·별자리·연륜","공개 카드와 카드 이미지에 태그·별자리와 젬의 연륜 결을 함께 보여요 (나이 숫자는 어디에도 나오지 않아요)"]];
+ const OPTS=[["sentence","한 문장","AI 해석 문장, 또는 내가 다듬은 문장"],["keywords","키워드","세 단어"],["hexagon","육각형 눈금","축 이름은 늘 보이고, 눈금은 고를 때만"],["badges","배지","받은 배지 목록"],["items","대표 아이템 요약","카드 안에 이름·기간·사연만 (사진 없이)"],["shelf","선반 공개","사진과 사연까지 선반 전체를 보여 줘요. 아래에서 숨길 아이템을 고르세요"],["words","한 단어 추천사 받기","사람들이 나에게 한 단어를 남길 수 있음"],["tags","MBTI·혈액형·별자리·연륜","공개 카드와 카드 이미지에 태그·별자리와 젬의 연륜 결을 함께 보여요 (나이 숫자는 어디에도 나오지 않아요)"],["crests","나의 휘장","진열한 휘장과 대표 한 줄, 젬의 월계관·조명·뿌리·깃발 (터전은 시·구까지만)"]];
  return html`<${Sheet} title="공개할 모습" onClose=${onClose}>
   <p className="muted small">처음엔 모두 비공개입니다. 젬과 보석 이름은 공개 카드의 기본이고, 나머지는 항목별로 고릅니다. 원본 기록과 근거는 공개되지 않습니다.</p>
   <div className="field"><span className="lbl">누구에게 보일까요?</span><div className="segs" role="group" aria-label="공개 범위">${[["all","CBT 1기 전체"],["friends","친구만"]].map(([k,t])=>html`<button key=${k} aria-pressed=${aud===k} onClick=${()=>update(s=>{s.visibility.audience=k})}>${t}</button>`)}</div><span className="hint">${aud==="all"?"함께 테스트하는 1기 참여자 누구나 볼 수 있어요.":"서로 친구를 맺은 사람만 볼 수 있어요."}</span></div>

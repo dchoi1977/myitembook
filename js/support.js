@@ -99,7 +99,7 @@ function useDesktop(){const [d,setD]=useState(()=>{try{return matchMedia(DESK_Q)
 const DESK_NAV=[["me","나","me"],["step","한 걸음","step"],["feed","소식","feed"],["friends","친구","people"]];
 function DeskSide({tab,setTab,openSheet,profile,day,pending,unread,onFeedback,onAdmin,setSheet,updNew}){
  const go=k=>{setTab(k);setSheet(null);window.scrollTo(0,0)};
- const more=[["achieve","별","업적 도감"],["shelf","선반","나의 선반"],["publish","문","공개할 모습"],["inbox","말풍선","알림"+(unread?` ${unread}`:"")],["help","눈","도움말"],["updates","새싹","업데이트 소식"]];
+ const more=[["achieve","별","업적 도감"],["identity","왕관","나의 휘장"],["shelf","선반","나의 선반"],["publish","문","공개할 모습"],["inbox","말풍선","알림"+(unread?` ${unread}`:"")],["help","눈","도움말"],["updates","새싹","업데이트 소식"]];
  return html`<aside className="side" aria-label="메뉴">
   <button className="side-me" onClick=${()=>setSheet("avatar")}><${Avatar} p=${profile} size=${40}/><span className="grow"><b>${profile.nickname}</b><br/><span className="small faint">${MIB_CONFIG.cohort} · Day ${Math.min(day,99)}</span></span></button>
   <nav className="side-nav" aria-label="메인">${DESK_NAV.map(([k,t,ic])=>html`<button key=${k} className="side-item" aria-current=${tab===k?"page":undefined} onClick=${()=>go(k)}><${Ico} n=${ic}/><span className="grow">${t}</span>${k==="friends"&&pending?html`<i className="side-dot" aria-label="새 친구 요청"></i>`:null}</button>`)}</nav>

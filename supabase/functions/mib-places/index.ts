@@ -113,12 +113,51 @@ async function placesNearby(req: Request, b: any) {
   return json({ places: list, area: res.area, source: res.source || (key ? "kakao" : "osm") });
 }
 
+// ───────── region of where I am right now (for "터전" check-in). Only the region names leave; coordinates are not stored ─────────
+function pickRegion(vals: string[]) {
+  const v = vals.filter((x) => typeof x === "string" && x.trim()).map((x) => x.trim());
+  const sido = v.find((x) => /(특별시|광역시|특별자치시|특별자치도|도)$/.test(x)) || v.find((x) => /^(서울|부산|대구|인천|광주|대전|울산|세종|제주)$/.test(x)) || "";
+  const gu = v.find((x) => x !== sido && /(구|군)$/.test(x) && !/(동|가)$/.test(x)) || v.find((x) => x !== sido && /시$/.test(x)) || "";
+  const dong = v.find((x) => x !== gu && /(동|읍|면|가|리)$/.test(x)) || "";
+  return { sido, gu, dong };
+}
+const UA = { "Accept": "application/json", "User-Agent": "MIB-CBT/1.0 (https://dchoi1977.github.io/myitembook/)" };
+async function regionOf(lat: number, lng: number, debug = false) {
+  const key = Deno.env.get("KAKAO_REST_KEY"); const dbg: any = {};
+  if (key) {
+    try {
+      const u = new URL("https://dapi.kakao.com/v2/local/geo/coord2regioncode.json"); u.searchParams.set("x", String(lng)); u.searchParams.set("y", String(lat));
+      const r = await fetch(u, { headers: { Authorization: `KakaoAK ${key}` }, signal: AbortSignal.timeout(6000) });
+      if (r.ok) { const j = await r.json(); const h = (j.documents || []).find((x: any) => x.region_type === "H") || (j.documents || [])[0]; if (h) return { sido: h.region_1depth_name || "", gu: h.region_2depth_name || "", dong: h.region_3depth_name || "", source: "kakao" }; }
+    } catch (_) { /* fall back */ }
+  }
+  try {
+    const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&zoom=16&accept-language=ko`, { headers: UA, signal: AbortSignal.timeout(7000) });
+    dbg.nominatim = r.status;
+    if (r.ok) { const j = await r.json(); const a = j.address || {}; const vals = Object.entries(a).filter(([k]) => !/postcode|country|road|house|ISO/i.test(k)).map(([, v]) => String(v)); dbg.nparts = vals; const g = pickRegion(vals); if (g.sido || g.gu) return { ...g, source: "osm", ...(debug ? { dbg } : {}) }; }
+  } catch (e) { dbg.nerr = String((e as Error)?.message || ""); }
+  const r = await fetch(`https://photon.komoot.io/reverse?lat=${lat}&lon=${lng}&limit=3`, { headers: UA, signal: AbortSignal.timeout(7000) });
+  if (!r.ok) throw new Error("region_" + r.status);
+  const j = await r.json(); const props = (j.features || []).map((f: any) => f.properties || {});
+  const vals: string[] = []; props.forEach((p: any) => { for (const k of ["state", "city", "county", "district", "locality", "name"]) if (p[k]) vals.push(String(p[k])); });
+  dbg.pparts = vals; const g = pickRegion(vals);
+  return { ...g, source: "osm", ...(debug ? { dbg } : {}) };
+}
+async function region(req: Request, b: any) {
+  const user = await caller(req); if (!user) return fail("unauthorized", 401);
+  const lat = Number(b.lat), lng = Number(b.lng);
+  if (!isFinite(lat) || !isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) return fail("bad_location");
+  try { const r = await regionOf(lat, lng); if (!r.sido && !r.gu) return fail("region_unknown", 404); return json(r); } catch (e) { console.error("region", (e as Error)?.message); return fail("region_failed", 502); }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (req.method !== "POST") return fail("method_not_allowed", 405);
   let b: any = {}; try { b = await req.json(); } catch (_) { return fail("bad_json"); }
   try {
     if (b.action === "health") { const key = Deno.env.get("KAKAO_REST_KEY"); try { const r = key ? await kakaoNearby(key, 37.5663, 126.9779, "") : await osmNearby(37.5663, 126.9779, ""); return json({ ok: true, source: r.source, n: r.places.length, area: r.area, sample: r.places.slice(0, 5).map((p: any) => p.name + "/" + p.cat) }); } catch (e) { return json({ ok: false, source: key ? "kakao" : "osm", error: String((e as Error)?.message || "") }); } }
+    if (b.action === "region_health") { try { return json({ ok: true, ...(await regionOf(37.5006, 127.0366, true)) }); } catch (e) { return json({ ok: false, error: String((e as Error)?.message || "") }); } }
+    if (b.action === "region") return await region(req, b);
     return await placesNearby(req, b);
   } catch (e) { console.error("places_fn", (e as Error)?.message); return fail("server_error", 500); }
 });

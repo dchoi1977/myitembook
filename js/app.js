@@ -74,12 +74,13 @@ function App(){
  const [fx,setFx]=useState([]);const [show,setShow]=useState(null);const [askStat,setAskStat]=useState(null);const [asksMe,setAsksMe]=useState([]);const evo=fx[0]||null;const pushFx=list=>setFx(q=>[...q,...list.filter(Boolean)]);const nextFx=()=>setFx(q=>q.slice(1));
  const fxOf=(evt,badges)=>{const rb=badges.filter(id=>(badgeById(id)||{}).g==="연륜");if(rb.length>1)badges=badges.filter(id=>!rb.includes(id)||id===rb.sort().slice(-1)[0]);const out=[];if(evt&&(evt.changes.length||evt.away))out.push({type:"evo",...evt,badges:[],nb:badges.length});if(badges.length)out.push({type:"badge",ids:[...badges].sort((a,b)=>RARITY[badgeById(a).rar].n-RARITY[badgeById(b).rar].n)});return out};
  const AWAY_MS=6*3600000;const AWAY_ITEMS=[["friends","새 친구"],["cheers","받은 공감"],["words","받은 한 단어"],["visitors","새로 다녀간 사람"]];
- useEffect(()=>{const socReady=freshSoc.current==="fail"||(!!freshSoc.current&&soc===freshSoc.current);if(!st||!stats||!st.analysis||demo||!loaded.current||!socReady||sheet==="publish")return;
+ const holdFx=sheet==="publish"||(!!sheet&&sheet.startsWith("identity"));
+ useEffect(()=>{const socReady=freshSoc.current==="fail"||(!!freshSoc.current&&soc===freshSoc.current);if(!st||!stats||!st.analysis||demo||!loaded.current||!socReady||holdFx)return;
   const sg=Math.max(stageOf(st,stats),st.flags.maxStage||0);const earned=earnedIds(st,stats);const seen=st.flags.badgesSeen||[];const nw=earned.filter(id=>!seen.includes(id));
   const marks=marksOf(st,stats);
   const g=livingGem({...st,flags:{...st.flags,maxStage:sg,marks}});const snap=gemSnap(g,sg);const prev=st.flags.seenGem;
   const ovKey=JSON.stringify(st.gemOverride||{});const ovChanged=!!prev&&prev.ov!==undefined&&prev.ov!==ovKey;
-  const changes=prev?evoDiff(prev,snap):[];
+  const ID_K=["laurel","spot","roots","banners"];const raw=prev?evoDiff(prev,snap):[];const idDown=raw.some(c=>ID_K.includes(c.k)&&c.to<(c.from||0));const changes=raw.filter(c=>!(ID_K.includes(c.k)&&c.to<(c.from||0)));
   // first pass of a session: was the person away, and what piled up meanwhile?
   let away=null;const now=Date.now();const cur=seenCounts(stats);const ls=st.flags.lastSeen;
   if(awayRef.current===null){awayRef.current=true;if(ls&&now-ls.at>=AWAY_MS){const items=AWAY_ITEMS.map(([k,label])=>({k,label,n:Math.max(0,(cur[k]||0)-((ls.c||{})[k]||0))})).filter(x=>x.n>0);away={ms:now-ls.at,label:awayLabel(now-ls.at),items}}}
@@ -87,7 +88,7 @@ function App(){
   const marksChanged=JSON.stringify(marks)!==JSON.stringify(st.flags.marks||{});
   const atMissing=earned.some(id=>!(st.flags.badgeAt||{})[id]);
   const stampDue=!ls||JSON.stringify(ls.c)!==JSON.stringify(cur)||now-ls.at>10*60000;
-  if(prev&&!changes.length&&!nw.length&&sg===(st.flags.maxStage||0)&&!marksChanged&&!atMissing){
+  if(prev&&!changes.length&&!idDown&&!nw.length&&sg===(st.flags.maxStage||0)&&!marksChanged&&!atMissing){
    if(away&&away.items.length)toast(`${away.label} 그사이 ${away.items.map(x=>`${x.label} ${x.n}`).join(", ")}`);
    if(stampDue)setSt(s=>({...s,flags:{...s.flags,lastSeen:{at:now,c:cur}}}));return}
   const silent=!prev||(ovChanged&&!st.flags.celebrate&&changes.every(c=>c.k==="stone"||c.k==="symbol"));
@@ -99,7 +100,7 @@ function App(){
   if(!silent){const ups=changes.filter(c=>MARK_KEYS.includes(c.k)&&c.to>(c.from||0));ups.forEach(c=>track("mark",{k:c.k,lv:c.to}));if(ups.length)api.postFeed("mark",{k:ups[0].k,lv:ups[0].to})}
   if(!silent&&(changes.length||nw.length))pushFx(fxOf({from:prev,to:snap,changes,head:(()=>{const h=evoHeadline(changes,nw,stats);const sc=changes.find(c=>c.k==="stage");if(sc&&sc.to>(sc.from||0)){const aw=awakenAt(g,st.createdAt,sc.to);if(aw){const tier=AW_TIERS[aw.t][0];return aw.t>=2?{...h,title:`${tier} 발현 · ${aw.n}!`,sub:`${h.title} ${h.sub}`,aw}:{...h,sub:`${h.sub} · 새 발현 ${aw.n}`,aw}}}return h})(),away:away&&(away.items.length||away.ms>=86400000)?away:null},nw));
   else if(away&&away.items.length)toast(`${away.label} 그사이 ${away.items.map(x=>`${x.label} ${x.n}`).join(", ")}`);
- },[stats,sheet==="publish"]);
+ },[stats,holdFx]);
  function previewAway(){const base=st&&st.analysis?livingGem(st):{stone:"비취",lightName:"새벽빛",light:"물결",form:"덩이",texture:"맑음",symbol:"산",hardness:2,grain:1,facets:8,marks:{}};const from=gemSnap({...base,marks:{setting:1,sat:1,aura:1,stars:0}},3);const to={...from,setting:2,sat:2,aura:2,stars:1,marks:{setting:2,sat:2,aura:2,stars:1}};const changes=evoDiff(from,to);pushFx(fxOf({from,to,changes,head:evoHeadline(changes,["linked"],{mv:{setting:7,sat:3,aura:12,stars:6}}),away:{ms:3*86400000,label:"3일 만이에요",items:[{k:"friends",label:"새 친구",n:2},{k:"cheers",label:"받은 공감",n:9},{k:"words",label:"받은 한 단어",n:3},{k:"visitors",label:"새로 다녀간 사람",n:6}]}},["friend3","back"]))}
  function previewBadges(){pushFx([{type:"badge",ids:["log1","friend3","loved10","allweek"]}])}
  function replayBadge(id){pushFx([{type:"badge",ids:[id],replay:true}])}
@@ -126,7 +127,7 @@ function App(){
  async function runAnalysis(feedback){
   ctl.current=new AbortController();setReading({status:"waiting",chars:0,error:null});setRoute("reading");
   const prev=st.analysis;const t0=Date.now();
-  const quick=draft.quick||st.quick||null;window.__promptStays=(st.stays||[]).slice(-60);const prompt=buildPrompt({quick,know:st.know,sources:draft.sources,answers:draft.answers,photoCount:draft.photos.length,items,feedback,prev,logs:prev?st.logs:null,stepsDone:prev?(st.steps.done.length?[(st.steps.current||prev.firstStep).title]:[]):null,reflections:prev?st.reflections:null});
+  const quick=draft.quick||st.quick||null;window.__promptStays=(st.stays||[]).slice(-60);window.__promptIdentity=(()=>{const I=st.identity||{};if(I.useAI===false)return null;const E=(I.entries||[]).filter(e=>e.cat!=="home");return ID_CATS.filter(c=>c.k!=="home").map(c=>{const L=E.filter(e=>e.cat===c.k);return L.length?`- ${c.n}(${c.q}): ${L.map(e=>[e.name,e.type,e.extra,e.tier,e.year].filter(Boolean).join(" · ")).join(" / ")}`:null}).filter(Boolean)})();const prompt=buildPrompt({quick,know:st.know,sources:draft.sources,answers:draft.answers,photoCount:draft.photos.length,items,feedback,prev,logs:prev?st.logs:null,stepsDone:prev?(st.steps.done.length?[(st.steps.current||prev.firstStep).title]:[]):null,reflections:prev?st.reflections:null});
   track("analysis_start",{re:!!prev,fb:!!feedback,photos:draft.photos.length,len:prompt.length});
   try{
    const images=[];for(const f of draft.photos.slice(0,4))images.push(await imageForAI(f));
@@ -187,6 +188,7 @@ function App(){
   <${DailyQuestion} key=${"dq"+day} day=${day} answered=${dailyAnswered} toast=${toast} onDone=${reloadSoc}/>
 </div>`;
  const mid=!demo&&html`<div className="stack">
+  <${IdPrompt} st=${st} update=${update} onOpen=${openSheet} day=${day}/>
   <${AskPanel} stat=${askStat} incoming=${asksMe} names=${names} onOpen=${openSheet} friendsCount=${friendIds(uid,soc.friendships).length}/>
   <${KnowCard} st=${st} update=${update} toast=${toast} demo=${demo} onReread=${()=>openSheet("reread")}/>
   <${Missions} day=${day} stats=${stats} onOpen=${openSheet}/>
@@ -224,7 +226,8 @@ function App(){
   else if(sheet==="asks")sheetEl=html`<${AnswersSheet} stat=${askStat} names=${names} onClose=${close} openUser=${openUser}/>`;
   else if(sheet==="answer"||sheet.startsWith("answer:"))sheetEl=html`<${AnswerSheet} incoming=${asksMe} names=${names} focus=${+sheet.split(":")[1]||null} toast=${toast} onClose=${close} onDone=${reloadSoc}/>`;
   else if(sheet==="updates")sheetEl=html`<${UpdatesSheet} st=${st} update=${update} onClose=${close} onOpen=${k=>setSheet(k)}/>`;
-  else if(sheet==="stay")sheetEl=html`<${StaySheet} st=${st} update=${update} onClose=${close} toast=${toast} demo=${demo}/>`;
+  else if(sheet==="identity"||sheet.startsWith("identity:"))sheetEl=html`<${IdentitySheet} key=${sheet} st=${st} update=${update} onClose=${close} toast=${toast} demo=${demo} focus=${sheet.split(":")[1]||null}/>`;
+  else if(sheet==="stay")sheetEl=html`<${StaySheet} st=${st} update=${update} onClose=${close} toast=${toast} demo=${demo} onOpen=${k=>setSheet(k)}/>`;
   else if(sheet==="stays")sheetEl=html`<${StaysSheet} st=${st} update=${update} onClose=${close}/>`;
   else if(sheet==="achieve"||sheet==="badgebox")sheetEl=html`<${AchieveSheet} st=${st} stats=${stats} update=${update} meName=${profile.nickname} start=${sheet==="badgebox"?"box":"book"} onClose=${close} onReplay=${replayBadge}/>`;
   else if(sheet==="publish")sheetEl=html`<${PublishSheet} st=${st} items=${items} stats=${stats} update=${update} onClose=${close} toast=${toast} demo=${demo} meName=${profile.nickname} uid=${uid} me=${profile} onItemPrivate=${setItemPrivate}/>`;

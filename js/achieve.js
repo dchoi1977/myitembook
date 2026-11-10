@@ -1,7 +1,7 @@
 "use strict";
 /* MIB CBT · 업적 도감 · 배지 보관함 · 배지별 획득 연출 */
 
-const BADGE_GROUPS=["지속","도약","회복","함께","발자취","연륜","비밀"];
+const BADGE_GROUPS=["지속","도약","회복","함께","발자취","휘장","연륜","비밀"];
 const badgeById=id=>BADGES.find(b=>b.id===id);
 function badgeProg(b,stats){const [c,t]=b.prog?b.prog(stats):[b.test(stats)?1:0,1];return {cur:c,tgt:t,pct:Math.round(Math.min(1,c/t)*100)}}
 function badgeReward(b){const r=[{k:"title",label:"칭호",v:`'${b.title}'`}];if(b.frame)r.push({k:"frame",label:"카드 테두리",v:CARD_FRAMES[b.frame].name});return r}

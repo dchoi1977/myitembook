@@ -7,7 +7,7 @@ async function renderPublicCardImage(card,name){
  try{await Promise.all([document.fonts.load('700 48px "Noto Serif KR"'),document.fonts.load('500 30px "Noto Sans KR"'),document.fonts.load('700 30px "Noto Sans KR"')])}catch(e){}
  const SERIF='"Noto Serif KR","Apple SD Gothic Neo",serif',SANS='"Noto Sans KR","Apple SD Gothic Neo",sans-serif';
  x.fillStyle="#F4F1E9";x.fillRect(0,0,W,H);x.strokeStyle="#D6DACF";x.lineWidth=2;x.strokeRect(40,40,W-80,H-80);
- const FR={gold:"#C9A45A",rose:"#C9878F",star:"#7E95C9",dawn:"#E7A86B",ring:"#8C6A3A"};
+ const FR={gold:"#C9A45A",rose:"#C9878F",star:"#7E95C9",dawn:"#E7A86B",ring:"#8C6A3A",crest:"#7A1F2B"};
  if(d.frame){x.lineWidth=8;if(d.frame==="seven"){const gr=x.createLinearGradient(40,40,W-40,H-40);["#E57373","#F0B65A","#E8D96A","#7CC08A","#6AA9D8","#8A7CD0","#C77BB8"].forEach((cl,i,a)=>gr.addColorStop(i/(a.length-1),cl));x.strokeStyle=gr}else x.strokeStyle=FR[d.frame]||"#C9A45A";x.strokeRect(40,40,W-80,H-80)}
  x.fillStyle="#66706E";x.font=`700 26px ${SANS}`;x.textAlign="left";x.fillText("MYITEMBOOK · "+MIB_CONFIG.cohort,90,120);
  x.textAlign="right";x.fillText(d.title?d.title+" "+name:"@"+name,W-90,120);x.textAlign="center";
@@ -15,11 +15,13 @@ async function renderPublicCardImage(card,name){
  if(typeof drawConstellation==="function"&&d.zodiac)drawConstellation(x,zodiacByKey(d.zodiac));
  const g=await svgImage(gemSVG(d.gem||{},d.gemName||name,"pc"),520,559);x.drawImage(g,(W-520)/2,170);
  x.fillStyle="#173D3B";x.font=`700 60px ${SERIF}`;x.fillText(d.gemName||"",W/2,800);
- if(d.sentence){x.fillStyle="#1F2A28";x.font=`500 40px ${SERIF}`;wrapLines(x,d.sentence,W-220,3).forEach((l,i)=>x.fillText(l,W/2,880+i*60))}
+ const CR=d.crests||[],ML=d.motto||"",IDL=CR.length>0||!!ML;
+ if(d.sentence){x.fillStyle="#1F2A28";x.font=`500 40px ${SERIF}`;wrapLines(x,d.sentence,W-220,IDL?2:3).forEach((l,i)=>x.fillText(l,W/2,880+i*60))}
  const kw=(d.keywords||[]).map(t=>({t,tag:false})).concat((d.tags||[]).map(t=>({t,tag:true})));
- if(kw.length){x.font=`700 30px ${SANS}`;const tot=kw.reduce((s,k)=>s+x.measureText(k.t).width+60,0)-16;let cx=(W-tot)/2;kw.forEach(({t,tag})=>{const w=x.measureText(t).width+44;x.beginPath();x.roundRect?x.roundRect(cx,1080,w,56,28):x.rect(cx,1080,w,56);if(tag){x.strokeStyle="#A7B5A1";x.lineWidth=2.5;x.stroke()}else{x.fillStyle="#E4E9DF";x.fill()}x.fillStyle=tag?"#465250":"#173D3B";x.textAlign="center";x.fillText(t,cx+w/2,1118);cx+=w+16})}
- const stg=d.stage||1;x.fillStyle="#66706E";x.font=`500 26px ${SANS}`;x.fillText(`연마 ${stg}단계 · ${STAGES[stg]||""}`,W/2,1210);
- x.fillStyle="#93A09B";x.font=`500 22px ${SANS}`;x.fillText("누구나 원석으로 태어난다. 살아가는 만큼, 보석이 된다.",W/2,H-80);
+ if(kw.length){x.font=`700 30px ${SANS}`;const tot=kw.reduce((s,k)=>s+x.measureText(k.t).width+60,0)-16;let cx=(W-tot)/2;kw.forEach(({t,tag})=>{const w=x.measureText(t).width+44;x.beginPath();const KY=IDL?975:1080;x.roundRect?x.roundRect(cx,KY,w,56,28):x.rect(cx,KY,w,56);if(tag){x.strokeStyle="#A7B5A1";x.lineWidth=2.5;x.stroke()}else{x.fillStyle="#E4E9DF";x.fill()}x.fillStyle=tag?"#465250":"#173D3B";x.textAlign="center";x.fillText(t,cx+w/2,KY+38);cx+=w+16})}
+ if(IDL&&typeof drawCrestRow==="function")await drawCrestRow(x,CR,ML,{top:1060,pub:true});
+ const stg=d.stage||1;x.fillStyle="#66706E";x.font=`500 ${IDL?22:26}px ${SANS}`;x.textAlign="center";x.fillText(`연마 ${stg}단계 · ${STAGES[stg]||""}`,W/2,IDL?(CR.length?1262:1200):1210);
+ x.fillStyle="#93A09B";x.font=`500 ${IDL?19:22}px ${SANS}`;x.fillText("누구나 원석으로 태어난다. 살아가는 만큼, 보석이 된다.",W/2,IDL?H-56:H-80);
  return c;
 }
 

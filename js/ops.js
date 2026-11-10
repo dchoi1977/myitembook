@@ -146,7 +146,7 @@ async function renderShareImage(kind,{st,stats,profile}){
  x.fillStyle="#66706E";x.font=`700 26px ${SANS}`;x.textAlign="left";x.fillText("MYITEMBOOK · "+MIB_CONFIG.cohort,90,120);
  const eqp=(typeof equipped==="function"&&stats)?equipped(st,stats):{title:"",frame:""};
  x.textAlign="right";x.fillText(eqp.title?eqp.title+" "+profile.nickname:"@"+profile.nickname,W-90,120);x.textAlign="center";
- const FR={gold:"#C9A45A",rose:"#C9878F",star:"#7E95C9",dawn:"#E7A86B",ring:"#8C6A3A"};if(eqp.frame){x.lineWidth=8;if(eqp.frame==="seven"){const gr=x.createLinearGradient(40,40,W-40,H-40);["#E57373","#F0B65A","#E8D96A","#7CC08A","#6AA9D8","#8A7CD0","#C77BB8"].forEach((c,i,a)=>gr.addColorStop(i/(a.length-1),c));x.strokeStyle=gr}else x.strokeStyle=FR[eqp.frame]||"#C9A45A";x.strokeRect(40,40,W-80,H-80)}
+ const FR={gold:"#C9A45A",rose:"#C9878F",star:"#7E95C9",dawn:"#E7A86B",ring:"#8C6A3A",crest:"#7A1F2B"};if(eqp.frame){x.lineWidth=8;if(eqp.frame==="seven"){const gr=x.createLinearGradient(40,40,W-40,H-40);["#E57373","#F0B65A","#E8D96A","#7CC08A","#6AA9D8","#8A7CD0","#C77BB8"].forEach((c,i,a)=>gr.addColorStop(i/(a.length-1),c));x.strokeStyle=gr}else x.strokeStyle=FR[eqp.frame]||"#C9A45A";x.strokeRect(40,40,W-80,H-80)}
  const a=st.analysis;const now=livingGem(st);
  if(kind==="week"){
   const f=st.first||{gem:a.gem,sentence:displaySentence(a),keywords:displayKeywords(a),at:a.at};
@@ -166,9 +166,12 @@ async function renderShareImage(kind,{st,stats,profile}){
   if(typeof drawConstellation==="function")drawConstellation(x,myZodiac(st));
   const g=await svgImage(gemSVG(now,st.createdAt,"s0"),520,559);x.drawImage(g,(W-520)/2,170);
   x.fillStyle="#173D3B";x.font=`700 60px ${SERIF}`;x.fillText(gemName(now),W/2,800);
-  x.fillStyle="#1F2A28";x.font=`500 40px ${SERIF}`;wrapLines(x,displaySentence(a),W-220,3).forEach((l,i)=>x.fillText(l,W/2,880+i*60));
-  const kw=displayKeywords(a).map(t=>({t,tag:false})).concat((st.visibility.fields.tags?cardTags(st):[]).map(t=>({t,tag:true})));x.font=`700 30px ${SANS}`;let tot=kw.reduce((s,k)=>s+x.measureText(k.t).width+60,0)-16;let cx=(W-tot)/2;kw.forEach(({t,tag})=>{const w=x.measureText(t).width+44;x.beginPath();x.roundRect?x.roundRect(cx,1080,w,56,28):x.rect(cx,1080,w,56);if(tag){x.strokeStyle="#A7B5A1";x.lineWidth=2.5;x.stroke()}else{x.fillStyle="#E4E9DF";x.fill()}x.fillStyle=tag?"#465250":"#173D3B";x.textAlign="center";x.fillText(t,cx+w/2,1118);cx+=w+16});
-  x.fillStyle="#66706E";x.font=`500 26px ${SANS}`;x.fillText(`연마 ${stageOf(st,stats)}단계 · ${STAGES[stageOf(st,stats)]} · 걸어온 날 ${stats.active}`,W/2,1210);
+  const CR=typeof shownCrests==="function"?shownCrests(st):[];const ML=typeof idLine==="function"?idLine(st):"";const IDL=CR.length>0||!!ML;
+  x.fillStyle="#1F2A28";x.font=`500 40px ${SERIF}`;wrapLines(x,displaySentence(a),W-220,IDL?2:3).forEach((l,i)=>x.fillText(l,W/2,880+i*60));
+  const kw=displayKeywords(a).map(t=>({t,tag:false})).concat((st.visibility.fields.tags?cardTags(st):[]).map(t=>({t,tag:true})));x.font=`700 30px ${SANS}`;let tot=kw.reduce((s,k)=>s+x.measureText(k.t).width+60,0)-16;let cx=(W-tot)/2;kw.forEach(({t,tag})=>{const w=x.measureText(t).width+44;x.beginPath();const KY=IDL?975:1080;x.roundRect?x.roundRect(cx,KY,w,56,28):x.rect(cx,KY,w,56);if(tag){x.strokeStyle="#A7B5A1";x.lineWidth=2.5;x.stroke()}else{x.fillStyle="#E4E9DF";x.fill()}x.fillStyle=tag?"#465250":"#173D3B";x.textAlign="center";x.fillText(t,cx+w/2,KY+38);cx+=w+16});
+  if(IDL)await drawCrestRow(x,CR,ML,{top:1060});
+  x.fillStyle="#66706E";x.font=`500 ${IDL?22:26}px ${SANS}`;x.textAlign="center";x.fillText(`연마 ${stageOf(st,stats)}단계 · ${STAGES[stageOf(st,stats)]} · 걸어온 날 ${stats.active}`,W/2,IDL?(CR.length?1262:1200):1210);
+  if(IDL){x.fillStyle="#93A09B";x.font=`500 19px ${SANS}`;x.fillText("누구나 원석으로 태어난다. 살아가는 만큼, 보석이 된다.",W/2,H-56);return c}
  }
  x.fillStyle="#93A09B";x.font=`500 22px ${SANS}`;x.fillText("누구나 원석으로 태어난다. 살아가는 만큼, 보석이 된다.",W/2,H-80);
  return c;
@@ -191,7 +194,7 @@ function ShareImageSheet({kind,st,stats,profile,onClose,toast,onExit,exitDone}){
   ${url?html`<img src=${url} alt=${kind==="week"?"일주일 전과 지금의 젬 비교 이미지":"내 젬 카드 이미지"} className="shareimg"/>`:html`<p className="small faint">이미지를 만드는 중…</p>`}
   <div className="row"><button className="btn grow" disabled=${!url} onClick=${save}>이미지 저장</button>${canShareFiles&&html`<button className="btn ghost grow" disabled=${!url} onClick=${share}><${Ico} n="share"/>공유하기</button>`}</div>
   ${!isMobile&&html`<p className="small faint">이미지를 마우스 오른쪽 버튼으로 눌러 ‘다른 이름으로 이미지 저장’을 해도 돼요.</p>`}
-  <p className="note">이미지에는 젬, 한 문장, 키워드, 닉네임과 칭호, 그리고 공개 설정에서 켠 MBTI·혈액형 태그와 별자리만 담깁니다. 원문 기록과 근거는 들어가지 않아요.</p>
+  <p className="note">이미지에는 젬, 한 문장, 키워드, 닉네임과 칭호, 그리고 공개 설정에서 켠 MBTI·혈액형 태그와 별자리, 진열한 휘장만 담깁니다. 원문 기록과 근거는 들어가지 않아요.</p>
   ${kind==="week"&&!exitDone&&html`<div className="panel tint stack"><b>마지막 미션 · 마무리 설문</b><span className="small muted">일주일을 돌아본 지금, 솔직한 의견을 들려주세요.</span><button className="btn sm" onClick=${onExit}>마무리 설문 열기</button></div>`}
  <//>`;
 }

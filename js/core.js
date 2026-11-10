@@ -248,6 +248,7 @@ function gemSVG(g,seed,key){
   over+=`<ellipse cx="${((bx[0]+bx[1])/2).toFixed(1)}" cy="${((by[0]+by[1])/2+8).toFixed(1)}" rx="${((bx[1]-bx[0])*.42).toFixed(1)}" ry="${((by[1]-by[0])*.4).toFixed(1)}" fill="url(#${id}core)" opacity="${(.12+rg*.06).toFixed(2)}"/>`}
  const mk=g.marks||{};const MET=[null,["#E9EDF1","#A3ACB7","#6E7884"],["#F6DF98","#C99A35","#8C6618"],["#F2F6F8","#B5C3CC","#7A8D99"],["#F6DF98","#C99A35","#8C6618"],["#FFE9A8","#D4A43C","#8C6618"]];
  let back="",front="",plinth="";
+ {const IN=(typeof gemInsignia==="function"&&g.idm)?gemInsignia(g.idm,id):null;if(IN){back+=IN.back;under+=IN.under}}
  const au=clamp(mk.aura||0,0,5);
  if(au){back+=`<circle class="gm-breathe" cx="100" cy="98" r="96" fill="url(#${id}glow)" opacity="${(.25+au*.15).toFixed(2)}"/>`;for(let i=0;i<au;i++)back+=`<circle cx="100" cy="98" r="${(94-i*6).toFixed(1)}" fill="none" stroke="${i%2?"#E2BC5C":st.light==="#FFFFFF"?st.tint:st.light}" stroke-opacity="${(.62-i*.07).toFixed(2)}" stroke-width="${i===0?1.6:1.1}"${i%2?` stroke-dasharray="1.5 4.5" class="gm-spin${i%4===1?"":" rev"}"`:""}/>`}
  const sr=clamp(mk.stars||0,0,5);
@@ -335,7 +336,7 @@ const FRAMES=["발견","이어감","깊어짐","나눔","전수"];
 /* rarity → how big the acquisition ceremony is */
 const RARITY={common:{name:"일반",en:"ACHIEVEMENT",color:"#9FB39A",n:1},rare:{name:"희귀",en:"RARE ACHIEVEMENT",color:"#7E9BD1",n:2},epic:{name:"영웅",en:"EPIC ACHIEVEMENT",color:"#B58AD8",n:3},legend:{name:"전설",en:"LEGENDARY",color:"#E2BC5C",n:4}};
 /* card frames unlocked by epic+ badges */
-const CARD_FRAMES={gold:{name:"금빛 테두리"},rose:{name:"장밋빛 테두리"},star:{name:"별빛 테두리"},dawn:{name:"새벽빛 테두리"},ring:{name:"나이테 테두리"},seven:{name:"일곱 빛깔 테두리"}};
+const CARD_FRAMES={gold:{name:"금빛 테두리"},rose:{name:"장밋빛 테두리"},star:{name:"별빛 테두리"},dawn:{name:"새벽빛 테두리"},ring:{name:"나이테 테두리"},crest:{name:"휘장 테두리"},seven:{name:"일곱 빛깔 테두리"}};
 const BP=(v,t)=>[Math.min(v||0,t),t],BB=v=>[v?1:0,1];
 /* season 1 — every badge: condition(desc), progress(prog), reward(title + optional frame) */
 const BADGES=[
@@ -371,11 +372,23 @@ const BADGES=[
  {id:"ring4",g:"연륜",rar:"rare",name:"짙은 결",glyph:"산",desc:"쉰을 넘어선 시간이 결을 짙게 물들였어요.",cond:"쉰을 넘어선 시간 · 생일에서 태어난 해를 고르면 저절로 새겨져요",title:"짙은 결의",test:s=>(s.rings||0)>=4,prog:s=>BB((s.rings||0)>=4)},
  {id:"ring5",g:"연륜",rar:"epic",name:"원숙한 결",glyph:"별",desc:"예순을 넘어선 시간이 젬에 원숙한 빛을 더했어요.",cond:"예순을 넘어선 시간 · 생일에서 태어난 해를 고르면 저절로 새겨져요",title:"원숙한 결의",test:s=>(s.rings||0)>=5,prog:s=>BB((s.rings||0)>=5)},
  {id:"ring6",g:"연륜",rar:"legend",name:"그윽한 결",glyph:"열쇠",desc:"일흔을 넘어선 시간, 가장 그윽한 나이테가 젬을 감쌌어요.",cond:"일흔을 넘어선 시간 · 생일에서 태어난 해를 고르면 저절로 새겨져요",title:"그윽한 결의",frame:"ring",test:s=>(s.rings||0)>=6,prog:s=>BB((s.rings||0)>=6)},
+ {id:"id_root",g:"휘장",rar:"common",name:"뿌리를 밝힌",glyph:"새싹",desc:"나고 자란 곳을 휘장으로 남겼어요.",cond:"'나의 휘장'에 뿌리 1곳 남기기",title:"뿌리를 밝힌",test:s=>(s.idRoot||0)>=1,prog:s=>BP(s.idRoot,1)},
+ {id:"id_home",g:"휘장",rar:"common",name:"터를 잡은",glyph:"집",desc:"그 자리에서 나의 터전을 인증했어요.",cond:"집이나 일터에서 터전 인증하기",title:"터를 잡은",test:s=>(s.idHomeDays||0)>=1,prog:s=>BP(s.idHomeDays,1)},
+ {id:"id_home7",g:"휘장",rar:"rare",name:"터줏대감",glyph:"집",desc:"같은 터전을 서로 다른 일곱 날 인증했어요.",cond:"같은 터전을 다른 날 7번 인증",title:"터줏대감",test:s=>(s.idHomeDays||0)>=7,prog:s=>BP(s.idHomeDays,7)},
+ {id:"id_school",g:"휘장",rar:"common",name:"배움의 길",glyph:"책",desc:"배운 곳 두 곳을 남겼어요.",cond:"배운 곳 2곳 남기기",title:"배움의 길을 걸은",test:s=>(s.idSchool||0)>=2,prog:s=>BP(s.idSchool,2)},
+ {id:"id_org",g:"휘장",rar:"common",name:"함께하는 곳",glyph:"사람",desc:"내가 속한 곳을 휘장으로 새겼어요.",cond:"소속 1곳 남기기",title:"함께하는",test:s=>(s.idOrg||0)>=1,prog:s=>BP(s.idOrg,1)},
+ {id:"id_org3",g:"휘장",rar:"rare",name:"다리를 놓는",glyph:"고리",desc:"세 곳 이상의 공동체에 속해 있어요.",cond:"소속 3곳 남기기",title:"다리를 놓는",test:s=>(s.idOrg||0)>=3,prog:s=>BP(s.idOrg,3)},
+ {id:"id_honor",g:"휘장",rar:"rare",name:"영예로운",glyph:"왕관",desc:"받은 상이나 자격을 휘장으로 새겼어요.",cond:"영예 1개 남기기",title:"영예로운",test:s=>(s.idHonor||0)>=1,prog:s=>BP(s.idHonor,1)},
+ {id:"id_honor5",g:"휘장",rar:"epic",name:"영예의 전당",glyph:"왕관",desc:"다섯 가지 영예가 쌓였어요.",cond:"영예 5개 남기기",title:"영예의 전당에 오른",test:s=>(s.idHonor||0)>=5,prog:s=>BP(s.idHonor,5)},
+ {id:"id_media",g:"휘장",rar:"rare",name:"화면 속 나",glyph:"카메라",desc:"방송·신문·온라인에 소개된 순간을 남겼어요.",cond:"조명 1개 남기기",title:"조명을 받은",test:s=>(s.idMedia||0)>=1,prog:s=>BP(s.idMedia,1)},
+ {id:"id_media5",g:"휘장",rar:"epic",name:"스포트라이트",glyph:"해",desc:"다섯 번의 조명을 받았어요.",cond:"조명 5개 남기기",title:"스포트라이트의",test:s=>(s.idMedia||0)>=5,prog:s=>BP(s.idMedia,5)},
+ {id:"id_shelf",g:"휘장",rar:"common",name:"진열장을 연",glyph:"선반",desc:"휘장을 카드에 진열했어요.",cond:"휘장 1개 진열하기",title:"진열장을 연",test:s=>(s.idShown||0)>=1,prog:s=>BP(s.idShown,1)},
+ {id:"id_all",g:"휘장",rar:"legend",name:"나를 새긴 사람",glyph:"별",desc:"뿌리·터전·배움·소속·영예·조명, 여섯 갈래를 모두 새겼어요.",cond:"여섯 갈래 휘장을 모두 남기기",title:"나를 새긴",frame:"crest",test:s=>(s.idCats||0)>=6,prog:s=>BP(s.idCats,6)},
  {id:"dawn",g:"비밀",rar:"epic",secret:true,hint:"해가 뜨기 전, 하루를 먼저 연 사람에게",name:"새벽빛",glyph:"새싹",desc:"새벽 5~7시에 오늘의 한 줄을 남겼어요.",cond:"새벽 5~7시에 오늘의 한 줄 남기기",title:"새벽빛의",frame:"dawn",test:s=>!!s.dawn,prog:s=>BB(s.dawn)},
  {id:"allweek",g:"비밀",rar:"legend",secret:true,hint:"일곱 날, 하루도 빠짐없이",name:"일곱 빛깔",glyph:"별",desc:"일곱 날 모두 한 걸음이나 한 줄을 남겼어요.",cond:"활동한 날 7일 채우기",title:"일곱 날을 채운",frame:"seven",test:s=>s.active>=7,prog:s=>BP(s.active,7)}
 ];
-GROUPS["비밀"]="#5B4A7A";GROUPS["발자취"]="#4F6F8F";GROUPS["연륜"]="#8C6A3A";
-const GROUP_DESC={"연륜":"살아온 시간이 젬에 새긴 나이테","발자취":"머무른 곳이 남긴 길","지속":"꾸준히 이어 간 시간","도약":"나를 새로 발견한 순간","회복":"쉬고, 다듬고, 돌아온 일","함께":"사람들과 결을 주고받은 일","비밀":"조건이 숨겨진 업적"};
+GROUPS["비밀"]="#5B4A7A";GROUPS["발자취"]="#4F6F8F";GROUPS["연륜"]="#8C6A3A";GROUPS["휘장"]="#7A1F2B";
+const GROUP_DESC={"휘장":"내가 걸어온 길 — 뿌리·터전·배움·소속·영예·조명","연륜":"살아온 시간이 젬에 새긴 나이테","발자취":"머무른 곳이 남긴 길","지속":"꾸준히 이어 간 시간","도약":"나를 새로 발견한 순간","회복":"쉬고, 다듬고, 돌아온 일","함께":"사람들과 결을 주고받은 일","비밀":"조건이 숨겨진 업적"};
 function frameOf(days){return days>=100?4:days>=60?3:days>=30?2:days>=7?1:0}
 function Medal({b,earned,frame=0,size=60}){
  const c=GROUPS[b.g];const ring=earned?["#B9C3B4","#9FB39A","#C9A45A","#B98A3A","#8E6B22"][frame]:"none";
@@ -421,7 +434,7 @@ const DEMO_ITEMS=[
 const EXAMPLE_PERSON={gem:{stone:"호박",lightName:"햇살",light:"물결",form:"덩이",texture:"맑음",hardness:3,grain:2,facets:8,symbol:"그릇"},gemName:"햇살 호박",sentence:"주말마다 요리를 기록하며 이웃과 레시피를 나누는 사람",keywords:["나눔","요리","설명"],axes:[{name:"설명력"},{name:"꾸준함"},{name:"돌봄"}]};
 
 /* ───────── state helpers ───────── */
-function freshState(){return {v:2,createdAt:Date.now(),analyses:0,sources:{youtube:"",calendar:"",story:"",photos:0,at:null},answers:["","",""],quick:null,know:[],analysis:null,first:null,axesHistory:[],steps:{done:[],rests:[],comebacks:0,current:null},logs:[],reflections:[],visibility:{public:false,audience:"all",fields:{sentence:true,keywords:true,hexagon:false,badges:true,items:true,words:true,tags:false}},gemOverride:{},featured:[],flags:{edited:false,maxStage:0,badgesSeen:[]}}}
+function freshState(){return {v:2,createdAt:Date.now(),analyses:0,sources:{youtube:"",calendar:"",story:"",photos:0,at:null},answers:["","",""],quick:null,know:[],analysis:null,first:null,axesHistory:[],steps:{done:[],rests:[],comebacks:0,current:null},logs:[],reflections:[],visibility:{public:false,audience:"all",fields:{sentence:true,keywords:true,hexagon:false,badges:true,items:true,words:true,tags:false,crests:true}},gemOverride:{},featured:[],flags:{edited:false,maxStage:0,badgesSeen:[]}}}
 function normState(s){const f=freshState();if(!s)return f;s=clone(s);const o={...f,...s};o.sources={...f.sources,...(s.sources||{})};o.steps={...f.steps,...(s.steps||{})};o.visibility={...f.visibility,...(s.visibility||{}),fields:{...f.visibility.fields,...((s.visibility||{}).fields||{})}};o.flags={...f.flags,...(s.flags||{})};o.logs=Array.isArray(s.logs)?s.logs:[];o.know=Array.isArray(s.know)?s.know:[];o.answers=(s.answers||f.answers).slice(0,3);while(o.answers.length<3)o.answers.push("");return o}
 function displaySentence(a){return (a&&(a.editSentence||a.sentence))||""}
 function displayKeywords(a){return (a&&(a.editKeywords||a.keywords))||[]}
@@ -437,6 +450,7 @@ function livingGem(st){
  g.fp=a.gem.fp||fingerprint(a);
  const mk=st.flags&&st.flags.marks;if(mk)g.marks={...mk};
  g.polish=clamp((st.flags&&st.flags.maxStage)||1,1,5);
+ if(typeof idMarks==="function"){const m=idMarks(st);if(m){g.idm=m;g.facets=clamp(g.facets+m.facets,6,14)}}
  if(typeof ringsOf==="function"){const r=ringsOf(st);if(r)g.rings=r;else delete g.rings}
  return g;
 }
@@ -451,7 +465,7 @@ function daysWith(st){const t=(st.first&&st.first.at)||(st.analysis&&st.analysis
 function markValues(st,s){return {setting:daysWith(st),sat:s.connections||0,aura:(s.reactionsReceived||0)+(s.wordsReceived||0),stars:s.visitors||0}}
 function marksOf(st,s){const v=markValues(st,s),prev=(st.flags&&st.flags.marks)||{};const o={};MARKS.forEach(m=>{o[m.k]=Math.max(prev[m.k]||0,m.steps.filter(x=>v[m.k]>=x).length)});return o}
 function markNext(m,lv,val){const t=m.steps[lv];return t==null?null:{target:t,left:Math.max(0,t-val),pct:clamp(Math.round((val-(m.steps[lv-1]||0))/(t-(m.steps[lv-1]||0))*100),0,100)}}
-function statsOf(st,items,soc){soc=soc||{};return {days:st.steps.done.length,active:activeDays(st),logs:(st.logs||[]).length,rests:st.steps.rests.length,comebacks:st.steps.comebacks||0,confirmed:!!(st.analysis&&(st.analysis.status==="yes"||st.analysis.status==="edited")),analyses:st.analyses||0,items:items.length,edited:!!st.flags.edited,isPublic:!!st.visibility.public,wordsGiven:soc.wordsGiven||0,wordsReceived:soc.wordsReceived||0,connections:soc.friends||0,reactionsGiven:soc.reactionsGiven||0,reactionsReceived:soc.reactionsReceived||0,exitDone:!!soc.exitDone,knows:(st.know||[]).length,rings:(typeof ringsOf==="function"?ringsOf(st):0),...(typeof stayStats==='function'?(()=>{const z=stayStats(st);return {stays:z.stays,placesN:z.places,regular:z.regular,placeCats:z.cats,newPlaces:z.newPlaces}})():{}),returns:(st.flags&&st.flags.returns)||0,dawn:(st.logs||[]).some(l=>{if(!l.at)return false;const h=new Date(l.at).getHours();return h>=5&&h<7})}}
+function statsOf(st,items,soc){soc=soc||{};return {days:st.steps.done.length,active:activeDays(st),logs:(st.logs||[]).length,rests:st.steps.rests.length,comebacks:st.steps.comebacks||0,confirmed:!!(st.analysis&&(st.analysis.status==="yes"||st.analysis.status==="edited")),analyses:st.analyses||0,items:items.length,edited:!!st.flags.edited,isPublic:!!st.visibility.public,wordsGiven:soc.wordsGiven||0,wordsReceived:soc.wordsReceived||0,connections:soc.friends||0,reactionsGiven:soc.reactionsGiven||0,reactionsReceived:soc.reactionsReceived||0,exitDone:!!soc.exitDone,knows:(st.know||[]).length,...(typeof idStats==="function"?(()=>{const I=idStats(st);return {idRoot:I.n.root,idHome:I.n.home,idHomeDays:I.homeDays,idSchool:I.n.school,idOrg:I.n.org,idHonor:I.n.honor,idMedia:I.n.media,idCats:I.cats,idShown:I.shown}})():{}),rings:(typeof ringsOf==="function"?ringsOf(st):0),...(typeof stayStats==='function'?(()=>{const z=stayStats(st);return {stays:z.stays,placesN:z.places,regular:z.regular,placeCats:z.cats,newPlaces:z.newPlaces}})():{}),returns:(st.flags&&st.flags.returns)||0,dawn:(st.logs||[]).some(l=>{if(!l.at)return false;const h=new Date(l.at).getHours();return h>=5&&h<7})}}
 const STAGES=["","원석","초벌","연마","광택","명품"];
 /* stages rise strictly in order (CBT thresholds; the full service would use 7·30·60 days) */
 const STAGE_RULES=[null,
@@ -491,6 +505,7 @@ function buildPrompt({sources,answers,photoCount,items,feedback,prev,logs,stepsD
  if(qa)P.push(`[성찰 질문 답변]\n${qa}`);
  {const ql=quickLines(quick);if(ql)P.push(ql);const kl=knowLines(know);if(kl)P.push(kl)}
  if(logs&&logs.length)P.push(`[MIB에 남긴 오늘의 한 줄 — 최근 기록]\n`+logs.slice(-14).map(l=>`- ${l.day} ${l.text}`).join("\n"));
+ {const ID=(typeof __promptIdentity!=="undefined"&&__promptIdentity)||null;if(ID&&ID.length){P.push(`[나의 휘장 — 본인이 직접 남긴 이력]\n${ID.join("\n")}\n→ 출신·배움·소속·영예·출연은 본인이 밝힌 사실이다. 이 사람이 걸어온 맥락(뿌리, 배움의 결, 함께하는 공동체, 인정받은 순간)을 읽는 근거로만 쓰고, 학벌·직함·지역·유명세로 사람을 서열화하거나 단정하지 않는다. 문장에 학교·회사 이름을 그대로 옮겨 적지 않는다.`)}}
  {const sts=(typeof __promptStays!=="undefined"&&__promptStays)||[];if(sts.length){const cats={},names={};sts.forEach(x=>{cats[x.place.cat]=(cats[x.place.cat]||0)+1;names[x.place.name]=(names[x.place.name]||0)+1});P.push(`[머무른 곳 — 본인이 고른 장소, 최근 ${sts.length}번]\n갈래: ${Object.entries(cats).sort((a,b)=>b[1]-a[1]).map(([k,v])=>k+" "+v).join(", ")}\n자주 간 곳: ${Object.entries(names).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([k,v])=>k+(v>1?"("+v+")":"")).join(", ")}\n→ 생활 반경과 리듬(관심 영역 domains, 생활 밀도 pace)을 읽는 근거로만 쓰고, 집·직장 위치를 추정하거나 언급하지 않는다.`)}}
  if(stepsDone&&stepsDone.length)P.push(`[MIB에서 마친 한 걸음]\n`+stepsDone.slice(-10).map(x=>`- ${x}`).join("\n"));
  if(reflections&&reflections.length)P.push(`[주간 회고]\n`+reflections.slice(-2).map(r=>`- 잘한 것: ${r.good} / 어려웠던 것: ${r.hard} / 다음: ${r.next}`).join("\n"));

@@ -558,6 +558,42 @@ label.btn{display:inline-flex;align-items:center;justify-content:center;cursor:p
 .gem.live .gm-fire{animation:gmFire 3.8s ease-in-out infinite}
 @keyframes gmFire{0%,100%{opacity:.15}50%{opacity:.75}}
 @media (prefers-reduced-motion:reduce){.gem.live svg *{animation:none!important}}
+/* insignia — 나의 휘장 */
+.crest{display:inline-flex;flex-direction:column;align-items:center;gap:2px;background:none;border:0;padding:4px 2px;cursor:default;color:inherit;font:inherit;text-align:center}
+button.crest{cursor:pointer;border-radius:12px}button.crest:hover{background:rgba(23,61,59,.05)}
+.crest-ic{display:block;filter:drop-shadow(0 2px 3px rgba(0,0,0,.18))}.crest-ic svg{width:100%;height:100%;display:block}
+.crest-t{font-size:12.5px;font-weight:700;line-height:1.25;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--accent)}
+.crest-s{font-size:11px;line-height:1.2;color:var(--ink-3,#66706E);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.crest.empty .crest-ic{border:1.5px dashed var(--line);border-radius:14px;filter:none}
+.crest-shelf{display:flex;flex-direction:column;align-items:center;gap:6px;width:100%;margin-top:4px;padding-top:10px;border-top:1px dashed var(--line)}
+.crest-shelf.pub{align-items:flex-start}
+.crest-row{display:flex;flex-wrap:wrap;justify-content:center;gap:6px}
+.crest-shelf.pub .crest-row{justify-content:flex-start}
+.motto{margin:0;font-family:var(--serif,"Noto Serif KR",serif);font-size:14.5px;line-height:1.55;color:var(--ink-2);text-align:center}
+.crest-shelf.pub .motto{text-align:left}
+.motto.big{font-size:17px;color:var(--accent);font-weight:600}
+.id-hero{display:flex;flex-direction:column;gap:8px;align-items:center;text-align:center;padding:6px 4px 2px}
+.id-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.id-stat{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:10px;border-radius:14px;border:1.5px solid var(--line);background:var(--card);font:inherit;color:inherit;text-align:left;cursor:pointer}
+.id-stat.on{border-color:var(--accent);box-shadow:0 0 0 2px rgba(23,61,59,.08)}
+.id-stat b{font-size:14px}.id-stat small{font-size:11px;color:var(--ink-3,#66706E);line-height:1.3}
+.pips{display:flex;gap:3px}.pips i{width:8px;height:8px;border-radius:50%;border:1.5px solid #C9A45A}.pips i.on{background:#C9A45A}
+.id-display{display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:16px;background:linear-gradient(180deg,rgba(201,164,90,.10),rgba(201,164,90,.02));border:1px solid rgba(201,164,90,.35)}
+.id-cat{display:flex;flex-direction:column;gap:10px}
+.id-list{display:flex;flex-direction:column;gap:4px}
+.id-row{display:flex;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)}
+.id-row .crest{width:auto!important;padding:0}.id-row .crest-t,.id-row .crest-s{display:none}
+.id-acts{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.id-star{font-size:22px;line-height:1;background:none;border:0;color:#B8A27A;cursor:pointer;padding:2px 4px}.id-star.on{color:#D4A43C;text-shadow:0 0 8px rgba(212,164,60,.5)}
+.id-form{gap:10px}
+.id-found{display:flex;flex-direction:column;gap:4px;padding:12px;border-radius:12px;background:var(--sage-soft)}
+.idprompt{border:1px solid rgba(201,164,90,.45);background:linear-gradient(135deg,rgba(201,164,90,.10),transparent 60%)}
+.idprompt .serif{font-size:17px}
+.gem.live .gm-spot{animation:gmSpot 6s ease-in-out infinite}.gem.live .gm-spot.l{animation-delay:-2s}.gem.live .gm-spot.r{animation-delay:-4s}
+@keyframes gmSpot{0%,100%{opacity:.75}50%{opacity:1}}
+.gem.live .gm-flag{transform-box:view-box;animation:gmFlag 3.2s ease-in-out infinite}
+@keyframes gmFlag{0%,100%{transform:skewY(0)}50%{transform:skewY(-4deg)}}
+.frame-crest{border-color:#7A1F2B!important;box-shadow:0 0 0 1px #7A1F2B,0 0 0 4px rgba(212,164,60,.35),0 0 22px rgba(122,31,43,.3)}
 /* gem features & collection */
 .feed-aw{border-radius:14px;background:linear-gradient(100deg,rgba(201,162,255,.14),rgba(255,210,122,.12) 60%,transparent);box-shadow:inset 0 0 0 1px rgba(201,162,255,.35)}
 .feed-aw.t4{background:linear-gradient(100deg,rgba(255,190,90,.22),rgba(255,143,163,.12) 50%,rgba(143,199,255,.12));box-shadow:inset 0 0 0 1px rgba(216,180,101,.6),0 0 16px rgba(255,200,110,.25)}
@@ -772,23 +808,24 @@ label.btn{display:inline-flex;align-items:center;justify-content:center;cursor:p
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/htm@3.1.1/dist/htm.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
-<script src="js/config.js?v=36"></script>
-<script src="js/core.js?v=36"></script>
-<script src="js/zodiac.js?v=36"></script>
-<script src="js/api.js?v=36"></script>
-<script src="js/support.js?v=36"></script>
-<script src="js/avatars.js?v=36"></script>
-<script src="js/screens.js?v=36"></script>
-<script src="js/social.js?v=36"></script>
-<script src="js/ops.js?v=36"></script>
-<script src="js/quick.js?v=36"></script>
-<script src="js/evolve.js?v=36"></script>
-<script src="js/achieve.js?v=36"></script>
-<script src="js/gems.js?v=36"></script>
-<script src="js/showcase.js?v=36"></script>
-<script src="js/ask.js?v=36"></script>
-<script src="js/places.js?v=36"></script>
-<script src="js/updates.js?v=36"></script>
-<script src="js/app.js?v=36"></script>
+<script src="js/config.js?v=39"></script>
+<script src="js/core.js?v=39"></script>
+<script src="js/zodiac.js?v=39"></script>
+<script src="js/api.js?v=39"></script>
+<script src="js/support.js?v=39"></script>
+<script src="js/avatars.js?v=39"></script>
+<script src="js/screens.js?v=39"></script>
+<script src="js/social.js?v=39"></script>
+<script src="js/ops.js?v=39"></script>
+<script src="js/quick.js?v=39"></script>
+<script src="js/evolve.js?v=39"></script>
+<script src="js/achieve.js?v=39"></script>
+<script src="js/gems.js?v=39"></script>
+<script src="js/showcase.js?v=39"></script>
+<script src="js/ask.js?v=39"></script>
+<script src="js/places.js?v=39"></script>
+<script src="js/updates.js?v=39"></script>
+<script src="js/insignia.js?v=39"></script>
+<script src="js/app.js?v=39"></script>
 </body>
 </html>

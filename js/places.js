@@ -26,7 +26,7 @@ function StayCard({st,onOpen}){
  </div>`;
 }
 
-function StaySheet({st,update,onClose,toast,demo}){
+function StaySheet({st,update,onClose,toast,demo,onOpen}){
  const [phase,setPhase]=useState("idle");const [pos,setPos]=useState(null);const [res,setRes]=useState(null);const [q,setQ]=useState("");const [err,setErr]=useState("");const [adding,setAdding]=useState(false);const [nf,setNf]=useState({name:"",cat:"기타"});
  const t=dayKey();const todayIds=(st.stays||[]).filter(s=>s.day===t).map(s=>s.place.id);
  async function locate(){setErr("");setPhase("locating");try{const p=await getPosition();setPos(p);setPhase("loading");const r=await placesNearby(p.lat,p.lng,"");setRes(r);setPhase("list");track("stay_lookup",{n:r.places.length,src:r.source})}catch(e){setErr(GEO_MSG[e.code]||"주변 장소를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.");setPhase("error")}}
@@ -47,6 +47,7 @@ function StaySheet({st,update,onClose,toast,demo}){
    ${list.length?html`<div className="list stay-list">${list.map(p=>html`<button key=${p.id} className="list-row" onClick=${()=>pick(p)} disabled=${todayIds.includes(p.id)}><span className="stay-ic" aria-hidden="true">${placeIcon(p.cat)}</span><span className="grow"><span className="t">${p.name}</span><br/><span className="d">${p.cat}${p.sub&&p.sub!==p.cat?" · "+p.sub:""}${p.mine?" · 내가 등록":""}</span></span><span className="small faint">${p.dist<1000?p.dist+"m":(p.dist/1000).toFixed(1)+"km"}</span></button>`)}</div>`:html`<p className="small faint">근처에서 찾은 장소가 없어요. 이름으로 찾거나 직접 등록해 보세요.</p>`}
    <p className="note">장소 정보: ${res.source==="kakao"?"카카오맵":"OpenStreetMap 기여자"}</p>
   </div>`}
+  ${pos&&onOpen&&html`<button className="btn quiet block" onClick=${()=>onOpen("identity:home")}>🏠 지금 이곳을 나의 터전(집·일터)으로 인증</button>`}
   ${pos&&(adding?html`<div className="panel stack"><b>목록에 없는 곳 직접 등록</b><span className="small muted">지금 있는 곳(약 100m 단위)에 이 이름으로 등록돼요. 나만 보는 장소라 '우리 집', '작업실'도 괜찮아요.</span>
     <div className="field" style=${{margin:0}}><label htmlFor="np-name">장소 이름</label><input type="text" id="np-name" maxLength="40" value=${nf.name} onChange=${e=>setNf({...nf,name:e.target.value})} placeholder="예) 우리 집, 동네 뒷산, 작업실"/></div>
     <div className="segs stay-cats" role="group" aria-label="갈래">${PLACE_CATS.map(([c,i])=>html`<button key=${c} aria-pressed=${nf.cat===c} onClick=${()=>setNf({...nf,cat:c})}>${i} ${c}</button>`)}</div>
