@@ -189,6 +189,7 @@ function App(){
 
  const top=!demo&&html`<div className="stack">
   ${!desk&&html`<button className="merow" onClick=${()=>setSheet("avatar")}><${Avatar} p=${profile} size=${46}/><span className="grow"><b>${profile.nickname}</b><br/><span className="small faint">${profile.avatar?"프로필 이미지 바꾸기":"프로필 이미지 고르기 · 캐릭터 16종 또는 내 사진"}</span></span><span className="chev">›</span></button>`}
+  ${!desk&&typeof hasNewUpdate==="function"&&hasNewUpdate(st)&&html`<button className="panel updbar" onClick=${()=>setSheet("updates")}><span className="upd-new">NEW</span><span className="grow"><b>업데이트 소식</b><br/><span className="small muted">${latestUpdate().date} · ${latestUpdate().title}</span></span><span className="chev">›</span></button>`}
   ${newAnn&&html`<button className="panel ann" onClick=${()=>setSheet("inbox")}><span className="eyebrow">운영 공지</span><b>${anns[0].title}</b></button>`}
   <${DailyQuestion} key=${"dq"+day} day=${day} answered=${dailyAnswered} toast=${toast} onDone=${reloadSoc}/>
 </div>`;
@@ -244,7 +245,7 @@ function App(){
  const newFriend=!!st&&((pulse&&pulse.card>(seenT.friends||0))||soc.friendships.some(f=>f.status==="accepted"&&Date.parse(f.created_at||0)>(seenT.friends||0)))&&!!seenT.friends;
  const newFeed=!!(pulse&&pulse.feed>(seenT.feed||0))&&!!seenT.feed;
  const newStep=!!st&&seenT.step!==tdy&&(!(st.steps.done||[]).includes(tdy)||!(st.logs||[]).some(l=>l.day===tdy));
- const newTabs={friends:newFriend&&tab!=="friends",feed:newFeed&&tab!=="feed",step:newStep&&tab!=="step"};
+ const newTabs={me:!desk&&!!st&&typeof hasNewUpdate==="function"&&hasNewUpdate(st),friends:newFriend&&tab!=="friends",feed:newFeed&&tab!=="feed",step:newStep&&tab!=="step"};
  const tabs=route==="home"&&st.analysis&&html`<nav className="tabbar" aria-label="메인">${[["me","나","me"],["step","한 걸음","step"],["feed","소식","feed"],["friends","친구","people"]].map(([k,t,ic])=>html`<button key=${k} className="tab" aria-current=${tab===k?"page":undefined} onClick=${()=>{setTab(k);setSheet(null);window.scrollTo(0,0)}}><${Ico} n=${ic}/>${t}${newTabs[k]?html`<span className="upd-new tabnew" aria-label="새 소식">NEW</span>`:k==="friends"&&soc.friendships.some(f=>f.status==="pending"&&f.addressee===uid)?html`<i className="tabdot" aria-label="새 친구 요청"></i>`:null}</button>`)}</nav>`;
  const fab=!demo&&!fbOpen&&route!=="reading"&&html`<button className=${"fab"+(tabs?" up":"")} onClick=${openFeedback} aria-label="이 화면에 대한 의견 보내기"><${Ico} n="chat"/>의견</button>`;
  const pending=soc.friendships.some(f=>f.status==="pending"&&f.addressee===uid);
