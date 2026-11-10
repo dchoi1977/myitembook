@@ -191,7 +191,7 @@ function App(){
  const top=!demo&&html`<div className="stack">
   ${!desk&&html`<button className="merow" onClick=${()=>setSheet("avatar")}><${Avatar} p=${profile} size=${46}/><span className="grow"><b>${profile.nickname}</b><br/><span className="small faint">${profile.avatar?"프로필 이미지 바꾸기":"프로필 이미지 고르기 · 캐릭터 16종 또는 내 사진"}</span></span><span className="chev">›</span></button>`}
   ${!desk&&typeof hasNewUpdate==="function"&&hasNewUpdate(st)&&html`<button className="panel updbar" onClick=${()=>setSheet("updates")}><span className="upd-new">NEW</span><span className="grow"><b>업데이트 소식</b><br/><span className="small muted">${latestUpdate().date} · ${latestUpdate().title}</span></span><span className="chev">›</span></button>`}
-  ${newAnn&&html`<button className="panel ann" onClick=${()=>setSheet("inbox")}><span className="eyebrow">운영 공지</span><b>${anns[0].title}</b></button>`}
+  ${!!newAnn&&html`<button className="panel ann" onClick=${()=>setSheet("inbox")}><span className="eyebrow">운영 공지</span><b>${anns[0].title}</b></button>`}
   <${DailyQuestion} key=${"dq"+day} day=${day} answered=${dailyAnswered} toast=${toast} onDone=${reloadSoc}/>
 </div>`;
  const mid=!demo&&html`<div className="stack">
