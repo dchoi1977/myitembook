@@ -31,6 +31,11 @@ function MyGems({fids,cardOf,names,soc,uid,openUser,toast,onFind}){
  const sorted=[...fids].sort((a,b)=>(cardOf(b)?1:0)-(cardOf(a)?1:0)||nick(names,a).localeCompare(nick(names,b)));
  const slots=Math.max(cols*2,Math.ceil((sorted.length+1)/cols)*cols);
  const [pop,setPop]=useState(null);
+ const SK="mib_gemseen_"+uid;const NEW_MS=72*36e5;const upAt=id=>{const c=cardOf(id);return c?Math.max(Date.parse(c.updated_at||0)||0,(c.data&&c.data.updatedAt)||0):0};
+ const [seen,setSeen]=useState(()=>{try{const v=JSON.parse(localStorage.getItem(SK)||"null");if(v&&typeof v==="object")return v}catch(e){}return null});
+ useEffect(()=>{if(seen||!fids.length)return;const base={_t:Date.now()};setSeen(base);try{localStorage.setItem(SK,JSON.stringify(base))}catch(e){}},[fids.length,!!seen]);
+ const isNew=id=>{if(!seen)return false;const u=upAt(id);return u>0&&u>(seen[id]||seen._t||0)&&Date.now()-u<NEW_MS};
+ const markSeen=id=>{const nx={...(seen||{_t:Date.now()}),[id]:Date.now()};setSeen(nx);try{localStorage.setItem(SK,JSON.stringify(nx))}catch(e){}};
  const shown=sorted.filter(id=>cardOf(id)).length;
  return html`<section className="mygems" aria-label="My GEMS">
   <div className="mg-head"><div><div className="mg-eyebrow">INVENTORY</div><h2 className="mg-title">My GEMS</h2></div><span className="mg-count">${sorted.length}<small> 개의 젬 · 빛나는 ${shown}</small></span></div>
@@ -50,7 +55,8 @@ function MyGems({fids,cardOf,names,soc,uid,openUser,toast,onFind}){
    ${Array.from({length:slots}).map((_,i)=>{const id=sorted[i];
     if(!id)return i===sorted.length?html`<button key=${"add"+i} className="mg-slot add" onClick=${onFind}><span className="mg-plus" aria-hidden="true">+</span><span className="mg-name">친구 찾기</span></button>`:html`<div key=${"e"+i} className="mg-slot empty" aria-hidden="true"></div>`;
     const c=cardOf(id);const g=c?c.data.gem:UNCUT;
-    return html`<button key=${id} className=${"mg-slot"+(c?"":" sealed")} onClick=${()=>{setPop(id);track("mygems_open",{card:!!c})}} aria-label=${nick(names,id)+(c?" · "+c.data.gemName:" · 아직 원석")}>
+    return html`<button key=${id} className=${"mg-slot"+(c?"":" sealed")} onClick=${()=>{const nw=isNew(id);if(nw)markSeen(id);setPop(id);track("mygems_open",{card:!!c,fresh:nw})}} aria-label=${nick(names,id)+(c?" · "+c.data.gemName:" · 아직 원석")+(isNew(id)?" · 새 소식":"")}>
+     ${isNew(id)&&html`<span className="mg-new">NEW</span>`}
      <span className="mg-gem"><${GemView} g=${g} seed=${c?c.data.gemName:id} size=${desk?74:54}/></span>
      ${c&&(()=>{const f=gemFeatures(c.data.gem||{},c.data.gemName);const I=gemIdentity(c.data.gem||{},c.data.gemName);const r=f.find(k=>k==="star"||k==="cat");const ep=(I.aw||[]).some(a=>a.t>=3);return (r||I.rareVariant||ep)?html`<span className="mg-rare" title=${r?INCLUSIONS[r].name:I.variant}>✦</span>`:null})()}
      ${c&&html`<span className="mg-stage" aria-hidden="true">${[1,2,3,4,5].map(k=>html`<i key=${k} className=${k<=(c.data.stage||1)?"on":""}></i>`)}</span>`}
