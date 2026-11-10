@@ -58,6 +58,7 @@ function InAppBar(){const [hide,setHide]=useState(()=>{try{return sessionStorage
  return html`<div className="topbar-note warn" role="note"><span><b>${INAPP==="kakao"?"카카오톡":"앱"} 안에서 열렸어요.</b> 사진 올리기와 로그인 유지가 불안정할 수 있어요.</span><span className="row" style=${{gap:"6px",flexWrap:"nowrap"}}><button className="btn sm" onClick=${openExternal}>${/iPhone|iPad/i.test(navigator.userAgent)&&INAPP!=="kakao"?"주소 복사":"브라우저로 열기"}</button><button className="linkbtn small" onClick=${()=>{setHide(true);try{sessionStorage.setItem("mib_inapp_hide","1")}catch(e){}}} aria-label="안내 닫기">닫기</button></span></div>`}
 
 /* ── help & FAQ ── */
+const GLOSSARY=[["젬","나를 닮은 보석. 내가 고른 답과 남긴 기록으로 모양이 정해져요."],["결","AI가 읽어 준 나의 한 문장과 키워드. 내가 고쳐 쓸 수 있어요."],["연마 단계","활동한 날이 쌓이면 오르는 다섯 단계(원석→초벌→연마→광택→명품). 오를수록 젬이 커지고 맑아져요."],["발현","연마 단계가 오를 때 가끔 깨어나는 특별한 무늬·빛·장식. 일반부터 전설까지 있어요."],["표식","사람들과의 주고받음이 젬 둘레에 남는 것. 받침(함께한 날)·인연석(친구)·광채(받은 공감)·별무리(내 카드를 본 사람)."],["별자리","생일(월·일)을 넣으면 젬 뒤 하늘에 뜨는 열두 별자리. 표식의 '별무리'와는 달라요."],["연륜","태어난 해를 넣으면 젬 안에 생기는 나이테. 나이 숫자는 어디에도 보이지 않아요."],["휘장","내가 거쳐 온 곳과 속한 곳(뿌리·터전·배움·소속 등). 다섯 개까지 진열할 수 있고, 하나씩 비공개로 둘 수 있어요."],["배지 · 칭호","걸음과 만남이 쌓이면 받는 업적. 칭호는 닉네임 앞에 붙는 이름이에요."],["우리 사이","친구와 서로 합의해 붙이는 둘만의 관계 이름."],["아틀리에","한 사람의 공간. 젬·휘장·업적·선반을 공개한 범위 안에서 구경해요."],["선반","내 물건(아이템)을 올려 두는 곳. 대표 아이템은 네 개까지 고를 수 있어요."]];
 const FAQ=[
  ["CBT는 어떻게 참여하나요?","7일 동안 하루 5분이면 충분해요. 첫날 1분짜리 '빠른 시작'으로 젬을 만들고, 매일 '한 걸음'이나 '오늘의 한 줄' 하나만 남겨 주세요. 미션은 홈 화면에 하루씩 열립니다."],
  ["홈 화면에 앱처럼 두려면?","iPhone은 Safari 아래쪽 공유 버튼 → '홈 화면에 추가', 갤럭시는 Chrome 메뉴(⋮) → '홈 화면에 추가'를 눌러 주세요. 카카오톡 안에서는 추가가 안 되니 먼저 브라우저로 열어 주세요."],
@@ -76,6 +77,7 @@ function HelpSheet({onClose,onFeedback,supportUrl}){
  return html`<${Sheet} title="도움말" onClose=${onClose}>
   <div className="panel stack small"><b>막히면 이렇게 알려 주세요</b><span className="muted">어느 화면에서든 오른쪽 아래 <b>의견</b> 버튼 → '오류'를 고르면 지금 화면 캡처와 함께 운영자에게 바로 전달돼요.</span>
    <div className="row"><button className="btn sm grow" onClick=${onFeedback}>의견 보내기</button>${supportUrl&&html`<a className="btn ghost sm grow" href=${supportUrl} target="_blank" rel="noopener">운영 채팅방</a>`}</div></div>
+  <details className="panel gloss"><summary><b>용어 한눈에</b><span className="small muted"> · 젬, 발현, 표식, 휘장…</span></summary><dl>${GLOSSARY.map(([t,d])=>html`<div key=${t}><dt>${t}</dt><dd>${d}</dd></div>`)}</dl></details>
   <div className="faq">${FAQ.map(([q,a],i)=>html`<div key=${i} className="faq-item"><button className="faq-q" aria-expanded=${open===i} onClick=${()=>setOpen(open===i?null:i)}><span>${q}</span><span className="chev">${open===i?"−":"+"}</span></button>${open===i&&html`<p className="faq-a">${a}</p>`}</div>`)}</div>
   <p className="small faint center">버전 ${APP_VER} · ${MIB_CONFIG.cohort}</p>
  <//>`;

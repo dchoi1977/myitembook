@@ -136,6 +136,10 @@ function Reveal({st,onConfirm,onEdit,onDiffer,onOpen}){
 }
 
 /* ───────── home: me ───────── */
+function GemFeat({g,seed,onMore,max=2}){const I=gemIdentity(g,seed);
+ const ex=[...(I.aw||[]).map(x=>({k:"a"+x.k,w:10+x.t,el:html`<span key=${"a"+x.k} className=${"aw t"+x.t} title=${AW_TIERS[x.t][0]+" 발현 · 연마 "+x.at+"단계"}>✺ ${x.n}</span>`})),...I.feats.map(k=>({k:"f"+k,w:(INCLUSIONS[k].rar==="희귀"||k==="star"||k==="cat")?12:5,el:html`<span key=${"f"+k} title=${INCLUSIONS[k].desc}>✧ ${INCLUSIONS[k].name}</span>`}))].sort((a,b)=>b.w-a.w);
+ const rest=ex.length-max;
+ return html`<div className="gemfeat"><span className="gf-id">${I.rareVariant?"✦ ":""}${I.variant} · ${I.cut}</span>${ex.slice(0,max).map(x=>x.el)}${rest>0&&html`<button className="gf-more" onClick=${onMore} aria-label=${"특성 "+rest+"개 더 보기"}>+${rest}</button>`}</div>`}
 function LifeCard({st,items,stats,onOpen,me}){
  const desk=useDesktop();const a=st.analysis;const g=livingGem(st);const [back,setBack]=useState(false);
  const earned=BADGES.filter(b=>isEarned(st,stats,b));const stage=stageOf(st,stats);
@@ -147,7 +151,7 @@ function LifeCard({st,items,stats,onOpen,me}){
    <${ZodiacSky} z=${myZodiac(st)} size=${210}/>
    <${GemView} g=${g} seed=${st.createdAt} size=${210}/>
    <div className="gemname">${gemName(g)}</div>
-   ${(()=>{const I=gemIdentity(g,st.createdAt);return html`<div className="gemfeat"><span className="gf-id">${I.rareVariant?"✦ ":""}${I.variant} · ${I.cut}${I.pattern?" · "+I.pattern:""}</span>${I.feats.map(k=>html`<span key=${k} title=${INCLUSIONS[k].desc}>✧ ${INCLUSIONS[k].name}</span>`)}${(I.aw||[]).map(x=>html`<span key=${x.k} className=${"aw t"+x.t} title=${AW_TIERS[x.t][0]+" 발현 · 연마 "+x.at+"단계"}>✺ ${x.n}</span>`)}</div>`})()}
+   ${html`<${GemFeat} g=${g} seed=${st.createdAt} onMore=${()=>onOpen("gemwhy")}/>`}
    <button className="linkbtn small" onClick=${()=>onOpen("gemwhy")}>왜 이런 모양일까 ›</button>
   </div><div className="lc-story"><span className="eyebrow">THE STORY OF</span>
    <div className="lc-who">${me&&html`<${Avatar} p=${me} size=${46}/>`}<b className="serif">${(me&&me.nickname)||"나"}</b><span>의 결</span></div>
@@ -160,7 +164,7 @@ function LifeCard({st,items,stats,onOpen,me}){
    <${ZodiacSky} z=${myZodiac(st)} size=${210}/>
    <${GemView} g=${g} seed=${st.createdAt} size=${210}/>
    <div className="gemname">${gemName(g)}</div>
-   ${(()=>{const I=gemIdentity(g,st.createdAt);return html`<div className="gemfeat"><span className="gf-id">${I.rareVariant?"✦ ":""}${I.variant} · ${I.cut}${I.pattern?" · "+I.pattern:""}</span>${I.feats.map(k=>html`<span key=${k} title=${INCLUSIONS[k].desc}>✧ ${INCLUSIONS[k].name}</span>`)}${(I.aw||[]).map(x=>html`<span key=${x.k} className=${"aw t"+x.t} title=${AW_TIERS[x.t][0]+" 발현 · 연마 "+x.at+"단계"}>✺ ${x.n}</span>`)}</div>`})()}
+   ${html`<${GemFeat} g=${g} seed=${st.createdAt} onMore=${()=>onOpen("gemwhy")}/>`}
    <button className="linkbtn small" onClick=${()=>onOpen("gemwhy")}>왜 이런 모양일까 ›</button>
    <p className="sentence">${displaySentence(a)}</p>
    <div className="kw">${displayKeywords(a).map(k=>html`<span className="chip" key=${k}>${k}</span>`)}${st.visibility.fields.tags&&cardTags(st).map(t=>html`<span className="chip plain tagchip" key=${"t"+t}>${t}</span>`)}</div>

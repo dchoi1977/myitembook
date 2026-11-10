@@ -166,7 +166,7 @@ const AW_TIERS=[["일반",50],["드묾",28],["희귀",15],["영웅",5.5],["전�
 const AWAKEN=[
  {k:"firefly",n:"반딧불",t:0,kind:"빛"},{k:"silver",n:"은빛 고리",t:0,kind:"장식"},{k:"runes",n:"룬 고리",t:0,kind:"문양"},{k:"dust",n:"잔별",t:0,kind:"장식"},
  {k:"moon",n:"달빛 심",t:1,kind:"빛"},{k:"frost",n:"서리빛",t:1,kind:"빛깔"},{k:"gold",n:"황금 가루",t:1,kind:"빛깔"},{k:"mandala",n:"만다라",t:1,kind:"문양"},{k:"goldsym",n:"금빛 상",t:1,kind:"상"},
- {k:"filigree",n:"금 세공 테",t:2,kind:"장식"},{k:"engrave",n:"별자리 각인",t:2,kind:"문양"},{k:"pearl",n:"진주빛",t:2,kind:"빛깔"},{k:"moons",n:"쌍둥이 달",t:2,kind:"장식"},
+ {k:"filigree",n:"금 세공 테",t:2,kind:"장식"},{k:"engrave",n:"별무늬 각인",t:2,kind:"문양"},{k:"pearl",n:"진주빛",t:2,kind:"빛깔"},{k:"moons",n:"쌍둥이 달",t:2,kind:"장식"},
  {k:"sun",n:"태양 심",t:3,kind:"빛"},{k:"holo",n:"홀로그램",t:3,kind:"빛깔"},{k:"crown",n:"왕관",t:3,kind:"장식"},{k:"heart",n:"하트 컷",t:3,kind:"모양"},{k:"glowsym",n:"빛나는 상",t:3,kind:"상"},
  {k:"nebula",n:"성운",t:4,kind:"빛"},{k:"wings",n:"빛의 날개",t:4,kind:"장식"},{k:"phoenix",n:"불사조빛",t:4,kind:"빛깔"},{k:"star",n:"별 컷",t:4,kind:"모양"}];
 const awKey=(g,seed)=>{const fp=g&&g.fp;return fp?(fp.mod||[]).join(",")+"|"+fp.hue+"|"+fp.tilt:String(seed)+(g&&g.stone)};
@@ -489,7 +489,7 @@ const MARKS=[
  {k:"setting",label:"받침",src:"젬과 함께한 날",unit:"일",steps:[3,7,30,100,365],names:["없음","은 받침","금 받침","백금 받침","보석 받침","왕관 받침"],head:"받침이 올라갔어요",desc:n=>`젬과 함께한 지 ${n}일`},
  {k:"sat",label:"인연석",src:"친구",unit:"명",steps:[1,3,5,10,20],names:["없음","1개","2개","3개","4개","5개"],head:"인연석이 떠올랐어요",desc:n=>`친구 ${n}명과 이어졌어요`},
  {k:"aura",label:"광채",src:"받은 공감·한 단어",unit:"개",steps:[3,10,30,60,100],names:["없음","은은한 광채","맑은 광채","눈부신 광채","찬란한 광채","만개한 광채"],head:"젬에 광채가 번졌어요",desc:n=>`받은 공감·한 단어 ${n}개`},
- {k:"stars",label:"별자리",src:"내 카드를 본 사람",unit:"명",steps:[5,15,30,60,100],names:["없음","첫 별","별 무리","작은 별자리","큰 별자리","은하수"],head:"젬 위에 별자리가 생겼어요",desc:n=>`내 카드를 본 사람 ${n}명`}];
+ {k:"stars",label:"별무리",src:"내 카드를 본 사람",unit:"명",steps:[5,15,30,60,100],names:["없음","첫 별","별 셋","작은 별무리","큰 별무리","은하수"],head:"젬 위에 별무리가 떴어요",desc:n=>`내 카드를 본 사람 ${n}명`}];
 const markTitle=(m,lv)=>m.k==="sat"?`인연석 ${lv}개`:m.names[lv];
 function daysWith(st){const t=(st.first&&st.first.at)||(st.analysis&&st.analysis.at)||null;return t?Math.max(0,Math.floor((Date.now()-t)/86400000)):0}
 function markValues(st,s){return {setting:daysWith(st),sat:s.connections||0,aura:(s.reactionsReceived||0)+(s.wordsReceived||0),stars:s.visitors||0}}

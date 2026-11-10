@@ -14,7 +14,7 @@ function settleReread(an,prev){
 }
 
 /* what the person can see change */
-const EVO_FIELDS=[["stage","단계"],["stone","색"],["form","형"],["texture","질"],["light","빛"],["symbol","상"],["setting","받침"],["sat","인연석"],["aura","광채"],["stars","별자리"],["hardness","강"],["grain","결"],["facets","각"],["rings","연륜"],["laurel","월계관"],["spot","조명"],["roots","뿌리"],["banners","깃발"]];
+const EVO_FIELDS=[["stage","단계"],["stone","색"],["form","형"],["texture","질"],["light","빛"],["symbol","상"],["setting","받침"],["sat","인연석"],["aura","광채"],["stars","별무리"],["hardness","강"],["grain","결"],["facets","각"],["rings","연륜"],["laurel","월계관"],["spot","조명"],["roots","뿌리"],["banners","깃발"]];
 const MARK_KEYS=["setting","sat","aura","stars"];
 function gemSnap(g,stage){const m=g.marks||{};return {stone:g.stone,form:g.form,texture:g.texture,light:g.light,symbol:g.symbol,hardness:g.hardness,grain:g.grain,facets:g.facets,lightName:g.lightName,fp:g.fp,stage,setting:m.setting||0,sat:m.sat||0,aura:m.aura||0,stars:m.stars||0,rings:g.rings||0,polish:stage,laurel:(g.idm||{}).laurel||0,spot:(g.idm||{}).spot||0,roots:(g.idm||{}).roots||0,banners:((g.idm||{}).banners||[]).length,idm:g.idm?{...g.idm}:null,marks:{...m}}}
 /* a field the old snapshot never had (older app version) is adopted quietly, not celebrated */
