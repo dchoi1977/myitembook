@@ -46,7 +46,7 @@ function AnswersSheet({stat,names,onClose,openUser}){
   ${sent.length?sent.map(q=>{const ts=q.round.targets||[];const done=ts.filter(t=>t.answer);return html`<div key=${q.id} className="stack ask-block">
    <div className="row between"><b className="serif">Q${q.ord}. ${q.text}</b><span className="small faint">${done.length} / ${ts.length}</span></div>
    ${done.length?html`<div className=${"ask-answers"+(q.max_len<=20?" words":"")}>${done.map(t=>html`<button key=${t.friend} className="ask-answer" onClick=${()=>openUser(t.friend)}><span className="ask-a">${t.answer}</span><span className="ask-by"><${Avatar} p=${names[t.friend]||{id:t.friend}} size=${20}/>${nick(names,t.friend)}</span></button>`)}</div>`:html`<p className="small faint">아직 답을 기다리는 중이에요.</p>`}
-   ${ts.length>done.length&&html`<span className="small faint">기다리는 중 · ${ts.filter(t=>!t.answer).map(t=>nick(names,t.friend)).join(", ")}</span>`}
+   ${ts.length>done.length&&html`<span className="small faint">기다리는 중 · ${ts.filter(t=>!t.answer).map((t,i)=>html`${i?", ":""}<${UName} key=${t.friend} id=${t.friend} names=${names} className="plain"/>`)}</span>`}
   </div>`}):html`<p className="small faint">아직 보낸 질문이 없어요.</p>`}
  <//>`;
 }
@@ -57,7 +57,7 @@ function AnswerSheet({incoming,names,onClose,toast,onDone,focus}){
  async function answer(a){const v=(vals[a.round]||"").trim();if(!v)return;setBusy(a.round);try{const r=await api.askAnswer(a.round,v);if(r==="ok"){track("ask_answer");toast(`${nick(names,a.owner)}님에게 답을 보냈어요.`);onDone()}else toast(r==="already_answered"?"이미 답한 질문이에요.":"보내지 못했어요.")}catch(e){toast("보내지 못했어요.")}finally{setBusy(null)}}
  return html`<${Sheet} title="나에게 온 질문" onClose=${onClose}>
   ${list.length?list.map(a=>html`<div key=${a.round} className="panel stack ask-in">
-   <div className="row" style=${{gap:"10px"}}><${Avatar} p=${names[a.owner]||{id:a.owner}} size=${36}/><span className="grow"><b>${nick(names,a.owner)}</b>님이 물어요<br/><span className="small faint">${a.hint||""}</span></span></div>
+   <div className="row" style=${{gap:"10px"}}><${Avatar} p=${names[a.owner]||{id:a.owner}} size=${36}/><span className="grow"><${UName} id=${a.owner} names=${names}/>님이 물어요<br/><span className="small faint">${a.hint||""}</span></span></div>
    <b className="serif ask-text">"${a.text}"</b>
    ${a.answer?html`<div className="ask-mine"><span className="small faint">내 답</span><span>${a.answer}</span></div>`
    :html`<div className="field" style=${{margin:0}}><label htmlFor=${"ans-"+a.round} className="sr-only">답</label><textarea id=${"ans-"+a.round} rows=${a.max_len<=20?1:2} maxLength=${a.max_len} value=${vals[a.round]||""} onChange=${e=>setVals(v=>({...v,[a.round]:e.target.value}))} placeholder=${a.max_len<=20?"한마디로":"짧게 적어 주세요"}></textarea><span className="hint">${(vals[a.round]||"").length} / ${a.max_len} · 한 번 보내면 고칠 수 없어요 · ${nick(names,a.owner)}님만 봐요</span></div>

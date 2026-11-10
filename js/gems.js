@@ -69,7 +69,7 @@ function GemPopup({id,card,names,onClose,openUser,toast}){
  return html`<div className="gp" role="dialog" aria-modal="true" aria-label=${name+"의 카드"} onClick=${onClose}>
   <div className="gp-in" onClick=${e=>e.stopPropagation()}>
    ${card?html`${url?html`<img className="gp-img" src=${url} alt=${name+"의 젬 카드: "+(card.data.gemName||"")}/>`:html`<div className="gp-loading"><div className="pulse"><${GemView} g=${card.data.gem} seed=${card.data.gemName} size=${200}/></div><span>카드를 펼치는 중…</span></div>`}
-     <div className="gp-actions"><button className="btn" onClick=${()=>openUser(id)}>카드 자세히 · 공감 남기기</button><button className="btn ghost" onClick=${onClose}>닫기</button></div>`
+     <div className="gp-actions"><button className="btn" onClick=${()=>openUser(id)}>아뜰리에로 ›</button><button className="btn ghost" onClick=${onClose}>닫기</button></div>`
    :html`<div className="gp-sealed"><${GemView} g=${UNCUT} seed=${id} size=${200} className="float"/><b className="serif">${name}님의 원석</b><span>아직 카드를 공개하지 않았어요. 공개하면 이 원석이 젬으로 빛나요.</span>
      <div className="gp-actions"><button className="btn" disabled=${asked} onClick=${ask}>${asked?"요청을 보냈어요":"카드 공개 요청하기"}</button><button className="btn ghost" onClick=${()=>openUser(id)}>프로필 보기</button><button className="btn ghost" onClick=${onClose}>닫기</button></div></div>`}
   </div>

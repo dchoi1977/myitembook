@@ -167,6 +167,7 @@ function App(){
   setSheet(k);
  }
  const openUser=id=>{if(!id)return;setSheet("user:"+id)};
+ window.__openUser=openUser;window.__uid=uid;
 
  // ── render
  if(boot||route==="loading")return html`<div className="app"><div className="splash wrap"><div className="stack" style=${{alignItems:"center"}}><div className="pulse"><${GemView} g=${{stone:"오팔",form:"결정",texture:"유백",light:"번짐",hardness:2,grain:1,facets:8}} seed="splash" size=${120}/></div><p className="faint small">MyItemBook을 여는 중</p></div></div></div>`;

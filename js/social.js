@@ -109,7 +109,7 @@ function MineSheet({uid,soc,names,profile,onClose,openUser,ensureNames}){
    ${card.length>0&&html`<div className="wordchips">${[...new Set(card.map(r=>r.from_id))].slice(0,30).map(fid=>html`<button key=${fid} className="chip plain chipbtn" onClick=${()=>openUser(fid)}>${nick(names,fid)} · ${card.filter(r=>r.from_id===fid).map(r=>(REACT[r.kind]||{}).label).filter(Boolean).join(", ")}</button>`)}</div>`}
    <p className="small muted">소식에 받은 응원 ${feedCheers}개</p>
   </div>
-  <div className="stack"><h2 className="h3">한 단어 추천사</h2>${(soc.wordsTo||[]).length?html`<div className="wordchips">${soc.wordsTo.map(w=>html`<span key=${w.from_id} className="chip gold">${w.word} · ${nick(names,w.from_id)}</span>`)}</div>`:html`<p className="small faint">아직 받은 한 단어가 없어요.</p>`}</div>
+  <div className="stack"><h2 className="h3">한 단어 추천사</h2>${(soc.wordsTo||[]).length?html`<div className="wordchips">${soc.wordsTo.map(w=>html`<button key=${w.from_id} className="chip gold chipbtn" onClick=${()=>openUser(w.from_id)}>${w.word} · ${nick(names,w.from_id)}</button>`)}</div>`:html`<p className="small faint">아직 받은 한 단어가 없어요.</p>`}</div>
   <div className="stack"><h2 className="h3">최근 14일, 내 카드를 본 사람</h2>
    ${vis===null?html`<p className="small faint">불러오는 중…</p>`:profile.quiet_view?html`<p className="small muted">'조용히 보기'를 켜 두어 방문자 이름은 보이지 않아요. 방문 ${vis.length}번.</p>`:html`
     ${uniqNamed.length?html`<div className="wordchips">${uniqNamed.map(v=>html`<button key=${v.viewer_id} className="chip plain chipbtn" onClick=${()=>openUser(v.viewer_id)}>${v.nickname}</button>`)}</div>`:null}

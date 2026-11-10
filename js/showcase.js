@@ -94,7 +94,7 @@ function CardShowcase({faces,onClose,toast,onProfile}){
   <div className="cs-bar" onClick=${e=>e.stopPropagation()}>
    <div className="cs-seg" role="group" aria-label="면 고르기"><button aria-pressed=${!flip} onClick=${()=>setFlip(false)}>앞면</button><button aria-pressed=${flip} onClick=${()=>setFlip(true)}>뒷면</button></div>
    <button className="btn" disabled=${!img[side]} onClick=${()=>{saveCanvas(cvs.current[side],`mib-${faces.mine?"my":"card"}-${side}-${dayKey()}.png`,toast);track("card_save",{side,mine:faces.mine})}}>이 면 저장</button>
-   ${onProfile&&html`<button className="btn ghost" onClick=${onProfile}>공감 남기기</button>`}
+   ${onProfile&&html`<button className="btn ghost" onClick=${onProfile}>아뜰리에로 ›</button>`}
   </div>
   <p className="cs-hint">카드를 누르면 뒤집혀요${reduce?"":" · 마우스를 올리면 빛이 움직여요"}</p>
  </div>`;
