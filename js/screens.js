@@ -31,7 +31,7 @@ function Connect({draft,setDraft,rt,onNext,onBack,hasItems,allowEmpty,nextLabel,
  const canPhotos=true;
  const urls=useMemo(()=>draft.photos.map(f=>URL.createObjectURL(f)),[draft.photos]);
  useEffect(()=>()=>urls.forEach(u=>URL.revokeObjectURL(u)),[urls]);
- const allLinks=typeof linkList==="function"?linkList(s):[];const nLinks=allLinks.filter(linkIsAccount).length;const nShots=allLinks.filter(l=>linkSvc(l.kind).m==="shot").length,nTraces=allLinks.filter(l=>linkSvc(l.kind).m==="trace").length;
+ const allLinks=typeof linkList==="function"?linkList(s):[];const nLinks=allLinks.filter(linkIsAccount).length;const nShots=allLinks.filter(l=>linkSvc(l.kind).m==="shot").length,nTraces=allLinks.filter(l=>linkSvc(l.kind).m==="trace").length,nGoogle=allLinks.filter(l=>linkSvc(l.kind).m==="google").length;
  const any=s.youtube.trim()||s.calendar.trim()||s.story.trim()||draft.photos.length||allLinks.length;
  const tog=k=>setOpen(o=>o===k?null:k);
  return html`<div className="main wrap">
@@ -52,6 +52,9 @@ function Connect({draft,setDraft,rt,onNext,onBack,hasItems,allowEmpty,nextLabel,
    <//>`}
    ${typeof TraceSource==="function"&&html`<${SourceCard} icon="data" title="폰·PC 속 흔적" desc=${nTraces?`${nTraces}가지 읽음 · 사진첩의 리듬·나와의 채팅·북마크`:"사진첩의 찍은 시각·장소, 카카오톡 나와의 채팅, 북마크"} open=${open==="traces"} onToggle=${()=>tog("traces")} filled=${nTraces>0}>
     <${TraceSource} s=${s} setDraft=${setDraft} toast=${toast||(()=>{})}/>
+   <//>`}
+   ${typeof GoogleSource==="function"&&html`<${SourceCard} icon="cal" title="구글 계정으로 읽기" desc=${nGoogle?`${nGoogle}가지 읽음 · 캘린더·유튜브 구독과 좋아요`:"구글에서 허락 한 번으로 캘린더·유튜브 구독과 좋아요"} open=${open==="google"} onToggle=${()=>tog("google")} filled=${nGoogle>0}>
+    <${GoogleSource} s=${s} setDraft=${setDraft} toast=${toast||(()=>{})}/>
    <//>`}
    <${SourceCard} icon="cal" title="캘린더" desc="반복 일정이나 지난 한 달의 일정" open=${open==="calendar"} onToggle=${()=>tog("calendar")} filled=${!!s.calendar.trim()}>
     <div className="field"><label htmlFor="src-cal">일정 붙여 넣기</label><textarea id="src-cal" value=${s.calendar} onChange=${e=>set("calendar",e.target.value)} placeholder=${"예)\n매주 토 07:00 등산 모임\n화·목 20:00 영어 스터디\n11/3 후배 이력서 봐 주기"}></textarea></div>

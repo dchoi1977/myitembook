@@ -31,13 +31,16 @@ const LINK_SVCS=[
  {k:"letterboxd",n:"레터박스드 · 영화",u:"영화",v:"봄",m:"feed",mono:"Lb",col:"#5C8A4E",ph:"letterboxd.com/아이디",hint:"본 영화 제목과 본 날짜만 읽어요."},
  {k:"goodreads",n:"굿리즈 · 독서",u:"책",v:"읽음",m:"feed",mono:"Gr",col:"#8A6B45",ph:"goodreads.com/user/show/숫자",hint:"'읽음' 책장의 책 제목과 날짜만 읽어요."},
  {k:"pinterest",n:"핀터레스트",m:"feed",mono:"Pi",col:"#B4504A",ph:"pinterest.com/아이디",hint:"공개 핀의 제목만 읽어요."},
+ {k:"ytlist",n:"유튜브 재생목록",u:"영상",v:"담음",passive:true,pub:true,m:"feed",mono:"Pl",col:"#B04A45",ph:"youtube.com/playlist?list=…",hint:"공개(또는 일부 공개) 재생목록의 영상 제목과 채널 이름만 읽어요. 만드는 사람이 아니라 '보는 사람'으로서의 취향이에요."},
+ {k:"ytsubs",n:"유튜브 구독 채널",u:"구독",v:"구독함",passive:true,pub:true,m:"feed",mono:"Su",col:"#A8504A",ph:"youtube.com/@내핸들",hint:"구독 목록을 공개로 둔 경우에만 읽을 수 있어요. 유튜브 설정 → 개인정보 보호에서 '내 구독정보 모두 비공개'를 꺼 주세요."},
+ {k:"steam",n:"스팀 · 게임",u:"게임",v:"플레이함",passive:true,pub:true,m:"feed",mono:"St",col:"#3D5A73",ph:"steamcommunity.com/id/아이디",hint:"프로필과 게임 세부 정보가 공개일 때, 많이 한 게임 이름과 플레이 시간만 읽어요."},
  {k:"netflix",n:"넷플릭스 시청 기록",u:"시청",v:"봄",passive:true,m:"wall",mono:"Nf",col:"#A8423D",modes:["file","paste"],
   guide:["넷플릭스(웹) → 계정 → 프로필 → 시청 기록","맨 아래 '모두 다운로드' → CSV 파일이 바로 받아져요","받은 CSV를 여기에 올려 주세요"]},
  {k:"rss",n:"그 밖의 블로그·팟캐스트",m:"feed",mono:"＋",col:"#6F7C78",ph:"홈페이지 주소 또는 RSS 주소",hint:"워드프레스·개인 블로그·뉴스레터·팟캐스트처럼 RSS가 있는 곳이면 돼요."}];
 const linkSvc=k=>LINK_SVCS.find(s=>s.k===String(k||"").split(":")[0])||LINK_SVCS.find(s=>s.k==="rss");
 const linkIsAccount=l=>{const m=linkSvc(l.kind).m;return m==="feed"||m==="wall"};
 const LINK_VIA={feed:"주소로 읽음",file:"내 정보 파일",cap:"화면 캡처",paste:"직접 적음",device:"이 기기에서 읽음"};
-const LINK_ERR={link_invalid:"주소를 확인해 주세요. 내 계정 홈 주소나 아이디를 그대로 넣으면 돼요.",link_not_found:"그 주소에서 계정을 찾지 못했어요. 공개 계정인지, 주소가 맞는지 확인해 주세요.",link_empty:"공개된 글이 아직 없어요. 글이 올라온 뒤 다시 시도해 주세요.",link_no_feed:"그 주소에서 읽을 수 있는 목록(RSS)을 찾지 못했어요. RSS 주소를 직접 넣어 보세요.",link_blocked:"그쪽 서비스가 지금 읽기를 막고 있어요. 잠시 뒤 다시 시도하거나 '직접 적기'를 써 주세요.",link_unavailable:"지금은 읽어오지 못했어요. 잠시 뒤 다시 시도해 주세요.",link_limit:"오늘 읽어올 수 있는 횟수를 다 썼어요. 내일 다시 시도해 주세요.",network:"인터넷 연결을 확인해 주세요.",unauthorized:"다시 로그인한 뒤 시도해 주세요.",
+const LINK_ERR={link_invalid:"주소를 확인해 주세요. 내 계정 홈 주소나 아이디를 그대로 넣으면 돼요.",link_not_found:"그 주소에서 계정을 찾지 못했어요. 공개 계정인지, 주소가 맞는지 확인해 주세요.",link_empty:"공개된 글이 아직 없어요. 글이 올라온 뒤 다시 시도해 주세요.",link_no_feed:"그 주소에서 읽을 수 있는 목록(RSS)을 찾지 못했어요. RSS 주소를 직접 넣어 보세요.",link_blocked:"그쪽 서비스가 지금 읽기를 막고 있어요. 잠시 뒤 다시 시도하거나 '직접 적기'를 써 주세요.",link_unavailable:"지금은 읽어오지 못했어요. 잠시 뒤 다시 시도해 주세요.",link_private:"비공개로 되어 있어 읽을 수 없어요. 그 서비스의 공개 설정을 확인해 주세요.",yt_not_configured:"유튜브 읽기는 운영자가 준비 중이에요.",link_limit:"오늘 읽어올 수 있는 횟수를 다 썼어요. 내일 다시 시도해 주세요.",network:"인터넷 연결을 확인해 주세요.",unauthorized:"다시 로그인한 뒤 시도해 주세요.",
  file_none:"읽을 수 있는 파일을 찾지 못했어요. 내려받은 zip을 그대로 올리거나, 그 안의 JSON·CSV 파일을 골라 주세요.",file_html:"HTML 형식으로 받은 파일이에요. 내보낼 때 형식을 'JSON'으로 골라 다시 받아 주세요.",file_empty:"파일은 맞는데 그 안에 읽을 게시물이 없어요.",file_big:"파일이 너무 커요. 내보낼 때 '게시물'만 고르고 미디어 품질을 낮춰 다시 받아 주세요.",zip_load:"압축을 푸는 도구를 불러오지 못했어요. 연결을 확인하거나, zip을 직접 푼 뒤 그 안의 JSON·CSV 파일을 올려 주세요.",
  cap_not_profile:"계정 화면으로 보이지 않아요. 내 프로필(소개와 게시물 목록이 보이는 화면)을 캡처해 주세요.",daily_limit:"오늘 AI 읽기 횟수를 다 썼어요. 내일 다시 시도하거나 '직접 적기'를 써 주세요.",ai_not_configured:"AI 읽기는 운영자가 준비 중이에요. '직접 적기'를 써 주세요.",image_rejected:"그 이미지는 읽지 못했어요. 다른 캡처로 시도해 주세요.",refused:"그 화면은 읽지 못했어요. 다른 캡처로 시도해 주세요."};
 
