@@ -72,7 +72,7 @@ function sampleState(p,now){now=now||Date.now();const R=rng("sample|"+p.id);cons
   items:(p.items||[]).map(([name,category,since])=>({name,category,since,story:"",verify:""})),tags:p.tags||[],zodiac:z?z.k:null,crests:ent.map(publicCrest),motto:real?"공개 자료로 만든 헌정 샘플 · 본인이 참여하지 않았어요":idLine(st)};
  return {p,day,active,stage:stg,friends,cheers,todayAct,card,logs:Math.floor(active*1.4)}}
 
-function SampleGallery({onClose,toast}){
+function SampleGallery({onClose,toast}){useBackLayer(onClose);
  const [age,setAge]=useState("전체");const [open,setOpen]=useState(null);const [g3,setG3]=useState(null);const [why,setWhy]=useState(null);const now=Date.now();
  const list=useMemo(()=>SAMPLE_PEOPLE.map(p=>sampleState(p,now)),[]);
  const shown=list.filter(x=>age==="전체"||x.p.age===age||(age==="50대+"&&["50대","60대"].includes(x.p.age)));

@@ -62,7 +62,7 @@ function MyGems({fids,cardOf,names,soc,uid,openUser,toast,onFind}){
   ${pop&&(cardOf(pop)?html`<${CardShowcase} key=${pop} faces=${otherCardFaces(cardOf(pop),nick(names,pop),pop)} toast=${toast} onClose=${()=>setPop(null)} onProfile=${()=>{const id=pop;setPop(null);openUser(id)}}/>`:html`<${GemPopup} id=${pop} card=${null} names=${names} onClose=${()=>setPop(null)} openUser=${id=>{setPop(null);openUser(id)}} toast=${toast}/>`)}
  </section>`;
 }
-function GemPopup({id,card,names,onClose,openUser,toast}){
+function GemPopup({id,card,names,onClose,openUser,toast}){useBackLayer(onClose);
  const [url,setUrl]=useState(null);const [asked,setAsked]=useState(false);const name=nick(names,id);
  useEffect(()=>{if(!card)return;let alive=true;renderPublicCardImage(card.data,name).then(c=>alive&&setUrl(c.toDataURL("image/png"))).catch(()=>{});return()=>{alive=false}},[id]);
  useEffect(()=>{const k=e=>{if(e.key==="Escape")onClose()};window.addEventListener("keydown",k);return()=>window.removeEventListener("keydown",k)},[]);

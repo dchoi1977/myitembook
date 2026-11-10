@@ -70,7 +70,7 @@ async function saveCanvas(canvas,name,toast){
  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},800);toast(mobile?"이미지를 저장했어요.":"다운로드 폴더에 저장했어요.")
 }
 
-function CardShowcase({faces,onClose,toast,onProfile}){
+function CardShowcase({faces,onClose,toast,onProfile}){useBackLayer(onClose);
  const [img,setImg]=useState({front:null,back:null});const cvs=useRef({});const [flip,setFlip]=useState(false);const card=useRef(null);
  const reduce=useMemo(()=>{try{return matchMedia("(prefers-reduced-motion: reduce)").matches}catch(e){return false}},[]);
  useEffect(()=>{let alive=true;track("card_view",{mine:faces.mine});

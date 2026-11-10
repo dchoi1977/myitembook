@@ -650,7 +650,17 @@ const ICON={
 };
 const Ico=({n})=>html`<span style=${{display:"inline-grid"}} dangerouslySetInnerHTML=${{__html:ICON[n]}}></span>`;
 function Toast({msg}){return msg?html`<div className="toast" role="status">${msg}</div>`:null}
+/* 뒤로 가기(아이폰 가장자리 쓸기·안드로이드 뒤로 버튼·브라우저 뒤로)로 맨 위에 열린 화면부터 닫는다 */
+const BACK={layers:[],ignore:0,ready:false,pend:0,timer:0};
+function backInit(){if(BACK.ready||typeof window==="undefined")return;BACK.ready=true;window.addEventListener("popstate",()=>{if(BACK.ignore>0){BACK.ignore--;return}const top=BACK.layers.pop();if(top){top.byPop=true;try{top.close()}catch(e){}}})}
+function backFlush(){BACK.timer=0;const n=BACK.pend;BACK.pend=0;if(n>0){BACK.ignore++;try{history.go(-n)}catch(e){BACK.ignore--}}}
+function useBackLayer(onClose){const ref=useRef(onClose);ref.current=onClose;
+ useEffect(()=>{backInit();const layer={close:()=>ref.current&&ref.current(),byPop:false};BACK.layers.push(layer);
+  /* a page that replaces another in the same moment reuses its history entry */
+  if(BACK.pend>0)BACK.pend--;else{try{history.pushState({mib:"layer"},"")}catch(e){}}
+  return()=>{const i=BACK.layers.indexOf(layer);if(i>=0){BACK.layers.splice(i,1);if(!layer.byPop){BACK.pend++;if(!BACK.timer)BACK.timer=setTimeout(backFlush,0)}}}},[])}
 function Sheet({title,onClose,children}){
+ useBackLayer(onClose);
  const ref=useRef(null);useEffect(()=>{ref.current&&ref.current.focus();const prev=document.body.style.overflow;document.body.style.overflow="hidden";const k=e=>{if(e.key==="Escape")onClose()};window.addEventListener("keydown",k);return()=>{window.removeEventListener("keydown",k);document.body.style.overflow=prev}},[]);
  return html`<div className="sheet" role="dialog" aria-modal="true" aria-label=${title}><div className="sheet-inner"><div className="sheet-head wrap"><button className="iconbtn" ref=${ref} onClick=${onClose} aria-label="닫기"><${Ico} n="back"/></button><h2>${title}</h2></div><div className="sheet-body wrap">${children}</div></div></div>`;
 }

@@ -45,7 +45,7 @@ function buildGem3D(THREE,S){const grp=new THREE.Group();const V=THREE.Vector2,R
   const edges=new THREE.LineSegments(new THREE.EdgesGeometry(geo,18),new THREE.LineBasicMaterial({color:new THREE.Color(S.st.light).lerp(new THREE.Color("#FFFFFF"),.5),transparent:true,opacity:S.tex==="결정질"?.45:.18}));edges.position.copy(m.position);edges.rotation.copy(m.rotation);grp.add(edges)});
  const s=S.scale*1.15;grp.scale.set(s,s,s);return grp}
 
-function Gem3DView({g,seed,name,onClose}){
+function Gem3DView({g,seed,name,onClose}){useBackLayer(onClose);
  const host=useRef(null);const [state,setState]=useState("loading");
  useEffect(()=>{let alive=true,raf=0,ren=null,cleanup=()=>{};
   loadThree().then(THREE=>{if(!alive||!host.current)return;const el=host.current;const W=el.clientWidth,H=el.clientHeight;
