@@ -12,10 +12,10 @@ const api={
  sb,
  async session(){const {data}=await sb.auth.getSession();return data.session},
  onAuth(cb){return sb.auth.onAuthStateChange((ev,s)=>cb(ev,s)).data.subscription},
- async call(action,body,{auth=true,signal}={}){
+ async call(action,body,{auth=true,signal,url}={}){
   const h={"Content-Type":"application/json",apikey:MIB_CONFIG.key};
   if(auth){const s=await this.session();if(!s)throw Err("unauthorized");h.Authorization="Bearer "+s.access_token}
-  let r;try{r=await fetch(MIB_CONFIG.fn,{method:"POST",headers:h,body:JSON.stringify({action,...body}),signal})}catch(e){if(e&&e.name==="AbortError")throw Err("cancelled");throw Err("network")}
+  let r;try{r=await fetch(url||MIB_CONFIG.fn,{method:"POST",headers:h,body:JSON.stringify({action,...body}),signal})}catch(e){if(e&&e.name==="AbortError")throw Err("cancelled");throw Err("network")}
   const j=await r.json().catch(()=>null);
   if(!r.ok||!j||j.error)throw Err((j&&j.error)||"upstream_error",j||{});
   return j;
@@ -109,6 +109,7 @@ const api={
  async uploadShot(uid,dataUrl){const p=`${uid}/${Date.now()}.jpg`;await Q(sb.storage.from("feedback-shots").upload(p,dataUrlToBlob(dataUrl),{contentType:"image/jpeg"}));return p},
  async supportUrl(){try{const r=await Q(sb.from("settings").select("value").eq("key","support_url").maybeSingle());return (r&&typeof r.value==="string")?r.value:""}catch(e){return ""}},
  async youtube(channel){return this.call("youtube",{channel})},
+ async link(kind,ref){return this.call("fetch",{kind,ref},{url:MIB_CONFIG.fnLink})},
  async ai({task,prompt,images,signal}){const r=await this.call("ai",{task,prompt,images:images||[]},{signal});return r},
  async aiJSON(o){const r=await this.ai(o);return parseJSON(r.text)},
  async deleteMe(){return this.call("delete_me",{})},

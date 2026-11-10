@@ -25,17 +25,18 @@ function Progress({n}){return html`<div className="progress" aria-label=${`3단�
 function SourceCard({icon,title,desc,open,onToggle,filled,children}){
  return html`<div className="source"><button className="source-head" onClick=${onToggle} aria-expanded=${open}><span className="source-ico"><${Ico} n=${icon}/></span><span className="grow"><b>${title}</b><br/><span className="small faint">${desc}</span></span>${filled?html`<span className="chip">담김</span>`:html`<span className="faint">${open?"접기":"열기"}</span>`}</button>${open&&html`<div className="source-body">${children}</div>`}</div>`;
 }
-function Connect({draft,setDraft,rt,onNext,onBack,hasItems,allowEmpty,nextLabel}){
+function Connect({draft,setDraft,rt,onNext,onBack,hasItems,allowEmpty,nextLabel,toast}){
  const [open,setOpen]=useState("story");const s=draft.sources;const set=(k,v)=>setDraft(d=>({...d,sources:{...d.sources,[k]:v}}));
  const maxPhotos=4;
  const canPhotos=true;
  const urls=useMemo(()=>draft.photos.map(f=>URL.createObjectURL(f)),[draft.photos]);
  useEffect(()=>()=>urls.forEach(u=>URL.revokeObjectURL(u)),[urls]);
- const any=s.youtube.trim()||s.calendar.trim()||s.story.trim()||draft.photos.length;
+ const nLinks=typeof linkList==="function"?linkList(s).length:0;
+ const any=s.youtube.trim()||s.calendar.trim()||s.story.trim()||draft.photos.length||nLinks;
  const tog=k=>setOpen(o=>o===k?null:k);
  return html`<div className="main wrap">
   <${Progress} n=${1}/>
-  <div className="stack"><div className="eyebrow">첫 연결</div><h1 className="h2">무엇으로 나를 읽을까요?</h1><p className="muted">하나만 건네도 충분합니다. 유튜브는 채널 주소만 넣으면 자동으로 읽어오고, 나머지는 붙여 넣거나 골라서 건넵니다.</p></div>
+  <div className="stack"><div className="eyebrow">첫 연결</div><h1 className="h2">무엇으로 나를 읽을까요?</h1><p className="muted">하나만 건네도 충분합니다. 블로그·유튜브는 주소만 넣으면 읽어오고, 인스타그램 같은 곳은 화면 캡처나 내 정보 파일로 건넵니다. 많이 이을수록 젬이 나를 더 닮아 가요.</p></div>
   <div className="stack">
    <${SourceCard} icon="pen" title="나의 이야기" desc="요즘 하는 일, 오래 해 온 것, 다시 시작한 것" open=${open==="story"} onToggle=${()=>tog("story")} filled=${!!s.story.trim()}>
     <div className="field"><label htmlFor="src-story">자유롭게 적어 주세요</label><textarea id="src-story" value=${s.story} onChange=${e=>set("story",e.target.value)} placeholder="예) 3년째 주말마다 동네 뒷산을 오르고, 다녀오면 사진과 짧은 글을 블로그에 올립니다. 작년에 잠시 쉬었다가 올봄 다시 시작했어요."></textarea></div>
@@ -43,6 +44,9 @@ function Connect({draft,setDraft,rt,onNext,onBack,hasItems,allowEmpty,nextLabel}
    <${SourceCard} icon="yt" title="유튜브 채널" desc="채널 주소만 넣으면 업로드 목록을 읽어옵니다" open=${open==="youtube"} onToggle=${()=>tog("youtube")} filled=${!!s.youtube.trim()}>
     <${YouTubeSource} s=${s} set=${set} setDraft=${setDraft} ready=${rt.ytReady}/>
    <//>
+   ${typeof LinkSource==="function"&&html`<${SourceCard} icon="link" title="SNS·블로그 계정 연결" desc=${nLinks?`${nLinks}곳 연결됨 · 인스타그램·네이버 블로그·링크드인 등`:"인스타그램·페이스북·링크드인·틱톡·네이버 블로그 등 20곳"} open=${open==="links"} onToggle=${()=>tog("links")} filled=${nLinks>0}>
+    <${LinkSource} s=${s} setDraft=${setDraft} toast=${toast||(()=>{})}/>
+   <//>`}
    <${SourceCard} icon="cal" title="캘린더" desc="반복 일정이나 지난 한 달의 일정" open=${open==="calendar"} onToggle=${()=>tog("calendar")} filled=${!!s.calendar.trim()}>
     <div className="field"><label htmlFor="src-cal">일정 붙여 넣기</label><textarea id="src-cal" value=${s.calendar} onChange=${e=>set("calendar",e.target.value)} placeholder=${"예)\n매주 토 07:00 등산 모임\n화·목 20:00 영어 스터디\n11/3 후배 이력서 봐 주기"}></textarea></div>
     <div className="reads"><b>읽는 것</b><span>반복·주기·활동 종류</span><b>읽지 않음</b><span>함께한 사람 이름 (지워도 됩니다)</span></div>
@@ -186,7 +190,7 @@ function LifeCard({st,items,stats,onOpen,me}){
 function MeTab({st,items,soc,stats,onOpen,names,top,mid,me}){
  const desk=useDesktop();
  const featured=items.filter(i=>(st.featured||[]).includes(i.id)).slice(0,4);
- const rows=[["evidence","눈","이렇게 읽은 이유","사실과 AI 해석을 나눠 보고, 맞다·숨기기"],["attrs","별","젬의 8가지 속성","결·색·빛·형·질·강·상·각"],["shelf","선반","나의 선반",`실제로 가진 것 ${items.length}개 · 얼마나 함께했는가`],["publish","문","공개할 모습",st.visibility.public?(st.visibility.audience==="friends"?"친구에게 공개 중":"CBT 1기에 공개 중")+" · 항목별로 고르기":"지금은 나만 보기"],["reread","새싹","새 기록 더하기",`나를 다시 읽기 · 지금까지 ${st.analyses||1}번`]];
+ const rows=[["evidence","눈","이렇게 읽은 이유","사실과 AI 해석을 나눠 보고, 맞다·숨기기"],["attrs","별","젬의 8가지 속성","결·색·빛·형·질·강·상·각"],["shelf","선반","나의 선반",`실제로 가진 것 ${items.length}개 · 얼마나 함께했는가`],["publish","문","공개할 모습",st.visibility.public?(st.visibility.audience==="friends"?"친구에게 공개 중":"CBT 1기에 공개 중")+" · 항목별로 고르기":"지금은 나만 보기"],["reread","새싹","새 기록 더하기",(()=>{const n=typeof linkStats==="function"?linkStats(st).links:0;return `${n?`계정 ${n}곳 연결됨`:"SNS·블로그 계정 연결"} · 나를 다시 읽기 · 지금까지 ${st.analyses||1}번`})()]];
  const achN=earnedIds(st,stats).length;rows.splice(2,0,["achieve","별","업적 도감 · 배지 보관함",`배지 ${achN}/${BADGES.length} · 칭호와 대표 배지 고르기`]);rows.splice(3,0,["identity","왕관","나의 휘장",(()=>{const I=idStats(st);return I.total?`휘장 ${I.total}개 · 진열 ${I.shown}/${ID_MAX_SHOW} · 뿌리·터전·배움·소속·영예·조명`:"뿌리·터전·배움·소속·영예·조명을 새겨 진열하기"})()]);
  return html`<div className="main wrap">
   ${top}
@@ -205,7 +209,7 @@ function MeTab({st,items,soc,stats,onOpen,names,top,mid,me}){
 }
 function EvidenceSheet({st,update,onClose}){
  const a=st.analysis;const hidden=a.hiddenAxes||[];const ok=a.axisOk||[];const [editing,setEditing]=useState(null);const [nm,setNm]=useState("");
- const src=st.sources;const used=[["이야기",src.story],["유튜브",src.youtube],["캘린더",src.calendar]].filter(x=>(x[1]||"").trim());
+ const src=st.sources;const used=[["이야기",src.story],["유튜브",src.youtube],["캘린더",src.calendar],...(typeof linkList==="function"?linkList(src).map(l=>[linkSvc(l.kind).n,l.text]):[])].filter(x=>(x[1]||"").trim());
  const setAx=(fn)=>update(s=>{fn(s.analysis);s.flags.edited=true});
  return html`<${Sheet} title="이렇게 읽은 이유" onClose=${onClose}>
   <div className="panel small stack"><b>읽은 기록</b><div className="row">${used.map(([k,v])=>html`<span className="chip plain" key=${k}>${k} · ${v.trim().length.toLocaleString()}자</span>`)}${src.photos?html`<span className="chip plain">사진 ${src.photos}장 (저장 안 함)</span>`:null}</div><span className="faint">${src.at?new Date(src.at).toLocaleDateString("ko-KR")+"에 읽음":""}</span></div>
@@ -371,6 +375,7 @@ function DataSheet({st,items,profile,onClose,onWipe,onReread,onLogout,toast,demo
   <div className="panel stack small"><b>${profile.nickname} · ${MIB_CONFIG.cohort}</b><span>${demo?"예시 모드 · 저장하지 않음":"기록은 내 계정에만 보이는 서버 저장소에 보관됩니다. 운영 화면에는 원문 기록이 나타나지 않고, 테스트 지표는 사용 횟수만 집계합니다."}</span></div>
   <div className="stack"><h2 className="h3">연결 지도</h2>
    <div className="list">${[["yt","유튜브 채널",src.youtube],["cal","캘린더",src.calendar],["pen","나의 이야기",src.story]].map(([ic,t,v])=>html`<div className="list-row" key=${t} style=${{cursor:"default"}}><span className="ico"><${Ico} n=${ic}/></span><span className="grow"><span className="t">${t}</span><br/><span className="d">${(v||"").trim()?(ic==="yt"&&src.youtubeChannel?`${src.youtubeChannel.title} · 영상 ${src.youtubeChannel.count}편 · 해석에 사용`:`${v.trim().length.toLocaleString()}자 · 해석에 사용`):"연결 안 함"}</span></span></div>`)}
+   ${typeof linkList==="function"&&linkList(src).map(l=>html`<div className="list-row" key=${l.id} style=${{cursor:"default"}}><span className="ico"><${Ico} n="link"/></span><span className="grow"><span className="t">${linkSvc(l.kind).n} · ${l.title}</span><br/><span className="d">${linkSummary(l)} · ${LINK_VIA[l.via]} · 해석에 사용</span></span></div>`)}
    <div className="list-row" style=${{cursor:"default"}}><span className="ico"><${Ico} n="photo"/></span><span className="grow"><span className="t">사진 갤러리</span><br/><span className="d">${src.photos?`${src.photos}장 · 해석에만 쓰고 저장 안 함`:"연결 안 함"}</span></span></div></div>
    <p className="note">마지막으로 읽은 때: ${src.at?new Date(src.at).toLocaleString("ko-KR"):"없음"}</p>
   </div>

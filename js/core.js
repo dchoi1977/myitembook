@@ -393,6 +393,10 @@ const BADGES=[
  {id:"bond1",g:"함께",rar:"common",name:"이름 붙인 사이",glyph:"하트",desc:"친구와 합의해 우리 사이에 이름을 붙였어요.",cond:"친구 1명과 관계 이름 확정하기",title:"이름 붙인 사이가 있는",test:s=>(s.bonds||0)>=1,prog:s=>BP(s.bonds,1)},
  {id:"bond3",g:"함께",rar:"rare",name:"여러 빛깔의 인연",glyph:"나비",desc:"서로 다른 세 가지 관계 이름을 가졌어요.",cond:"서로 다른 관계 이름 3가지 확정하기",title:"여러 빛깔의 인연을 가진",test:s=>(s.bondKinds||0)>=3,prog:s=>BP(s.bondKinds,3)},
  {id:"bond5",g:"함께",rar:"epic",name:"인연의 매듭",glyph:"무한",desc:"다섯 사람과 관계 이름을 맺었어요.",cond:"친구 5명과 관계 이름 확정하기",title:"인연의 매듭을 지은",test:s=>(s.bonds||0)>=5,prog:s=>BP(s.bonds,5)},
+ {id:"link1",g:"물길",rar:"common",name:"첫 물길",glyph:"고리",desc:"다른 곳에 쌓아 온 기록을 처음 이어 왔어요.",cond:"'새 기록 더하기'에서 계정 1곳 연결하고 다시 읽기",title:"물길을 튼",test:s=>(s.links||0)>=1,prog:s=>BP(s.links,1)},
+ {id:"link3",g:"물길",rar:"rare",name:"세 갈래 물길",glyph:"별",desc:"세 곳의 기록이 하나의 젬으로 모였어요.",cond:"계정 3곳 연결하기",title:"세 물길이 모이는",test:s=>(s.links||0)>=3,prog:s=>BP(s.links,3)},
+ {id:"link5",g:"물길",rar:"epic",name:"다섯 물길의 합류",glyph:"산",desc:"다섯 곳의 기록이 모여 젬이 깊어졌어요.",cond:"계정 5곳 연결하기",title:"물길을 모으는",test:s=>(s.links||0)>=5,prog:s=>BP(s.links,5)},
+ {id:"rec300",g:"물길",rar:"rare",name:"삼백 편의 기록",glyph:"책",desc:"이어 온 계정의 기록이 삼백 편을 넘었어요.",cond:"연결한 계정의 기록 합계 300건",title:"삼백 편을 쌓은",test:s=>(s.linkRecords||0)>=300,prog:s=>BP(s.linkRecords,300)},
  {id:"id_root",g:"휘장",rar:"common",name:"뿌리를 밝힌",glyph:"새싹",desc:"나고 자란 곳을 휘장으로 남겼어요.",cond:"'나의 휘장'에 뿌리 1곳 남기기",title:"뿌리를 밝힌",test:s=>(s.idRoot||0)>=1,prog:s=>BP(s.idRoot,1)},
  {id:"id_home",g:"휘장",rar:"common",name:"터를 잡은",glyph:"집",desc:"그 자리에서 나의 터전을 인증했어요.",cond:"집이나 일터에서 터전 인증하기",title:"터를 잡은",test:s=>(s.idHomeDays||0)>=1,prog:s=>BP(s.idHomeDays,1)},
  {id:"id_home7",g:"휘장",rar:"rare",name:"터줏대감",glyph:"집",desc:"같은 터전을 서로 다른 일곱 날 인증했어요.",cond:"같은 터전을 다른 날 7번 인증",title:"터줏대감",test:s=>(s.idHomeDays||0)>=7,prog:s=>BP(s.idHomeDays,7)},
@@ -408,8 +412,8 @@ const BADGES=[
  {id:"dawn",g:"비밀",rar:"epic",secret:true,hint:"해가 뜨기 전, 하루를 먼저 연 사람에게",name:"새벽빛",glyph:"새싹",desc:"새벽 5~7시에 오늘의 한 줄을 남겼어요.",cond:"새벽 5~7시에 오늘의 한 줄 남기기",title:"새벽빛의",frame:"dawn",test:s=>!!s.dawn,prog:s=>BB(s.dawn)},
  {id:"allweek",g:"비밀",rar:"legend",secret:true,hint:"일곱 날, 하루도 빠짐없이",name:"일곱 빛깔",glyph:"별",desc:"일곱 날 모두 한 걸음이나 한 줄을 남겼어요.",cond:"활동한 날 7일 채우기",title:"일곱 날을 채운",frame:"seven",test:s=>s.active>=7,prog:s=>BP(s.active,7)}
 ];
-GROUPS["비밀"]="#5B4A7A";GROUPS["발자취"]="#4F6F8F";GROUPS["연륜"]="#8C6A3A";GROUPS["휘장"]="#7A1F2B";
-const GROUP_DESC={"휘장":"내가 걸어온 길 — 뿌리·터전·배움·소속·영예·조명","연륜":"살아온 시간이 젬에 새긴 나이테","발자취":"머무른 곳이 남긴 길","지속":"꾸준히 이어 간 시간","도약":"나를 새로 발견한 순간","회복":"쉬고, 다듬고, 돌아온 일","함께":"사람들과 결을 주고받은 일","비밀":"조건이 숨겨진 업적"};
+GROUPS["비밀"]="#5B4A7A";GROUPS["물길"]="#3E7F8F";GROUPS["발자취"]="#4F6F8F";GROUPS["연륜"]="#8C6A3A";GROUPS["휘장"]="#7A1F2B";
+const GROUP_DESC={"물길":"다른 곳에 쌓아 온 기록을 젬으로 이어 온 길","휘장":"내가 걸어온 길 — 뿌리·터전·배움·소속·영예·조명","연륜":"살아온 시간이 젬에 새긴 나이테","발자취":"머무른 곳이 남긴 길","지속":"꾸준히 이어 간 시간","도약":"나를 새로 발견한 순간","회복":"쉬고, 다듬고, 돌아온 일","함께":"사람들과 결을 주고받은 일","비밀":"조건이 숨겨진 업적"};
 function frameOf(days){return days>=100?4:days>=60?3:days>=30?2:days>=7?1:0}
 /* 배지 v2 — 희귀도마다 다른 테두리 모양, 금속 테와 에나멜, 양각 광택 */
 const EMBOSS=(id,k=.5)=>`<filter id="${id}" x="-15%" y="-15%" width="130%" height="130%"><feGaussianBlur in="SourceAlpha" stdDeviation="1.1" result="bl"/><feSpecularLighting in="bl" surfaceScale="3" specularConstant=".75" specularExponent="16" lighting-color="#FFFFFF" result="sp"><feDistantLight azimuth="225" elevation="52"/></feSpecularLighting><feComposite in="sp" in2="SourceAlpha" operator="in" result="sp2"/><feComposite in="SourceGraphic" in2="sp2" operator="arithmetic" k1="0" k2="1" k3="${k}" k4="0"/></filter>`;
@@ -495,7 +499,7 @@ function daysWith(st){const t=(st.first&&st.first.at)||(st.analysis&&st.analysis
 function markValues(st,s){return {setting:daysWith(st),sat:s.connections||0,aura:(s.reactionsReceived||0)+(s.wordsReceived||0),stars:s.visitors||0}}
 function marksOf(st,s){const v=markValues(st,s),prev=(st.flags&&st.flags.marks)||{};const o={};MARKS.forEach(m=>{o[m.k]=Math.max(prev[m.k]||0,m.steps.filter(x=>v[m.k]>=x).length)});return o}
 function markNext(m,lv,val){const t=m.steps[lv];return t==null?null:{target:t,left:Math.max(0,t-val),pct:clamp(Math.round((val-(m.steps[lv-1]||0))/(t-(m.steps[lv-1]||0))*100),0,100)}}
-function statsOf(st,items,soc){soc=soc||{};return {days:st.steps.done.length,active:activeDays(st),logs:(st.logs||[]).length,rests:st.steps.rests.length,comebacks:st.steps.comebacks||0,confirmed:!!(st.analysis&&(st.analysis.status==="yes"||st.analysis.status==="edited")),analyses:st.analyses||0,items:items.length,edited:!!st.flags.edited,isPublic:!!st.visibility.public,wordsGiven:soc.wordsGiven||0,wordsReceived:soc.wordsReceived||0,connections:soc.friends||0,reactionsGiven:soc.reactionsGiven||0,reactionsReceived:soc.reactionsReceived||0,exitDone:!!soc.exitDone,bonds:soc.bonds||0,bondKinds:soc.bondKinds||0,knows:(st.know||[]).length,...(typeof idStats==="function"?(()=>{const I=idStats(st);return {idRoot:I.n.root,idHome:I.n.home,idHomeDays:I.homeDays,idSchool:I.n.school,idOrg:I.n.org,idHonor:I.n.honor,idMedia:I.n.media,idCats:I.cats,idShown:I.shown}})():{}),rings:(typeof ringsOf==="function"?ringsOf(st):0),...(typeof stayStats==='function'?(()=>{const z=stayStats(st);return {stays:z.stays,placesN:z.places,regular:z.regular,placeCats:z.cats,newPlaces:z.newPlaces}})():{}),returns:(st.flags&&st.flags.returns)||0,dawn:(st.logs||[]).some(l=>{if(!l.at)return false;const h=new Date(l.at).getHours();return h>=5&&h<7})}}
+function statsOf(st,items,soc){soc=soc||{};return {...(typeof linkStats==="function"?linkStats(st):{}),days:st.steps.done.length,active:activeDays(st),logs:(st.logs||[]).length,rests:st.steps.rests.length,comebacks:st.steps.comebacks||0,confirmed:!!(st.analysis&&(st.analysis.status==="yes"||st.analysis.status==="edited")),analyses:st.analyses||0,items:items.length,edited:!!st.flags.edited,isPublic:!!st.visibility.public,wordsGiven:soc.wordsGiven||0,wordsReceived:soc.wordsReceived||0,connections:soc.friends||0,reactionsGiven:soc.reactionsGiven||0,reactionsReceived:soc.reactionsReceived||0,exitDone:!!soc.exitDone,bonds:soc.bonds||0,bondKinds:soc.bondKinds||0,knows:(st.know||[]).length,...(typeof idStats==="function"?(()=>{const I=idStats(st);return {idRoot:I.n.root,idHome:I.n.home,idHomeDays:I.homeDays,idSchool:I.n.school,idOrg:I.n.org,idHonor:I.n.honor,idMedia:I.n.media,idCats:I.cats,idShown:I.shown}})():{}),rings:(typeof ringsOf==="function"?ringsOf(st):0),...(typeof stayStats==='function'?(()=>{const z=stayStats(st);return {stays:z.stays,placesN:z.places,regular:z.regular,placeCats:z.cats,newPlaces:z.newPlaces}})():{}),returns:(st.flags&&st.flags.returns)||0,dawn:(st.logs||[]).some(l=>{if(!l.at)return false;const h=new Date(l.at).getHours();return h>=5&&h<7})}}
 const STAGES=["","원석","초벌","연마","광택","명품"];
 /* stages rise strictly in order (CBT thresholds; the full service would use 7·30·60 days) */
 const STAGE_RULES=[null,
@@ -528,6 +532,7 @@ function buildPrompt({sources,answers,photoCount,items,feedback,prev,logs,stepsD
 - [빠른 시작]과 [알아가기]는 본인이 직접 고른 답이다. 존중하되 그 답만으로 사람을 단정하지 않는다. MBTI는 본인이 밝힌 자기소개로만 참고한다.
 - 꾸준함은 젬의 강(剛)으로 따로 계산되므로, 가치(values)와 축(axes) 이름에 '꾸준함'을 쓰지 않는다. 이 사람에게만 어울리는 고유한 결 이름을 짓는다.`);
  if((sources.youtube||"").trim())P.push(`[유튜브 채널 기록 — 업로드 제목·날짜 등]\n${cut(sources.youtube,9000)}`);
+ if(typeof linkPromptBlocks==="function")linkPromptBlocks(sources.links).forEach(b=>P.push(b));
  if((sources.calendar||"").trim())P.push(`[캘린더 기록 — 반복 일정·활동]\n${cut(sources.calendar,5000)}`);
  if((sources.story||"").trim())P.push(`[직접 적은 이야기]\n${cut(sources.story,4000)}`);
  if(items&&items.length)P.push(`[선반의 아이템 — 실제로 가지고 쓰고 돌보는 것]\n`+items.slice(0,12).map(i=>`- ${i.category} · ${i.name}${i.since?" · "+sinceText(i.since):""}${i.story?" · "+i.story:""}`).join("\n"));
@@ -558,7 +563,7 @@ function buildPrompt({sources,answers,photoCount,items,feedback,prev,logs,stepsD
   "symbol": "${SYMBOLS.join("|")} 중 이 사람을 대표하는 장면에 가장 가까운 하나",
   "reasons": {"결":"한 줄 근거","색":"한 줄","빛":"한 줄","형":"한 줄","질":"한 줄","강":"한 줄","상":"한 줄","각":"한 줄"}
  },
- "axes": [ 정확히 6개 {"name":"이 사람에게 두드러진 결 2~5자, 꾸준함 제외 (예: 관찰력, 설명력, 손끝 정성)","level":"0.3~1.0 숫자 또는 null","evidence":["기록 속 사실 1~2개, 앞에 [유튜브] [캘린더] [이야기] [사진] [답변] [선반] [선택] [알아가기] 중 출처 표시"],"reading":"AI 해석 한 줄"} ],
+ "axes": [ 정확히 6개 {"name":"이 사람에게 두드러진 결 2~5자, 꾸준함 제외 (예: 관찰력, 설명력, 손끝 정성)","level":"0.3~1.0 숫자 또는 null","evidence":["기록 속 사실 1~2개, 앞에 [유튜브] [캘린더] [이야기] [사진] [답변] [선반] [선택] [알아가기] 또는 연결한 계정의 이름([인스타그램] [네이버] 등) 중 출처 표시"],"reading":"AI 해석 한 줄"} ],
  "firstStep": {"title":"내일 10분 안팎으로 할 수 있는 아주 작은 행동","minutes":"5~20 정수","why":"이 걸음이 이 사람의 결과 어떻게 이어지는지 한 줄"},
  "stepIdeas": ["다른 한 걸음 후보 3개, 각각 한 문장"],
  "turningPoints": ["기록에서 보이는 전환점·멈췄다 다시 시작한 순간 요약, 0~5개 (없으면 빈 배열)"]
@@ -597,7 +602,8 @@ function deriveGem(g,turning){
 function normAnalysis(j,opts){
  if(!j||typeof j!=="object")throw {code:"invalid_json"};
  const g=j.gem||{};const num=(v,a,b,d)=>{const n=Number(v);return Number.isFinite(n)?clamp(Math.round(n),a,b):d};
- const graw=opts&&(opts.quick||opts.know)?anchorGemInputs(g,opts.quick,opts.know):g;
+ let graw=opts&&(opts.quick||opts.know)?anchorGemInputs(g,opts.quick,opts.know):g;
+ {const F=opts&&opts.links&&typeof linkFloors==="function"?linkFloors(opts.links):null;if(F){graw={...graw,years:Math.max(Number(graw.years)||0,F.years),perWeek:Math.max(Number(graw.perWeek)||0,F.perWeek)}}}
  const gem={...deriveGem(graw,Array.isArray(j.turningPoints)?j.turningPoints:null),reasons:{}};
  ATTRS.forEach(a=>{gem.reasons[a.k]=String((g.reasons||{})[a.k]||"").slice(0,120)});
  let axes=Array.isArray(j.axes)?j.axes.slice(0,6).map(a=>({name:String(a.name||"아직 발견 중").slice(0,8),level:(a.level==null||a.level==="null"||!Number.isFinite(Number(a.level)))?null:clamp(Number(a.level),.2,1),evidence:(Array.isArray(a.evidence)?a.evidence:[]).slice(0,3).map(x=>String(x).slice(0,140)),reading:String(a.reading||"").slice(0,140)})):[];
@@ -629,6 +635,7 @@ async function compressImage(file,max,q){const url=URL.createObjectURL(file);try
 
 /* ───────── small UI pieces ───────── */
 const ICON={
+ link:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a4.5 4.5 0 006.4 0l3-3a4.5 4.5 0 00-6.4-6.4l-1.2 1.2"/><path d="M14 10a4.5 4.5 0 00-6.4 0l-3 3a4.5 4.5 0 006.4 6.4l1.2-1.2"/></svg>`,
  me:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3l7 6-7 12-7-12z"/><path d="M5 9h14M12 3v18"/></svg>`,
  step:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><ellipse cx="9" cy="16" rx="3.4" ry="4.6"/><ellipse cx="15.5" cy="7.5" rx="3" ry="4"/></svg>`,
  people:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="8" cy="9" r="3.2"/><circle cx="16.5" cy="9" r="3.2"/><path d="M2.5 20c.7-3.6 3-5.4 5.5-5.4s4.8 1.8 5.5 5.4M11.5 15.2c1.2-.4 3-.6 5-.6 2.6 0 4.4 1.8 5 5.4"/></svg>`,

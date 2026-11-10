@@ -124,6 +124,18 @@ textarea{min-height:110px;resize:vertical}
 .source-ico{width:40px;height:40px;border-radius:12px;background:var(--sage-soft);display:grid;place-items:center;color:var(--accent);flex:none}
 .source-ico svg{width:22px;height:22px}
 .source-body{padding:0 14px 14px;display:flex;flex-direction:column;gap:10px}
+.lk-mono{display:inline-flex;align-items:center;justify-content:center;flex:none;border-radius:10px;color:#fff;font-weight:800;letter-spacing:-.02em;font-family:var(--sans,inherit);box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}
+.lk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.lk-tile{display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px 6px 9px;border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink);font:inherit;cursor:pointer;text-align:center;min-width:0}
+.lk-tile:hover{border-color:var(--accent)}.lk-tile.sel{border-color:var(--accent-bg);box-shadow:0 0 0 2px var(--accent-bg) inset}.lk-tile:disabled{opacity:.45;cursor:default}
+.lk-n{font-size:12.5px;font-weight:700;line-height:1.25;word-break:keep-all}.lk-how{font-size:10.5px;color:var(--ink-3)}.lk-on{font-size:10.5px;font-weight:700;color:var(--accent)}
+.lk-list{display:grid;gap:8px}.lk-row{border:1px solid var(--line);border-radius:14px;padding:10px 12px;background:var(--card);display:grid;gap:4px}
+.lk-t{display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom}
+.lk-panel .hint,.lk-guide .hint{font-size:12.5px;color:var(--ink-3);line-height:1.5}
+.lk-acts{display:flex;gap:14px;align-items:center;margin-top:2px}.lk-pre{margin:4px 0 0;padding:10px;border-radius:10px;background:var(--sage-soft);font:12px/1.55 ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap;word-break:break-word;max-height:240px;overflow:auto;color:var(--ink-2)}
+.lk-panel{border-color:var(--accent-bg)}.lk-mine{display:flex;gap:8px;align-items:center;font-size:13.5px;margin-top:8px;cursor:pointer}.lk-mine input{width:18px;height:18px;accent-color:var(--accent-bg)}
+.lk-guide{font-size:13px;border:1px dashed var(--line);border-radius:12px;padding:8px 12px}.lk-guide summary{cursor:pointer;font-weight:700}.lk-guide ol{margin:8px 0 6px;padding-left:20px;display:grid;gap:4px;line-height:1.5}
+.filebtn.disabled{opacity:.6;pointer-events:none}
 .reads{font-size:12.5px;color:var(--ink-2);display:grid;grid-template-columns:auto 1fr;gap:2px 10px}
 .reads b{color:var(--ink);font-weight:700}
 .thumbs{display:flex;gap:8px;flex-wrap:wrap}
@@ -901,28 +913,29 @@ button.crest{cursor:pointer;border-radius:12px}button.crest:hover{background:rgb
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/htm@3.1.1/dist/htm.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
-<script src="js/config.js?v=79"></script>
-<script src="js/core.js?v=79"></script>
-<script src="js/zodiac.js?v=79"></script>
-<script src="js/api.js?v=79"></script>
-<script src="js/support.js?v=79"></script>
-<script src="js/avatars.js?v=79"></script>
-<script src="js/screens.js?v=79"></script>
-<script src="js/social.js?v=79"></script>
-<script src="js/ops.js?v=79"></script>
-<script src="js/quick.js?v=79"></script>
-<script src="js/evolve.js?v=79"></script>
-<script src="js/achieve.js?v=79"></script>
-<script src="js/bonds.js?v=79"></script>
-<script src="js/gems.js?v=79"></script>
-<script src="js/showcase.js?v=79"></script>
-<script src="js/ask.js?v=79"></script>
-<script src="js/places.js?v=79"></script>
-<script src="js/updates.js?v=79"></script>
-<script src="js/insignia.js?v=79"></script>
-<script src="js/gem3d.js?v=79"></script>
-<script src="js/gemwhy.js?v=79"></script>
-<script src="js/samples.js?v=79"></script>
-<script src="js/app.js?v=79"></script>
+<script src="js/config.js?v=80"></script>
+<script src="js/core.js?v=80"></script>
+<script src="js/zodiac.js?v=80"></script>
+<script src="js/api.js?v=80"></script>
+<script src="js/support.js?v=80"></script>
+<script src="js/avatars.js?v=80"></script>
+<script src="js/links.js?v=80"></script>
+<script src="js/screens.js?v=80"></script>
+<script src="js/social.js?v=80"></script>
+<script src="js/ops.js?v=80"></script>
+<script src="js/quick.js?v=80"></script>
+<script src="js/evolve.js?v=80"></script>
+<script src="js/achieve.js?v=80"></script>
+<script src="js/bonds.js?v=80"></script>
+<script src="js/gems.js?v=80"></script>
+<script src="js/showcase.js?v=80"></script>
+<script src="js/ask.js?v=80"></script>
+<script src="js/places.js?v=80"></script>
+<script src="js/updates.js?v=80"></script>
+<script src="js/insignia.js?v=80"></script>
+<script src="js/gem3d.js?v=80"></script>
+<script src="js/gemwhy.js?v=80"></script>
+<script src="js/samples.js?v=80"></script>
+<script src="js/app.js?v=80"></script>
 </body>
 </html>
