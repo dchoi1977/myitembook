@@ -137,7 +137,7 @@ function gemInsignia(m,id){if(!m)return {back:"",under:""};let back="",under="";
 async function regionHere(){const p=await getPosition();const s=await api.session();const token=s&&s.access_token;
  const r=await fetch(PLACES_FN(),{method:"POST",headers:{"Content-Type":"application/json",apikey:MIB_CONFIG.key,...(token?{Authorization:"Bearer "+token}:{})},body:JSON.stringify({action:"region",lat:p.lat,lng:p.lng})});
  const j=await r.json().catch(()=>({}));if(!r.ok)throw Err(j.error||"region_failed");return {sido:j.sido||"",gu:j.gu||"",dong:j.dong||""}}
-const sameArea=(a,b)=>a&&b&&shortSido(a.sido)===shortSido(b.sido)&&(a.gu||"")===(b.gu||"");
+const sameArea=(a,b)=>!!(a&&b)&&shortSido(a.sido)===shortSido(b.sido)&&(a.gu&&b.gu?a.gu===b.gu:(a.dong||"")===(b.dong||""));
 
 /* ───────── 알맞은 때 한 번씩 묻기 ───────── */
 function idSuggest(st,day){const E=idOf(st);const t=dayKey();const f=(st.identity||{});if(f.snooze===t)return null;
