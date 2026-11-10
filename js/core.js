@@ -408,16 +408,25 @@ const BADGES=[
 GROUPS["비밀"]="#5B4A7A";GROUPS["발자취"]="#4F6F8F";GROUPS["연륜"]="#8C6A3A";GROUPS["휘장"]="#7A1F2B";
 const GROUP_DESC={"휘장":"내가 걸어온 길 — 뿌리·터전·배움·소속·영예·조명","연륜":"살아온 시간이 젬에 새긴 나이테","발자취":"머무른 곳이 남긴 길","지속":"꾸준히 이어 간 시간","도약":"나를 새로 발견한 순간","회복":"쉬고, 다듬고, 돌아온 일","함께":"사람들과 결을 주고받은 일","비밀":"조건이 숨겨진 업적"};
 function frameOf(days){return days>=100?4:days>=60?3:days>=30?2:days>=7?1:0}
-function Medal({b,earned,frame=0,size=60}){
- const c=GROUPS[b.g];const ring=earned?["#B9C3B4","#9FB39A","#C9A45A","#B98A3A","#8E6B22"][frame]:"none";
- return html`<svg viewBox="0 0 60 60" style=${{width:size,height:size}} aria-hidden="true">
-  <circle cx="30" cy="30" r="27" style=${{fill:earned?c:"var(--card)",stroke:earned?ring:"var(--line)",strokeWidth:earned?3:1.5,strokeDasharray:earned?"none":"3 3"}}/>
-  <circle cx="30" cy="30" r="21.5" style=${{fill:"none",stroke:earned?"rgba(255,255,255,.35)":"none",strokeWidth:1}}/>
-  ${earned&&RARITY[b.rar]&&RARITY[b.rar].n>=2&&html`<circle cx="30" cy="30" r="29" style=${{fill:"none",stroke:RARITY[b.rar].color,strokeWidth:1.2,strokeDasharray:RARITY[b.rar].n>=3?"2 2.4":"none"}}/>`}
-  ${earned&&b.rar==="legend"&&html`<circle cx="30" cy="30" r="27" style=${{fill:"none",stroke:"#FFE9A8",strokeWidth:1,opacity:.8}}/>`}
-  ${!earned&&b.secret?html`<text x="30" y="38" textAnchor="middle" style=${{fill:"var(--ink-3)",font:"700 22px var(--serif)"}}>?</text>`:html`<g transform="translate(17,17) scale(.866)" style=${{color:earned?"#F7F3EA":"var(--ink-3)"}} dangerouslySetInnerHTML=${{__html:`<g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${glyph(b.glyph)}</g>`}}></g>`}
- </svg>`;
-}
+/* 배지 v2 — 희귀도마다 다른 테두리 모양, 금속 테와 에나멜, 양각 광택 */
+const EMBOSS=(id,k=.5)=>`<filter id="${id}" x="-15%" y="-15%" width="130%" height="130%"><feGaussianBlur in="SourceAlpha" stdDeviation="1.1" result="bl"/><feSpecularLighting in="bl" surfaceScale="3" specularConstant=".75" specularExponent="16" lighting-color="#FFFFFF" result="sp"><feDistantLight azimuth="225" elevation="52"/></feSpecularLighting><feComposite in="sp" in2="SourceAlpha" operator="in" result="sp2"/><feComposite in="SourceGraphic" in2="sp2" operator="arithmetic" k1="0" k2="1" k3="${k}" k4="0"/></filter>`;
+const MEDAL_METAL={common:["#F4F6F2","#B7C1B3","#75826F"],rare:["#E4F0FB","#8DB3DB","#44698F"],epic:["#EFE3FB","#AE8ADB","#5F4390"],legend:["#FFF3C4","#E2B44C","#8A6416"]};
+function medalShape(rar){const P=(n,r1,r2,rot=0)=>[...Array(n*2)].map((_,i)=>{const a=rot+i*Math.PI/n,r=i%2?r2:r1;return (30+Math.cos(a)*r).toFixed(2)+","+(30+Math.sin(a)*r).toFixed(2)}).join(" ");
+ if(rar==="rare")return `<polygon points="${P(4,28,25.6,Math.PI/8)}" stroke-linejoin="round"`;if(rar==="epic")return `<polygon points="${P(12,28.5,25.4)}" stroke-linejoin="round"`;if(rar==="legend")return `<polygon points="${P(16,29.4,24.6)}" stroke-linejoin="round"`;return `<circle cx="30" cy="30" r="27"`}
+function medalSVG(b,earned,frame,id){const c=GROUPS[b.g]||"#465250";const M=MEDAL_METAL[b.rar]||MEDAL_METAL.common;const sh=medalShape(b.rar);
+ if(!earned)return `<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">${sh} fill="none" stroke="#B9C3B4" stroke-width="1.3" stroke-dasharray="3 3"/><circle cx="30" cy="30" r="20" fill="#B9C3B4" opacity=".14"/>${b.secret?`<text x="30" y="38" text-anchor="middle" fill="#8B958F" font-family="'Noto Serif KR',serif" font-weight="700" font-size="22">?</text>`:`<g transform="translate(17,17) scale(.866)" fill="none" stroke="#9AA59D" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">${glyph(b.glyph)}</g>`}</svg>`;
+ const hi=mix(c,"#FFFFFF",.38),lo=mix(c,"#000000",.34);const pips=frame?[...Array(frame)].map((_,i)=>`<circle cx="${30+(i-(frame-1)/2)*4.4}" cy="47.5" r="1.3" fill="${M[0]}" stroke="${M[2]}" stroke-width=".4"/>`).join(""):"";
+ return `<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><defs>${EMBOSS(id+"e",.55)}<linearGradient id="${id}m" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${M[0]}"/><stop offset=".45" stop-color="${M[1]}"/><stop offset=".62" stop-color="${M[0]}"/><stop offset="1" stop-color="${M[2]}"/></linearGradient><radialGradient id="${id}en" cx="36%" cy="30%" r="80%"><stop offset="0" stop-color="${hi}"/><stop offset=".55" stop-color="${c}"/><stop offset="1" stop-color="${lo}"/></radialGradient><linearGradient id="${id}gl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF" stop-opacity=".5"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></linearGradient><clipPath id="${id}cp"><circle cx="30" cy="30" r="20.6"/></clipPath></defs>
+ <g filter="url(#${id}e)">${sh} fill="url(#${id}m)" stroke="${M[2]}" stroke-width=".8"/></g>
+ <circle cx="30" cy="30" r="21.6" fill="${M[2]}"/><circle cx="30" cy="30" r="20.6" fill="url(#${id}en)"/>
+ <circle cx="30" cy="30" r="17.6" fill="none" stroke="${M[0]}" stroke-opacity=".45" stroke-width=".6" stroke-dasharray="${b.rar==="common"?"none":"1 2"}"/>
+ <g transform="translate(17.6,17.9) scale(.866)" fill="none" stroke="${lo}" stroke-opacity=".7" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">${glyph(b.glyph)}</g>
+ <g transform="translate(17,17) scale(.866)" fill="none" stroke="#FFFBF0" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">${glyph(b.glyph)}</g>
+ <ellipse cx="30" cy="17" rx="19" ry="11" fill="url(#${id}gl)" clip-path="url(#${id}cp)"/>${pips}
+ ${b.rar==="legend"?`<path d="M30 1.2l1 2.6 2.6 1-2.6 1-1 2.6-1-2.6-2.6-1 2.6-1z" fill="#FFFFFF"/>`:""}</svg>`}
+function Medal({b,earned,frame=0,size=60}){const id=useMemo(()=>"md"+rid(),[]);const svg=useMemo(()=>medalSVG(b,earned,frame,id),[b.id,earned,frame,id]);
+ return html`<span className="medal" aria-hidden="true" style=${{width:size,height:size,display:"inline-block",lineHeight:0}} dangerouslySetInnerHTML=${{__html:svg}}></span>`}
+
 
 /* ───────── example persona (clearly marked) ───────── */
 function demoState(){
