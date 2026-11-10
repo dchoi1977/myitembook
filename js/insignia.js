@@ -22,7 +22,7 @@ ID_CATS.push(
  {k:"faith",n:"종교",q:"종교 · 신앙",types:["개신교","천주교","불교","원불교","이슬람교","유대교","힌두교","무교","기타"],ph:"(선택) 교단·종파 등",lab:"덧붙일 말 (선택)",noYear:true,plain:true,single:true,optName:true,sensitive:true,noAI:true,ask:"종교를 남길 수 있어요. 처음엔 비공개로 저장돼요.",eff:"젬에는 반영하지 않아요"},
  {k:"gender",n:"성별",q:"성별",types:["여성","남성","논바이너리","직접 적기"],ph:"(선택) 직접 적기",lab:"덧붙일 말 (선택)",noYear:true,plain:true,single:true,optName:true,sensitive:true,noAI:true,ask:"성별을 남길 수 있어요. 처음엔 비공개로 저장돼요.",eff:"젬에는 반영하지 않아요"});
 const ID_CORE=["root","home","school","org","honor","media"];
-const ID_MAX_SHOW=4;
+const ID_MAX_SHOW=5;
 const TIERS={def:["금","은","동","특별"],button:["실버","골드","다이아"]};
 const tierSet=type=>type==="크리에이터 버튼"?TIERS.button:TIERS.def;
 const METAL={"금":["#F6DF98","#D4A43C","#8C6618"],"은":["#F2F5F8","#B5C3CC","#6E7884"],"동":["#F2C49A","#C27A45","#6E3A18"],"특별":["#E6D7F6","#A57FDB","#4B2E73"],"실버":["#F2F5F8","#B5C3CC","#6E7884"],"골드":["#FFE9A8","#D4A43C","#8C6618"],"다이아":["#F4FCFF","#9FDCF2","#3E7FB0"]};
@@ -143,7 +143,7 @@ function PublicCrests({card}){const cr=card.crests||[];if(!cr.length&&!card.mott
 /* card image (1080 wide) */
 async function drawCrestRow(x,crests,motto,{top=1088,pub=false}={}){const W=1080;const SANS='"Noto Sans KR","Apple SD Gothic Neo",sans-serif',SERIF='"Noto Serif KR","Apple SD Gothic Neo",serif';
  let y=top;if(motto){x.fillStyle="#465250";x.font=`500 28px ${SERIF}`;x.textAlign="center";const l=wrapLines(x,motto,W-240,1)[0]||"";x.fillText(l+(l.length<motto.length?"…":""),W/2,y+6);y+=26}
- if(!crests.length)return;const n=crests.length,slot=200,iw=72,ih=81;const x0=W/2-(n*slot)/2;
+ if(!crests.length)return;const n=crests.length,slot=n>4?184:200,iw=72,ih=81;const x0=W/2-(n*slot)/2;
  for(let i=0;i<n;i++){const e=crests[i];const cx=x0+slot*i+slot/2;try{const img=await svgImage(crestSVG(e),iw,ih);x.drawImage(img,cx-iw/2,y+8)}catch(_){/* skip */}
   const L=crestLabel(e,pub);x.textAlign="center";x.fillStyle="#173D3B";x.font=`700 22px ${SANS}`;let t=L.t;while(x.measureText(t).width>slot-14&&t.length>2)t=t.slice(0,-1);x.fillText(t+(t!==L.t?"…":""),cx,y+ih+34);x.fillStyle="#66706E";x.font=`500 18px ${SANS}`;let s=L.s;while(x.measureText(s).width>slot-14&&s.length>2)s=s.slice(0,-1);x.fillText(s,cx,y+ih+58)}}
 
@@ -177,7 +177,7 @@ function idSuggest(st,day){const E=idOf(st);const t=dayKey();const f=(st.identit
 function IdPrompt({st,update,onOpen,day}){if(!st.analysis)return null;const s=idSuggest(st,day);if(!s)return null;
  const c=s.k==="show"?null:idCat(s.k);const snooze=()=>update(x=>{x.identity={...(x.identity||{entries:[]}),snooze:dayKey()}});
  const title=s.re?`오늘도 터전에 있나요?`:s.k==="show"?"휘장을 진열해 보세요":c.q;
- const sub=s.re?`${areaOf(s.re.verify)}에서 ${homeDays(s.re)}일 인증했어요. 다른 날 인증이 쌓일수록 '${HOME_LV[Math.min(5,homeLv(homeDays(s.re))+1)]}'에 가까워져요.`:s.k==="show"?"남긴 휘장 중 최대 네 개를 메인 카드와 카드 이미지에 걸 수 있어요.":c.ask;
+ const sub=s.re?`${areaOf(s.re.verify)}에서 ${homeDays(s.re)}일 인증했어요. 다른 날 인증이 쌓일수록 '${HOME_LV[Math.min(5,homeLv(homeDays(s.re))+1)]}'에 가까워져요.`:s.k==="show"?"남긴 휘장 중 최대 다섯 개를 메인 카드와 카드 이미지에 걸 수 있어요.":c.ask;
  return html`<div className="panel stack idprompt"><div className="row between"><span className="eyebrow">나의 휘장 · ${s.k==="show"?"진열":c.n}</span><button className="linkbtn small" onClick=${snooze}>오늘은 그만</button></div>
   <b className="serif">${title}</b><span className="small muted">${sub}</span>
   <button className="btn sm" onClick=${()=>onOpen(s.k==="show"?"identity":"identity:"+s.k)}>${s.re?"📍 지금 인증하기":s.k==="show"?"진열하러 가기":c.n+" 남기기"}</button></div>`}
@@ -194,7 +194,7 @@ function IdentitySheet({st,update,onClose,toast,demo,focus}){
   if(e.cat==="honor"&&!e.tier)e.tier=tierSet(e.type)[0];
   if(put(I=>{const i=I.entries.findIndex(x=>x.id===e.id);if(i>=0)I.entries[i]=e;else{if(CC.single)I.entries=I.entries.filter(x=>x.cat!==e.cat);if(!e.hidden&&!I.entries.some(x=>x.display)&&I.entries.filter(x=>x.display).length<ID_MAX_SHOW){e.display=true;e.shownAt=Date.now()}I.entries.push(e)}})){track("id_add",{cat:e.cat,type:e.type});toast(f.id?"휘장을 고쳤어요.":`'${idCat(e.cat).n}' 휘장이 새겨졌어요.`);setForm(null)}}
  function toggleHide(e){const h=!e.hidden;put(I=>{I.entries=I.entries.map(x=>x.id===e.id?{...x,hidden:h,display:h?false:x.display,shownAt:h?0:x.shownAt}:x)});track("id_hide",{on:h});toast(h?"비공개로 바꿨어요. 대표 한 줄과 진열, AI 해석 문장에는 나오지 않고 젬에는 그대로 반영돼요.":"다시 공개로 바꿨어요.")}
- function toggleShow(e){if(e.hidden){toast("비공개 휘장은 진열할 수 없어요. 먼저 비공개를 풀어 주세요.");return}const on=!e.display;if(on&&S.shown>=ID_MAX_SHOW){toast(`진열은 ${ID_MAX_SHOW}개까지예요. 하나를 내린 뒤 걸어 주세요.`);return}put(I=>{I.entries=I.entries.map(x=>x.id===e.id?{...x,display:on,shownAt:on?Date.now():0}:x)});track("id_show",{on})}
+ function toggleShow(e){if(e.hidden){if(S.shown>=ID_MAX_SHOW){toast(`진열은 ${ID_MAX_SHOW}개까지예요. 하나를 내린 뒤 걸어 주세요.`);return}if(!confirm(`'${crestLabel(e).t}' 휘장은 지금 비공개예요. 비공개를 풀고 진열대에 올릴까요? 진열하면 다른 사람에게도 보여요.`))return;put(I=>{I.entries=I.entries.map(x=>x.id===e.id?{...x,hidden:false,display:true,shownAt:Date.now()}:x)});track("id_show",{on:true,unhide:true});return}const on=!e.display;if(on&&S.shown>=ID_MAX_SHOW){toast(`진열은 ${ID_MAX_SHOW}개까지예요. 하나를 내린 뒤 걸어 주세요.`);return}put(I=>{I.entries=I.entries.map(x=>x.id===e.id?{...x,display:on,shownAt:on?Date.now():0}:x)});track("id_show",{on})}
  function del(e){if(!confirm(`'${crestLabel(e).t}' 휘장을 지울까요?`))return;put(I=>{I.entries=I.entries.filter(x=>x.id!==e.id)})}
  async function verifyNew(){setBusy("v");try{const r=await regionHere();setForm(f=>({...f,verify:{...r,days:[dayKey()],first:Date.now()}}))}catch(x){toast(GEO_MSG[x.code]||"지금 있는 곳을 확인하지 못했어요. 잠시 후 다시 시도해 주세요.")}finally{setBusy("")}}
  async function reverify(e){setBusy(e.id);try{const r=await regionHere();
