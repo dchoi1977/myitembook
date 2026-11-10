@@ -37,21 +37,21 @@ const SAMPLE_PEOPLE=[
   crests:[{cat:"school",type:"대학원",name:"별바다대학교"},{cat:"org",type:"직장",name:"솔봉 천문대"},{cat:"media",type:"라디오",name:"밤하늘 이야기"}],items:[["망원경","장비","2006-11"],["별자리 노트","기록","2001-02"]],acts:["오늘 밤 보이는 별 기록","관람객 질문 하나 정리","망원경 렌즈 닦기"]}];
 /* 헌정 샘플 — 널리 알려진 인물의 공개된 이력만으로 만든 카드. 본인이 참여하거나 쓴 것이 아니며, 1인칭 문장·일상 기록은 지어내지 않는다 */
 const REAL_PEOPLE=[
- {id:"r01",real:true,name:"손흥민",age:"유명인",job:"축구 · 대한민국 국가대표",stone:"호박",light:"반짝임",form:"결정",tex:"맑음",sym:"번개",ln:"질주하는",s:"여러 리그를 거치며 한국 축구의 새 기록을 써 온 선수.",kw:["축구","국제무대","주장"],
+ {id:"r01",real:true,photo:"img/samples/r01.jpg",credit:"Ujishadow · 크롭 DvTor8303 · CC BY-SA 4.0",name:"손흥민",age:"유명인",job:"축구 · 대한민국 국가대표",stone:"호박",light:"반짝임",form:"결정",tex:"맑음",sym:"번개",ln:"질주하는",s:"여러 리그를 거치며 한국 축구의 새 기록을 써 온 선수.",kw:["축구","국제무대","주장"],
   crests:[{cat:"root",type:"태어난 곳",name:"강원 춘천"},{cat:"org",type:"클럽",name:"LAFC"},{cat:"honor",type:"기록·완주",name:"프리미어리그 득점왕",tier:"금",year:"2022"},{cat:"honor",type:"상장·표창",name:"FIFA 푸스카스상",tier:"특별",year:"2020"}]},
- {id:"r02",real:true,name:"김연아",age:"유명인",job:"피겨스케이팅 · 국가대표 출신",stone:"수정",light:"반짝임",form:"덩이",tex:"맑음",sym:"눈송이",ln:"빙판빛",s:"빙판 위에서 한 시대를 연 피겨스케이팅 선수.",kw:["피겨","올림픽","우아함"],
+ {id:"r02",real:true,photo:"img/samples/r02.jpg",credit:"K-POPIT 케이팝잇 · CC BY 3.0",name:"김연아",age:"유명인",job:"피겨스케이팅 · 국가대표 출신",stone:"수정",light:"반짝임",form:"덩이",tex:"맑음",sym:"눈송이",ln:"빙판빛",s:"빙판 위에서 한 시대를 연 피겨스케이팅 선수.",kw:["피겨","올림픽","우아함"],
   crests:[{cat:"root",type:"태어난 곳",name:"경기 부천"},{cat:"school",type:"대학교",name:"고려대학교"},{cat:"honor",type:"상장·표창",name:"밴쿠버 올림픽 금메달",tier:"금",year:"2010"},{cat:"honor",type:"상장·표창",name:"소치 올림픽 은메달",tier:"은",year:"2014"}]},
- {id:"r03",real:true,name:"김연경",age:"유명인",job:"배구 · 국가대표 출신",stone:"장미석",light:"물결",form:"결정",tex:"결정질",sym:"불꽃",ln:"코트 위",s:"국경을 넘나들며 코트를 이끈 배구 선수. 2025년 우승과 함께 은퇴.",kw:["배구","리더십","국제무대"],
+ {id:"r03",real:true,photo:"img/samples/r03.jpg",credit:"TV10 · CC BY 4.0",name:"김연경",age:"유명인",job:"배구 · 국가대표 출신",stone:"장미석",light:"물결",form:"결정",tex:"결정질",sym:"불꽃",ln:"코트 위",s:"국경을 넘나들며 코트를 이끈 배구 선수. 2025년 우승과 함께 은퇴.",kw:["배구","리더십","국제무대"],
   crests:[{cat:"root",type:"태어난 곳",name:"경기 안산"},{cat:"org",type:"클럽",name:"흥국생명"},{cat:"honor",type:"상장·표창",name:"런던 올림픽 MVP",tier:"특별",year:"2012"},{cat:"honor",type:"상장·표창",name:"V리그 챔피언결정전 MVP",tier:"금",year:"2025"}]},
- {id:"r04",real:true,name:"페이커 이상혁",age:"유명인",job:"e스포츠 · LoL 프로게이머",stone:"자수정",light:"반짝임",form:"군집",tex:"결정질",sym:"왕관",ln:"불멸의",s:"한 팀에서 시즌을 거듭하며 e스포츠의 기록을 새로 쓴 선수.",kw:["e스포츠","꾸준함","기록"],
+ {id:"r04",real:true,photo:"img/samples/r04.jpg",credit:"Marie Claire · 프레임·크롭·색보정 Gauzecard · CC BY 4.0",name:"페이커 이상혁",age:"유명인",job:"e스포츠 · LoL 프로게이머",stone:"자수정",light:"반짝임",form:"군집",tex:"결정질",sym:"왕관",ln:"불멸의",s:"한 팀에서 시즌을 거듭하며 e스포츠의 기록을 새로 쓴 선수.",kw:["e스포츠","꾸준함","기록"],
   crests:[{cat:"root",type:"태어난 곳",name:"서울 강서구"},{cat:"org",type:"클럽",name:"T1"},{cat:"honor",type:"기록·완주",name:"월드 챔피언십 6회 우승",tier:"금",year:"2013~2025"},{cat:"honor",type:"상장·표창",name:"LoL 전설의 전당 헌액",tier:"특별",year:"2024"}]},
- {id:"r05",real:true,name:"일론 머스크",age:"유명인",job:"기업가 · 전기차와 우주개발",stone:"흑요석",light:"반짝임",form:"결정",tex:"결정질",sym:"비행기",ln:"궤도 위",s:"전기차와 우주개발 기업을 이끄는 기업가.",kw:["기술","기업","우주개발"],
+ {id:"r05",real:true,photo:"img/samples/r05.jpg",credit:"U.S. Air Force / Madelyn Keech · 크롭 Ooligan · Public domain (US)",name:"일론 머스크",age:"유명인",job:"기업가 · 전기차와 우주개발",stone:"흑요석",light:"반짝임",form:"결정",tex:"결정질",sym:"비행기",ln:"궤도 위",s:"전기차와 우주개발 기업을 이끄는 기업가.",kw:["기술","기업","우주개발"],
   crests:[{cat:"root",type:"태어난 곳",name:"남아공 프리토리아"},{cat:"school",type:"대학교",name:"University of Pennsylvania"},{cat:"org",type:"직장",name:"Tesla"},{cat:"org",type:"직장",name:"SpaceX"}]},
- {id:"r06",real:true,name:"오은영",age:"유명인",job:"정신건강의학과 전문의 · 저자",stone:"비취",light:"번짐",form:"덩이",tex:"유백",sym:"하트",ln:"다정한",s:"아이와 부모, 관계 속의 말을 방송과 책으로 풀어 온 의사.",kw:["육아","관계","상담"],
+ {id:"r06",real:true,photo:"img/samples/r06.jpg",credit:"SBS Radio 에라오 · CC BY 3.0",name:"오은영",age:"유명인",job:"정신건강의학과 전문의 · 저자",stone:"비취",light:"번짐",form:"덩이",tex:"유백",sym:"하트",ln:"다정한",s:"아이와 부모, 관계 속의 말을 방송과 책으로 풀어 온 의사.",kw:["육아","관계","상담"],
   crests:[{cat:"school",type:"대학교",name:"연세대학교"},{cat:"honor",type:"자격·면허",name:"정신건강의학과 전문의"},{cat:"media",type:"TV",name:"금쪽같은 내 새끼"}]},
- {id:"r07",real:true,name:"강형욱",age:"유명인",job:"반려견 행동 · 훈련과 보호자 교육",stone:"마노",light:"번짐",form:"덩이",tex:"결정질",sym:"강아지",ln:"산책길",s:"반려견과 보호자의 관계를 방송으로 알려 온 훈련사.",kw:["반려견","훈련","보호자 교육"],
+ {id:"r07",real:true,photo:"img/samples/r07.jpg",credit:"보더로운생활 · CC BY 3.0",name:"강형욱",age:"유명인",job:"반려견 행동 · 훈련과 보호자 교육",stone:"마노",light:"번짐",form:"덩이",tex:"결정질",sym:"강아지",ln:"산책길",s:"반려견과 보호자의 관계를 방송으로 알려 온 훈련사.",kw:["반려견","훈련","보호자 교육"],
   crests:[{cat:"org",type:"직장",name:"보듬컴퍼니"},{cat:"media",type:"TV",name:"세상에 나쁜 개는 없다"},{cat:"media",type:"TV",name:"개는 훌륭하다"}]},
- {id:"r08",real:true,name:"한문철",age:"유명인",job:"변호사 · 교통사고와 교통안전",stone:"청금석",light:"물결",form:"결정",tex:"맑음",sym:"바퀴",ln:"블랙박스",s:"공개된 사고 사례로 교통안전의 질문을 던져 온 변호사.",kw:["교통안전","법률","사례"],
+ {id:"r08",real:true,photo:"img/samples/r08.jpg",credit:"수원시청 · 수원새빛포럼 · 공공누리 제1유형",name:"한문철",age:"유명인",job:"변호사 · 교통사고와 교통안전",stone:"청금석",light:"물결",form:"결정",tex:"맑음",sym:"바퀴",ln:"블랙박스",s:"공개된 사고 사례로 교통안전의 질문을 던져 온 변호사.",kw:["교통안전","법률","사례"],
   crests:[{cat:"school",type:"대학교",name:"서울대학교"},{cat:"honor",type:"자격·면허",name:"변호사"},{cat:"media",type:"온라인",name:"한문철TV"},{cat:"media",type:"TV",name:"한문철의 블랙박스 리뷰"}]}];
 SAMPLE_PEOPLE.push(...REAL_PEOPLE);
 const AGE_RINGS={"10대":1,"20대":1,"30대":2,"40대":3,"50대":4,"60대":5};
@@ -84,12 +84,12 @@ function SampleGallery({onClose,toast}){
    <p className="small muted"><b>가상 인물 16명</b>은 날마다 스스로 한 걸음을 걷고 젬이 자라요. <b>유명인 8명</b>은 공개된 이력만으로 만든 헌정 샘플이며, 본인이 참여하거나 쓴 내용이 아니에요.</p>
    <div className="segs mini sg-f" role="group" aria-label="나이대">${["전체","유명인","10대","20대","30대","40대","50대+"].map(a=>html`<button key=${a} aria-pressed=${age===a} onClick=${()=>setAge(a)}>${a}</button>`)}</div>
    <div className="sg-grid">${shown.map(x=>html`<article key=${x.p.id} className="sg-card">
-    <div className="sg-top">${x.p.real?html`<span className="sg-av sg-mono" style=${{background:crestColors(x.p.name)[0]}}>${[...x.p.name.replace(/^페이커 /,"")][0]}</span>`:html`<img src=${"img/avatars/"+x.p.av+".svg"} alt="" className="sg-av"/>`}<span className="grow"><b className="serif">${x.p.name}</b><br/><span className="small faint">${x.p.real?x.p.job:x.p.age+" · "+x.p.job}</span></span><span className=${"sg-badge"+(x.p.real?" real":"")}>${x.p.real?"헌정 샘플":"가상 인물"}</span></div>
+    <div className="sg-top">${x.p.real?html`<img src=${x.p.photo} alt=${x.p.name} className="sg-av sg-photo"/>`:html`<img src=${"img/avatars/"+x.p.av+".svg"} alt="" className="sg-av"/>`}<span className="grow"><b className="serif">${x.p.name}</b><br/><span className="small faint">${x.p.real?x.p.job:x.p.age+" · "+x.p.job}</span></span><span className=${"sg-badge"+(x.p.real?" real":"")}>${x.p.real?"헌정 샘플":"가상 인물"}</span></div>
     <button className="sg-gem" onClick=${()=>setOpen(x)} aria-label=${x.p.name+"의 카드 보기"}><${GemView} g=${x.card.gem} seed=${x.card.gemName} size=${132}/></button>
     <div className="sg-gn">${x.card.gemName}<span className="small faint"> · 연마 ${x.stage}단계</span></div>
     <p className="sg-s serif">${x.p.s}</p>
     <div className="kw sg-kw">${x.p.kw.map(k=>html`<span key=${k} className="chip">${k}</span>`)}</div>
-    <div className="sg-foot"><span className="small faint">${x.p.real?"공개 자료 기반 · 본인 참여 아님":"오늘 · "+x.todayAct}</span><span className="row" style=${{gap:"8px"}}><button className="g3-btn" onClick=${()=>setG3(x)}>◇ 3D</button><button className="linkbtn small" onClick=${()=>setOpen(x)}>카드 보기 ›</button></span></div>
+    <div className="sg-foot"><span className="small faint">${x.p.real?html`공개 자료 기반 · 본인 참여 아님<br/><span className="sg-credit">사진: ${x.p.credit}</span>`:"오늘 · "+x.todayAct}</span><span className="row" style=${{gap:"8px"}}><button className="g3-btn" onClick=${()=>setG3(x)}>◇ 3D</button><button className="linkbtn small" onClick=${()=>setOpen(x)}>카드 보기 ›</button></span></div>
    </article>`)}</div>
    <p className="note" style=${{textAlign:"center"}}>가상 인물과 그 이야기는 지어낸 것이에요. 헌정 샘플은 공개 자료의 사실만 담았고, 해당 인물과 제휴·후원 관계가 없으며 CBT 기간에만 보여요.</p>
   </div>

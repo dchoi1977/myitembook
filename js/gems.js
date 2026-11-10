@@ -54,6 +54,7 @@ function MyGems({fids,cardOf,names,soc,uid,openUser,toast,onFind}){
      <span className="mg-gem"><${GemView} g=${g} seed=${c?c.data.gemName:id} size=${desk?74:54}/></span>
      ${c&&(()=>{const f=gemFeatures(c.data.gem||{},c.data.gemName);const I=gemIdentity(c.data.gem||{},c.data.gemName);const r=f.find(k=>k==="star"||k==="cat");const ep=(I.aw||[]).some(a=>a.t>=3);return (r||I.rareVariant||ep)?html`<span className="mg-rare" title=${r?INCLUSIONS[r].name:I.variant}>✦</span>`:null})()}
      ${c&&html`<span className="mg-stage" aria-hidden="true">${[1,2,3,4,5].map(k=>html`<i key=${k} className=${k<=(c.data.stage||1)?"on":""}></i>`)}</span>`}
+     ${(()=>{const b=bondOf(uid,id,soc.friendships);return b&&b.name?html`<span className="mg-bond" title=${b.name}><${BondIcon} name=${b.name} size=${20}/></span>`:null})()}
      <span className="mg-name">${nick(names,id)}</span>
     </button>`})}
   </div>
