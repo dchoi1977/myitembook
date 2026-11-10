@@ -16,6 +16,12 @@ const ID_CATS=[
   ask:"받은 상이나 자격, 자랑하고 싶은 칭호가 있나요? 영예가 쌓이면 젬에 월계관이 둘러져요.",eff:"젬의 월계관"},
  {k:"media",n:"조명",q:"출연·소개",types:["TV","라디오","신문","잡지","온라인","팟캐스트","샤라웃","강연·무대"],ph:"예) KBS, 매일경제, 유튜브 ○○ 채널",lab:"매체·채널",extra:"프로그램·기사 제목 (선택)",
   ask:"방송·신문·온라인에 소개된 적이 있나요? 조명을 받을수록 젬 위로 스포트라이트가 내려와요.",eff:"젬 위 스포트라이트"}];
+ID_CATS.push(
+ {k:"lang",n:"언어",q:"쓰는 언어 (여러 개 가능)",types:["모국어","유창해요","일상 회화","배우는 중"],ph:"예) 한국어, 영어, 일본어",lab:"언어",noYear:true,plain:true,ask:"어떤 언어로 말하고 쓰나요? 여러 개를 남길 수 있어요.",eff:"젬에는 반영하지 않아요"},
+ {k:"nation",n:"국적",q:"국적 (여러 개 가능)",types:["국적","복수 국적","영주권","출생지 국적"],ph:"예) 대한민국",lab:"나라",noYear:true,plain:true,noAI:true,ask:"국적을 남길 수 있어요. 여러 개도 괜찮아요.",eff:"젬에는 반영하지 않아요"},
+ {k:"faith",n:"종교",q:"종교 · 신앙",types:["개신교","천주교","불교","원불교","이슬람교","유대교","힌두교","무교","기타"],ph:"(선택) 교단·종파 등",lab:"덧붙일 말 (선택)",noYear:true,plain:true,single:true,optName:true,sensitive:true,noAI:true,ask:"종교를 남길 수 있어요. 처음엔 비공개로 저장돼요.",eff:"젬에는 반영하지 않아요"},
+ {k:"gender",n:"성별",q:"성별",types:["여성","남성","논바이너리","직접 적기"],ph:"(선택) 직접 적기",lab:"덧붙일 말 (선택)",noYear:true,plain:true,single:true,optName:true,sensitive:true,noAI:true,ask:"성별을 남길 수 있어요. 처음엔 비공개로 저장돼요.",eff:"젬에는 반영하지 않아요"});
+const ID_CORE=["root","home","school","org","honor","media"];
 const ID_MAX_SHOW=4;
 const TIERS={def:["금","은","동","특별"],button:["실버","골드","다이아"]};
 const tierSet=type=>type==="크리에이터 버튼"?TIERS.button:TIERS.def;
@@ -43,8 +49,8 @@ function idStats(st){const E=idOf(st);const by=k=>E.filter(e=>e.cat===k);
  const honorW=by("honor").reduce((a,e)=>a+(["금","골드","다이아","특별"].includes(e.tier)?2:1),0);
  const mediaW=by("media").reduce((a,e)=>a+(["TV","신문","라디오"].includes(e.type)?2:1),0);
  const lv={root:clamp(by("root").length*2,0,5),home:homeLv(hd),school:clamp(by("school").length,0,5),org:clamp(by("org").length,0,5),honor:clamp(honorW,0,5),media:clamp(mediaW,0,5)};
- const n={};ID_CATS.forEach(c=>n[c.k]=by(c.k).length);
- return {lv,n,homeDays:hd,cats:ID_CATS.filter(c=>n[c.k]>0).length,shown:E.filter(e=>e.display).length,total:E.length}}
+ const n={};ID_CATS.forEach(c=>{n[c.k]=by(c.k).length;if(lv[c.k]==null)lv[c.k]=clamp(c.single?n[c.k]*5:n[c.k],0,5)});
+ return {lv,n,homeDays:hd,cats:ID_CORE.filter(k=>n[k]>0).length,shown:E.filter(e=>e.display).length,total:E.length}}
 /* what the gem takes from it */
 function idMarks(st){const S=idStats(st);const E=idOf(st);if(!E.length)return null;
  return {laurel:S.lv.honor,spot:S.lv.media,roots:clamp(Math.ceil((S.lv.root+S.lv.home)/2),0,5),banners:E.filter(e=>e.cat==="org").slice(0,3).map(e=>crestColors(e.name)[0]),facets:Math.min(2,S.n.school)}}
@@ -69,10 +75,11 @@ function crestLabel(e,pub){const c=e.cat;
  if(c==="school")return {t:schoolShort(e.name),s:e.type};
  if(c==="honor")return {t:e.name,s:[e.tier,e.year].filter(Boolean).join(" · ")||e.type};
  if(c==="media")return {t:e.name,s:e.type+(e.year?" · "+e.year:"")};
+ if(idCat(c).plain)return e.name===e.type?{t:e.name,s:idCat(c).n}:{t:e.name,s:(idCat(c).optName||e.type===idCat(c).n?e.type:idCat(c).n+" · "+e.type)};
  return {t:e.name,s:e.type}}
 
 /* ───────── 휘장 그림 (SVG 100×112) — 실제 로고 대신 이름에서 뽑은 이니셜·빛깔로 새긴 고유 문양 ───────── */
-const IC={
+const IC={speech:'<path d="M4 5h16v11H11l-4 4v-4H4z"/><path d="M8 9h8M8 12h5"/>',moon:'<path d="M16 4a8 8 0 1 0 4 14A7 7 0 0 1 16 4z"/>',ring:'<circle cx="12" cy="12" r="8"/>',sunr:'<circle cx="12" cy="12" r="4"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M6 6l2 2M16 16l2 2M6 18l2-2M16 8l2-2"/>',dot:'<circle cx="12" cy="12" r="2.5"/>',person:'<circle cx="12" cy="8" r="4"/><path d="M4 21c1-5 4-7 8-7s7 2 8 7"/>',
  book:'<path d="M3 6c3-1.5 6-1.5 9 0v13c-3-1.5-6-1.5-9 0zM12 6c3-1.5 6-1.5 9 0v13c-3-1.5-6-1.5-9 0z"/>',
  brief:'<rect x="3" y="8" width="18" height="12" rx="2"/><path d="M9 8V5h6v3M3 13h18"/>',cross:'<path d="M12 3v18M6 9h12"/>',
  heart:'<path d="M12 20C5 15 3 11 3 8.5a4.5 4.5 0 0 1 9-1 4.5 4.5 0 0 1 9 1C21 11 19 15 12 20z"/>',people:'<circle cx="8" cy="9" r="3"/><circle cx="16" cy="9" r="3"/><path d="M2 20c1-4 4-5 6-5s5 1 6 5M10 20c1-4 4-5 6-5s5 1 6 5"/>',
@@ -115,6 +122,8 @@ function crestSVG(e){const id="cr"+(++__cid);const SY=symOf(e);let [c1,mt]=crest
  else if(e.cat==="honor"){const M=METAL[e.tier]||METAL["금"];
   if(e.type==="크리에이터 버튼"){b=`<defs><linearGradient id="${id}m" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${M[0]}"/><stop offset=".5" stop-color="${M[1]}"/><stop offset="1" stop-color="${M[2]}"/></linearGradient></defs><rect x="10" y="14" width="80" height="88" rx="8" fill="url(#${id}m)" stroke="${M[2]}" stroke-width="2"/><rect x="18" y="22" width="64" height="58" rx="5" fill="none" stroke="${M[2]}" stroke-opacity=".6" stroke-width="1.2"/><rect x="34" y="38" width="32" height="24" rx="7" fill="${M[2]}" opacity=".85"/><path d="M46 44l10 6-10 6z" fill="${M[0]}"/><path d="M26 90h48" stroke="${M[2]}" stroke-width="1.5" stroke-linecap="round" opacity=".7"/>${e.tier==="다이아"?`<path d="M80 22l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" fill="#FFFFFF"/>`:""}`}
   else{b=`<defs><radialGradient id="${id}m" cx="38%" cy="32%" r="70%"><stop offset="0" stop-color="${M[0]}"/><stop offset=".55" stop-color="${M[1]}"/><stop offset="1" stop-color="${M[2]}"/></radialGradient></defs><path d="M30 4L42 40H30L22 14Z" fill="${c1}"/><path d="M70 4L58 40H70L78 14Z" fill="${c1}"/><path d="M30 4L42 40M70 4L58 40" stroke="${mt}" stroke-width="1"/><circle cx="50" cy="68" r="36" fill="url(#${id}m)" stroke="${M[2]}" stroke-width="2"/><circle cx="50" cy="68" r="28" fill="none" stroke="${M[2]}" stroke-opacity=".55" stroke-width="1.2"/>${icon(TYPE_IC[e.type]||"star",37,55,26,M[2],2)}${e.tier==="특별"?[0,72,144,216,288].map(a=>{const r=a*Math.PI/180;return `<circle cx="${(50+Math.cos(r)*32).toFixed(1)}" cy="${(68+Math.sin(r)*32).toFixed(1)}" r="1.6" fill="#FFFFFF"/>`}).join(""):""}`}}
+ else if(idCat(e.cat).plain){const PIC={lang:"speech",nation:"flag",faith:({"개신교":"cross","천주교":"cross","불교":"leaf","원불교":"ring","이슬람교":"moon","유대교":"star","힌두교":"sunr","무교":"dot","기타":"star"})[e.type]||"star",gender:"person"}[e.cat];const sh=e.cat==="lang"?"M14 12H86A8 8 0 0 1 94 20V74A8 8 0 0 1 86 82H44L26 100V82H14A8 8 0 0 1 6 74V20A8 8 0 0 1 14 12Z":e.cat==="nation"?"M10 14Q30 6 50 14T90 14V84Q70 92 50 84T10 84Z":e.cat==="faith"?"M50 6L90 30V82L50 106L10 82V30Z":"M50 8A46 46 0 1 1 49.9 8Z";
+  b=`<path d="${sh}" fill="${c1}" stroke="${mt}" stroke-width="3" stroke-linejoin="round"/><path d="${sh}" fill="url(#${id}g)"/>${icon(PIC,39,e.cat==="lang"?20:e.cat==="faith"?24:22,22,mt,1.8)}${monoText(e.cat==="nation"||e.cat==="lang"?[...String(e.name)].slice(0,3).join(""):mono,e.cat==="lang"?58:66,"#FFFFFF")}`}
  else{const pts=[...Array(16)].map((_,i)=>{const a=-Math.PI/2+i*Math.PI/8,r=i%2?36:48;return [50+Math.cos(a)*r,58+Math.sin(a)*r]});b=`<polygon points="${pts.map(p=>p[0].toFixed(1)+","+p[1].toFixed(1)).join(" ")}" fill="${c1}" stroke="${mt}" stroke-width="2.4" stroke-linejoin="round"/><polygon points="${pts.map(p=>p[0].toFixed(1)+","+p[1].toFixed(1)).join(" ")}" fill="url(#${id}g)"/><circle cx="50" cy="58" r="25" fill="${mt}"/>${icon(TYPE_IC[e.type]||"online",37,45,26,c1,2.1)}`}
  return `<svg viewBox="0 0 100 112" xmlns="http://www.w3.org/2000/svg">${D}${EMBOSS(id+"e",.24).replace('stdDeviation="1.1"','stdDeviation="1.7"')}<linearGradient id="${id}gl" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFFFFF" stop-opacity=".34"/><stop offset=".45" stop-color="#FFFFFF" stop-opacity="0"/></linearGradient></defs><g filter="url(#${id}e)">${b}</g></svg>`}
 
@@ -163,7 +172,7 @@ const sameArea=(a,b)=>!!(a&&b)&&shortSido(a.sido)===shortSido(b.sido)&&(a.gu&&b.
 /* ───────── 알맞은 때 한 번씩 묻기 ───────── */
 function idSuggest(st,day){const E=idOf(st);const t=dayKey();const f=(st.identity||{});if(f.snooze===t)return null;
  const home=E.find(e=>e.cat==="home");if(home&&!((home.verify||{}).days||[]).includes(t))return {k:"home",re:home};
- for(let i=0;i<ID_CATS.length;i++){const c=ID_CATS[(Math.max(0,(day||1)-1)+i)%ID_CATS.length];if(!E.some(e=>e.cat===c.k))return {k:c.k}}
+ const ASK=ID_CATS.filter(c=>!c.sensitive&&c.k!=="nation");for(let i=0;i<ASK.length;i++){const c=ASK[(Math.max(0,(day||1)-1)+i)%ASK.length];if(!E.some(e=>e.cat===c.k))return {k:c.k}}
  if(E.length&&!E.some(e=>e.display))return {k:"show"};return null}
 function IdPrompt({st,update,onOpen,day}){if(!st.analysis)return null;const s=idSuggest(st,day);if(!s)return null;
  const c=s.k==="show"?null:idCat(s.k);const snooze=()=>update(x=>{x.identity={...(x.identity||{entries:[]}),snooze:dayKey()}});
@@ -180,10 +189,10 @@ function IdentitySheet({st,update,onClose,toast,demo,focus}){
  const [editLine,setEditLine]=useState(false);const [line,setLine]=useState((st.identity||{}).motto||"");const [busy,setBusy]=useState("");
  const C=idCat(cat);const list=E.filter(e=>e.cat===cat);
  const put=fn=>{if(demo){toast("예시 모드에서는 저장하지 않아요.");return false}update(s=>{const I={entries:[],useAI:true,...(s.identity||{})};I.entries=[...(I.entries||[])];fn(I);s.identity=I});return true};
- function save(){const f=form;if(!f)return;if(f.cat!=="home"&&!String(f.name||"").trim()){toast("이름을 적어 주세요.");return}
+ function save(){const f=form;if(!f)return;const CC=idCat(f.cat);if(CC.optName&&!String(f.name||"").trim()){if(f.type==="직접 적기"){toast("직접 적어 주세요.");return}f.name=f.type}if(f.cat!=="home"&&!String(f.name||"").trim()){toast("이름을 적어 주세요.");return}if(CC.sensitive&&!f.id&&f.hidden==null)f.hidden=true;
   const e={id:f.id||rid(),hidden:!!f.hidden,sym:f.sym||"auto",cat:f.cat,type:f.type,name:String(f.name||"").trim().slice(0,40),extra:String(f.extra||"").trim().slice(0,40),year:String(f.year||"").trim().slice(0,9),tier:f.tier||"",display:!!f.display,shownAt:f.shownAt||0,verify:f.verify||null,at:f.at||Date.now()};
   if(e.cat==="honor"&&!e.tier)e.tier=tierSet(e.type)[0];
-  if(put(I=>{const i=I.entries.findIndex(x=>x.id===e.id);if(i>=0)I.entries[i]=e;else{if(!I.entries.some(x=>x.display)&&I.entries.filter(x=>x.display).length<ID_MAX_SHOW){e.display=true;e.shownAt=Date.now()}I.entries.push(e)}})){track("id_add",{cat:e.cat,type:e.type});toast(f.id?"휘장을 고쳤어요.":`'${idCat(e.cat).n}' 휘장이 새겨졌어요.`);setForm(null)}}
+  if(put(I=>{const i=I.entries.findIndex(x=>x.id===e.id);if(i>=0)I.entries[i]=e;else{if(CC.single)I.entries=I.entries.filter(x=>x.cat!==e.cat);if(!e.hidden&&!I.entries.some(x=>x.display)&&I.entries.filter(x=>x.display).length<ID_MAX_SHOW){e.display=true;e.shownAt=Date.now()}I.entries.push(e)}})){track("id_add",{cat:e.cat,type:e.type});toast(f.id?"휘장을 고쳤어요.":`'${idCat(e.cat).n}' 휘장이 새겨졌어요.`);setForm(null)}}
  function toggleHide(e){const h=!e.hidden;put(I=>{I.entries=I.entries.map(x=>x.id===e.id?{...x,hidden:h,display:h?false:x.display,shownAt:h?0:x.shownAt}:x)});track("id_hide",{on:h});toast(h?"비공개로 바꿨어요. 대표 한 줄과 진열, AI 해석 문장에는 나오지 않고 젬에는 그대로 반영돼요.":"다시 공개로 바꿨어요.")}
  function toggleShow(e){if(e.hidden){toast("비공개 휘장은 진열할 수 없어요. 먼저 비공개를 풀어 주세요.");return}const on=!e.display;if(on&&S.shown>=ID_MAX_SHOW){toast(`진열은 ${ID_MAX_SHOW}개까지예요. 하나를 내린 뒤 걸어 주세요.`);return}put(I=>{I.entries=I.entries.map(x=>x.id===e.id?{...x,display:on,shownAt:on?Date.now():0}:x)});track("id_show",{on})}
  function del(e){if(!confirm(`'${crestLabel(e).t}' 휘장을 지울까요?`))return;put(I=>{I.entries=I.entries.filter(x=>x.id!==e.id)})}
@@ -214,9 +223,9 @@ function IdentitySheet({st,update,onClose,toast,demo,focus}){
       ${C.extra&&html`<div className="field" style=${{margin:0}}><label htmlFor="id-extra">${C.extra}</label><input type="text" id="id-extra" maxLength="40" value=${form.extra||""} onChange=${ev=>setForm({...form,extra:ev.target.value})}/></div>`}
       ${(cat==="school"||cat==="org")&&html`<div className="stack" style=${{gap:"6px"}}><span className="small muted">휘장 문양 ${(()=>{const m=SCHOOL_SYM.find(([re])=>re.test(form.name||""));return m&&cat==="school"?`· 자동: ${ANIMALS[m[1]].n}`:""})()}</span><div className="sym-pick" role="group" aria-label="휘장 문양">${[["auto","자동"],["mono","이니셜"],...Object.entries(ANIMALS).map(([k,v])=>[k,v.n])].map(([k,n])=>html`<button key=${k} aria-pressed=${(form.sym||"auto")===k} onClick=${()=>setForm({...form,sym:k})} title=${n}>${k==="auto"||k==="mono"?html`<span className="sym-t">${n}</span>`:html`<span className="sym-ic" dangerouslySetInnerHTML=${{__html:`<svg viewBox="0 0 24 24">${ANIMALS[k].d("currentColor","var(--card)")}</svg>`}}></span>`}</button>`)}</div></div>`}
       ${cat==="honor"&&html`<div className="segs mini" role="group" aria-label="등급">${tierSet(form.type).map(t=>html`<button key=${t} aria-pressed=${(form.tier||tierSet(form.type)[0])===t} onClick=${()=>setForm({...form,tier:t})}>${t}</button>`)}</div>`}
-      <div className="field" style=${{margin:0}}><label htmlFor="id-year">${cat==="org"?"함께한 때 (선택, 예: 2019~ 또는 2015~2020)":"연도 (선택)"}</label><input type="text" id="id-year" maxLength="12" value=${form.year||""} onChange=${ev=>setForm({...form,year:ev.target.value})} placeholder=${cat==="org"?"2019~":"2024"}/></div>`}
+      ${!C.noYear&&html`<div className="field" style=${{margin:0}}><label htmlFor="id-year">${cat==="org"?"함께한 때 (선택, 예: 2019~ 또는 2015~2020)":"연도 (선택)"}</label><input type="text" id="id-year" maxLength="12" value=${form.year||""} onChange=${ev=>setForm({...form,year:ev.target.value})} placeholder=${cat==="org"?"2019~":"2024"}/></div>`}${C.sensitive&&html`<p className="small muted">${C.n}은(는) 민감한 정보라 <b>비공개</b>로 저장돼요. 원하면 저장한 뒤 비공개를 풀 수 있어요. AI 해석에는 보내지 않아요.</p>`}`}
      <div className="row"><button className="btn ghost sm grow" onClick=${()=>setForm(null)}>취소</button><button className="btn sm grow" disabled=${cat==="home"&&!form.verify} onClick=${save}>${form.id?"고치기":"휘장 새기기"}</button></div></div>`
-   :html`<button className="btn ghost block" onClick=${()=>setForm({cat,type:C.types[0]})}>＋ ${C.n} 남기기</button>`}
+   :(C.single&&list.length?null:html`<button className="btn ghost block" onClick=${()=>setForm({cat,type:C.types[0]})}>＋ ${C.n} 남기기</button>`)}
   </div>
   <label className="checkline"><input type="checkbox" checked=${(st.identity||{}).useAI!==false} onChange=${ev=>put(I=>{I.useAI=ev.target.checked})}/><span><b>다시 읽기 때 AI가 참고</b><br/><span className="small muted">뿌리·배움·소속·영예·조명을 나의 맥락으로만 참고해요. 터전(위치)은 보내지 않아요.</span></span></label>
   <p className="note">휘장은 본인이 직접 남긴 이력이에요. 학교·회사의 실제 로고 대신 이름에서 뽑은 이니셜과 빛깔로 고유한 문양을 새겨요. 다른 사람에게는 진열한 휘장만, '공개할 모습'에서 휘장을 켰을 때 보여요.</p>
