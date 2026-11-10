@@ -25,7 +25,7 @@ function Gate({onSession,initialCode}){
    </div>
    <button className="btn block" onClick=${()=>setMode("join")}>초대 코드로 시작하기</button>
    <button className="btn ghost block" onClick=${()=>setMode("login")}>이미 가입했어요 · 로그인</button>
-   <button className="linkbtn block" style=${{marginTop:"4px"}} onClick=${()=>setSamples(true)}>먼저 둘러보기 · 가상 인물 16명의 아틀리에 ›</button>
+   <button className="linkbtn block" style=${{marginTop:"4px"}} onClick=${()=>setSamples(true)}>먼저 둘러보기 · 샘플 아틀리에 24곳 ›</button>
   </div>`}
   ${samples&&html`<${SampleGallery} onClose=${()=>setSamples(false)}/>`}
   ${mode==="join"&&html`<form className="stack" onSubmit=${join}>

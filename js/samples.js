@@ -35,23 +35,42 @@ const SAMPLE_PEOPLE=[
   crests:[{cat:"honor",type:"크리에이터 버튼",name:"구독자 10만 달성",tier:"실버"},{cat:"media",type:"온라인",name:"일상 브이로그 채널"},{cat:"media",type:"샤라웃",name:"선배 크리에이터 소개"}],items:[["첫 카메라","장비","2019-06"]],acts:["촬영 없이 산책하기","구독자 댓글 열 개 답장","다음 영상 기획 한 줄"]},
  {id:"s16",name:"남궁별",age:"40대",job:"천문대 해설사",av:"p15",stone:"청금석",light:"반짝임",form:"군집",tex:"맑음",sym:"별",ln:"은하빛",s:"오래된 빛을 보며, 지금의 나를 다정하게 봐요.",kw:["경이","설명","인내"],tags:["INTP"],pace:1.0,birth:"12-13",
   crests:[{cat:"school",type:"대학원",name:"별바다대학교"},{cat:"org",type:"직장",name:"솔봉 천문대"},{cat:"media",type:"라디오",name:"밤하늘 이야기"}],items:[["망원경","장비","2006-11"],["별자리 노트","기록","2001-02"]],acts:["오늘 밤 보이는 별 기록","관람객 질문 하나 정리","망원경 렌즈 닦기"]}];
+/* 헌정 샘플 — 널리 알려진 인물의 공개된 이력만으로 만든 카드. 본인이 참여하거나 쓴 것이 아니며, 1인칭 문장·일상 기록은 지어내지 않는다 */
+const REAL_PEOPLE=[
+ {id:"r01",real:true,name:"손흥민",age:"유명인",job:"축구 · 대한민국 국가대표",stone:"호박",light:"반짝임",form:"결정",tex:"맑음",sym:"번개",ln:"질주하는",s:"여러 리그를 거치며 한국 축구의 새 기록을 써 온 선수.",kw:["축구","국제무대","주장"],
+  crests:[{cat:"root",type:"태어난 곳",name:"강원 춘천"},{cat:"org",type:"클럽",name:"LAFC"},{cat:"honor",type:"기록·완주",name:"프리미어리그 득점왕",tier:"금",year:"2022"},{cat:"honor",type:"상장·표창",name:"FIFA 푸스카스상",tier:"특별",year:"2020"}]},
+ {id:"r02",real:true,name:"김연아",age:"유명인",job:"피겨스케이팅 · 국가대표 출신",stone:"수정",light:"반짝임",form:"덩이",tex:"맑음",sym:"눈송이",ln:"빙판빛",s:"빙판 위에서 한 시대를 연 피겨스케이팅 선수.",kw:["피겨","올림픽","우아함"],
+  crests:[{cat:"root",type:"태어난 곳",name:"경기 부천"},{cat:"school",type:"대학교",name:"고려대학교"},{cat:"honor",type:"상장·표창",name:"밴쿠버 올림픽 금메달",tier:"금",year:"2010"},{cat:"honor",type:"상장·표창",name:"소치 올림픽 은메달",tier:"은",year:"2014"}]},
+ {id:"r03",real:true,name:"김연경",age:"유명인",job:"배구 · 국가대표 출신",stone:"장미석",light:"물결",form:"결정",tex:"결정질",sym:"불꽃",ln:"코트 위",s:"국경을 넘나들며 코트를 이끈 배구 선수. 2025년 우승과 함께 은퇴.",kw:["배구","리더십","국제무대"],
+  crests:[{cat:"root",type:"태어난 곳",name:"경기 안산"},{cat:"org",type:"클럽",name:"흥국생명"},{cat:"honor",type:"상장·표창",name:"런던 올림픽 MVP",tier:"특별",year:"2012"},{cat:"honor",type:"상장·표창",name:"V리그 챔피언결정전 MVP",tier:"금",year:"2025"}]},
+ {id:"r04",real:true,name:"페이커 이상혁",age:"유명인",job:"e스포츠 · LoL 프로게이머",stone:"자수정",light:"반짝임",form:"군집",tex:"결정질",sym:"왕관",ln:"불멸의",s:"한 팀에서 시즌을 거듭하며 e스포츠의 기록을 새로 쓴 선수.",kw:["e스포츠","꾸준함","기록"],
+  crests:[{cat:"root",type:"태어난 곳",name:"서울 강서구"},{cat:"org",type:"클럽",name:"T1"},{cat:"honor",type:"기록·완주",name:"월드 챔피언십 6회 우승",tier:"금",year:"2013~2025"},{cat:"honor",type:"상장·표창",name:"LoL 전설의 전당 헌액",tier:"특별",year:"2024"}]},
+ {id:"r05",real:true,name:"일론 머스크",age:"유명인",job:"기업가 · 전기차와 우주개발",stone:"흑요석",light:"반짝임",form:"결정",tex:"결정질",sym:"비행기",ln:"궤도 위",s:"전기차와 우주개발 기업을 이끄는 기업가.",kw:["기술","기업","우주개발"],
+  crests:[{cat:"root",type:"태어난 곳",name:"남아공 프리토리아"},{cat:"school",type:"대학교",name:"University of Pennsylvania"},{cat:"org",type:"직장",name:"Tesla"},{cat:"org",type:"직장",name:"SpaceX"}]},
+ {id:"r06",real:true,name:"오은영",age:"유명인",job:"정신건강의학과 전문의 · 저자",stone:"비취",light:"번짐",form:"덩이",tex:"유백",sym:"하트",ln:"다정한",s:"아이와 부모, 관계 속의 말을 방송과 책으로 풀어 온 의사.",kw:["육아","관계","상담"],
+  crests:[{cat:"school",type:"대학교",name:"연세대학교"},{cat:"honor",type:"자격·면허",name:"정신건강의학과 전문의"},{cat:"media",type:"TV",name:"금쪽같은 내 새끼"}]},
+ {id:"r07",real:true,name:"강형욱",age:"유명인",job:"반려견 행동 · 훈련과 보호자 교육",stone:"마노",light:"번짐",form:"덩이",tex:"결정질",sym:"강아지",ln:"산책길",s:"반려견과 보호자의 관계를 방송으로 알려 온 훈련사.",kw:["반려견","훈련","보호자 교육"],
+  crests:[{cat:"org",type:"직장",name:"보듬컴퍼니"},{cat:"media",type:"TV",name:"세상에 나쁜 개는 없다"},{cat:"media",type:"TV",name:"개는 훌륭하다"}]},
+ {id:"r08",real:true,name:"한문철",age:"유명인",job:"변호사 · 교통사고와 교통안전",stone:"청금석",light:"물결",form:"결정",tex:"맑음",sym:"바퀴",ln:"블랙박스",s:"공개된 사고 사례로 교통안전의 질문을 던져 온 변호사.",kw:["교통안전","법률","사례"],
+  crests:[{cat:"school",type:"대학교",name:"서울대학교"},{cat:"honor",type:"자격·면허",name:"변호사"},{cat:"media",type:"온라인",name:"한문철TV"},{cat:"media",type:"TV",name:"한문철의 블랙박스 리뷰"}]}];
+SAMPLE_PEOPLE.push(...REAL_PEOPLE);
 const AGE_RINGS={"10대":1,"20대":1,"30대":2,"40대":3,"50대":4,"60대":5};
 
 /* the simulation: each sample person lives a few days ahead of the calendar at their own pace */
 function sampleState(p,now){now=now||Date.now();const R=rng("sample|"+p.id);const off=Math.floor(R()*7)-3;const day=Math.max(1,Math.floor((now-SIM_START)/864e5)+1+off);
  const active=Math.floor(day*Math.min(1,.55+p.pace*.3));const stage=active>=Math.round(14/p.pace)?5:active>=Math.round(8/p.pace)?4:active>=Math.round(4/p.pace)?3:active>=1?2:1;
- const friends=Math.min(12,Math.floor(active*.7*p.pace)+1);const cheers=Math.floor(active*1.6*p.pace);const visitors=Math.floor(active*2.2*p.pace);
+ const real=!!p.real;const friends=Math.min(12,Math.floor(active*.7*p.pace)+1);const cheers=Math.floor(active*1.6*p.pace);const visitors=Math.floor(active*2.2*p.pace);
  const lv=(v,steps)=>steps.filter(x=>v>=x).length;
- const marks={setting:lv(day,[3,7,30,100,365]),sat:lv(friends,[1,3,5,10,20]),aura:lv(cheers,[3,10,30,60,100]),stars:lv(visitors,[5,15,30,60,100])};
+ const marks=real?{setting:0,sat:0,aura:3,stars:0}:{setting:lv(day,[3,7,30,100,365]),sat:lv(friends,[1,3,5,10,20]),aura:lv(cheers,[3,10,30,60,100]),stars:lv(visitors,[5,15,30,60,100])};const stg=real?5:stage;
  const ent=p.crests.map((c,i)=>({id:p.id+"c"+i,display:true,shownAt:i,...c}));
  const st={identity:{entries:ent}};const idm=idMarks(st);
  const fp=(()=>{const F=rng("fp|"+p.id);return {hue:Math.round((F()-.5)*20),sat:+((F()-.5)*.3).toFixed(2),ws:+(.92+F()*.16).toFixed(2),hs:+(.94+F()*.1).toFixed(2),tilt:Math.round((F()-.5)*12),side:2+Math.floor(F()*3),mod:[...Array(8)].map(()=>+((F()*2-1)).toFixed(2))}})();
- const gem={stone:p.stone,lightName:p.ln,light:p.light,form:p.form,texture:p.tex,symbol:p.sym,hardness:clamp(1+lv(active,[3,7,21,60]),1,5),grain:Math.min(4,Math.floor(day/5)),facets:clamp(8+stage-1,6,14),fp,polish:stage,marks,rings:AGE_RINGS[p.age]||1};
+ const gem={stone:p.stone,lightName:p.ln,light:p.light,form:p.form,texture:p.tex,symbol:p.sym,hardness:real?5:clamp(1+lv(active,[3,7,21,60]),1,5),grain:real?2:Math.min(4,Math.floor(day/5)),facets:clamp(8+stg-1,6,14),fp,polish:stg,marks,...(AGE_RINGS[p.age]?{rings:AGE_RINGS[p.age]}:{})};
  if(idm){gem.idm=idm;gem.facets=clamp(gem.facets+idm.facets,6,14)}
- const todayAct=p.acts[(day+off+30)%p.acts.length];const z=(()=>{const [m,d]=p.birth.split("-").map(Number);return zodiacOf(m,d)})();
- const card={v:1,sample:true,gem,gemName:`${p.ln} ${p.stone}`,stage,sentence:p.s,keywords:p.kw,axes:[],showHex:false,badges:[],title:"",frame:"",shelf:0,
-  items:p.items.map(([name,category,since])=>({name,category,since,story:"",verify:""})),tags:p.tags,zodiac:z.k,crests:ent.map(publicCrest),motto:idLine(st)};
- return {p,day,active,stage,friends,cheers,todayAct,card,logs:Math.floor(active*1.4)}}
+ const todayAct=real?"":p.acts[(day+off+30)%p.acts.length];const z=p.birth?(()=>{const [m,d]=p.birth.split("-").map(Number);return zodiacOf(m,d)})():null;
+ const card={v:1,sample:true,gem,gemName:`${p.ln} ${p.stone}`,stage:stg,sentence:p.s,keywords:p.kw,axes:[],showHex:false,badges:[],title:"",frame:"",shelf:0,
+  items:(p.items||[]).map(([name,category,since])=>({name,category,since,story:"",verify:""})),tags:p.tags||[],zodiac:z?z.k:null,crests:ent.map(publicCrest),motto:real?"공개 자료로 만든 헌정 샘플 · 본인이 참여하지 않았어요":idLine(st)};
+ return {p,day,active,stage:stg,friends,cheers,todayAct,card,logs:Math.floor(active*1.4)}}
 
 function SampleGallery({onClose,toast}){
  const [age,setAge]=useState("전체");const [open,setOpen]=useState(null);const [g3,setG3]=useState(null);const now=Date.now();
@@ -62,17 +81,17 @@ function SampleGallery({onClose,toast}){
   <div className="sg-in">
    <div className="row between"><span className="eyebrow">A WINDOW INTO OTHER LIVES</span><button className="g3-x sg-x" onClick=${onClose} aria-label="닫기">✕</button></div>
    <h1 className="sg-h serif">삶의 모양은 달라도,<br/>쌓이는 시간은 닮아 있어요.</h1>
-   <p className="small muted">취향이 다른 16개의 아틀리에. 모두 <b>가상 인물</b>이에요. 날마다 스스로 한 걸음을 걷고, 젬이 자라는 모습을 미리 보여 주는 샘플입니다.</p>
-   <div className="segs mini sg-f" role="group" aria-label="나이대">${["전체","10대","20대","30대","40대","50대+"].map(a=>html`<button key=${a} aria-pressed=${age===a} onClick=${()=>setAge(a)}>${a}</button>`)}</div>
+   <p className="small muted"><b>가상 인물 16명</b>은 날마다 스스로 한 걸음을 걷고 젬이 자라요. <b>유명인 8명</b>은 공개된 이력만으로 만든 헌정 샘플이며, 본인이 참여하거나 쓴 내용이 아니에요.</p>
+   <div className="segs mini sg-f" role="group" aria-label="나이대">${["전체","유명인","10대","20대","30대","40대","50대+"].map(a=>html`<button key=${a} aria-pressed=${age===a} onClick=${()=>setAge(a)}>${a}</button>`)}</div>
    <div className="sg-grid">${shown.map(x=>html`<article key=${x.p.id} className="sg-card">
-    <div className="sg-top"><img src=${"img/avatars/"+x.p.av+".svg"} alt="" className="sg-av"/><span className="grow"><b className="serif">${x.p.name}</b><br/><span className="small faint">${x.p.age} · ${x.p.job}</span></span><span className="sg-badge">가상 인물</span></div>
+    <div className="sg-top">${x.p.real?html`<span className="sg-av sg-mono" style=${{background:crestColors(x.p.name)[0]}}>${[...x.p.name.replace(/^페이커 /,"")][0]}</span>`:html`<img src=${"img/avatars/"+x.p.av+".svg"} alt="" className="sg-av"/>`}<span className="grow"><b className="serif">${x.p.name}</b><br/><span className="small faint">${x.p.real?x.p.job:x.p.age+" · "+x.p.job}</span></span><span className=${"sg-badge"+(x.p.real?" real":"")}>${x.p.real?"헌정 샘플":"가상 인물"}</span></div>
     <button className="sg-gem" onClick=${()=>setOpen(x)} aria-label=${x.p.name+"의 카드 보기"}><${GemView} g=${x.card.gem} seed=${x.card.gemName} size=${132}/></button>
     <div className="sg-gn">${x.card.gemName}<span className="small faint"> · 연마 ${x.stage}단계</span></div>
     <p className="sg-s serif">${x.p.s}</p>
     <div className="kw sg-kw">${x.p.kw.map(k=>html`<span key=${k} className="chip">${k}</span>`)}</div>
-    <div className="sg-foot"><span className="small faint">오늘 · ${x.todayAct}</span><span className="row" style=${{gap:"8px"}}><button className="g3-btn" onClick=${()=>setG3(x)}>◇ 3D</button><button className="linkbtn small" onClick=${()=>setOpen(x)}>카드 보기 ›</button></span></div>
+    <div className="sg-foot"><span className="small faint">${x.p.real?"공개 자료 기반 · 본인 참여 아님":"오늘 · "+x.todayAct}</span><span className="row" style=${{gap:"8px"}}><button className="g3-btn" onClick=${()=>setG3(x)}>◇ 3D</button><button className="linkbtn small" onClick=${()=>setOpen(x)}>카드 보기 ›</button></span></div>
    </article>`)}</div>
-   <p className="note" style=${{textAlign:"center"}}>샘플 인물과 이야기는 모두 지어낸 것이며, 실제 인물·단체와 관계가 없어요.</p>
+   <p className="note" style=${{textAlign:"center"}}>가상 인물과 그 이야기는 지어낸 것이에요. 헌정 샘플은 공개 자료의 사실만 담았고, 해당 인물과 제휴·후원 관계가 없으며 CBT 기간에만 보여요.</p>
   </div>
   ${open&&html`<${CardShowcase} key=${open.p.id} faces=${otherCardFaces({data:open.card},open.p.name,null)} toast=${toast||(()=>{})} onClose=${()=>setOpen(null)}/>`}
   ${g3&&html`<${Gem3DView} g=${g3.card.gem} seed=${g3.card.gemName} name=${g3.p.name} onClose=${()=>setG3(null)}/>`}
@@ -80,4 +99,4 @@ function SampleGallery({onClose,toast}){
 
 /* a small strip that opens the gallery (Friends tab) */
 function SampleStrip({onOpen}){const list=useMemo(()=>SAMPLE_PEOPLE.slice(0,6).map(p=>sampleState(p)),[]);
- return html`<button className="panel sg-strip" onClick=${onOpen}><span className="eyebrow">SAMPLE ATELIERS</span><span className="grow"><b>가상 인물 16명의 아틀리에 둘러보기</b><br/><span className="small muted">젬이 어떻게 자라는지 미리 보세요</span></span><span className="sg-strip-gems">${list.map(x=>html`<span key=${x.p.id}><${GemView} g=${x.card.gem} seed=${x.card.gemName} size=${34}/></span>`)}</span></button>`}
+ return html`<button className="panel sg-strip" onClick=${onOpen}><span className="eyebrow">SAMPLE ATELIERS</span><span className="grow"><b>샘플 아틀리에 24곳 둘러보기</b><br/><span className="small muted">젬이 어떻게 자라는지 미리 보세요</span></span><span className="sg-strip-gems">${list.map(x=>html`<span key=${x.p.id}><${GemView} g=${x.card.gem} seed=${x.card.gemName} size=${34}/></span>`)}</span></button>`}
