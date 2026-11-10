@@ -59,6 +59,23 @@ function crystalPts(cx,cy,s,R,n,tilt,ws,hs){
 }
 function nuggetPts(cx,cy,R,n,ws,hs){const P=[];const off=R()*Math.PI*2;for(let i=0;i<n;i++){const a=off+i*2*Math.PI/n+(R()-.5)*(Math.PI/n)*.6;const r=.86+R()*.16;P.push([cx+Math.cos(a)*64*r*(ws||1),cy+Math.sin(a)*58*r*(hs||1)])}return P}
 const LDIR=(()=>{const x=-.55,y=-.83,l=Math.hypot(x,y);return [x/l,y/l]})();
+/* v2 렌더 — 실루엣 안을 층(layer)×방향으로 삼각 분할하고, 돔 형태로 빛을 받아 면마다 명암을 준다. 장식보다 '돌 자체'가 아름답게 */
+const L3=(()=>{const v=[-.42,-.62,.66],l=Math.hypot(...v);return v.map(x=>x/l)})();
+function meshFacets(P,c,st,tex,R,op,mod,layers,T){
+ const P0=P;if(P.length>14){const k=P.length/12;P=[...Array(12)].map((_,i)=>P[Math.floor(i*k)])}
+ const [cx,cy]=c;const n=P.length;const rmax=Math.max(...P.map(([x,y])=>Math.hypot(x-cx,y-cy)))||1;const RM=rng(n+"|"+P[0][0].toFixed(1)+"|"+layers);
+ const rings=[P];for(let l=1;l<=layers;l++){const t=1-l/(layers+1)*.9;const sh=l*1.6;rings.push(P.map(([x,y],i)=>[cx+(x-cx)*t+(RM()-.5)*3*t-sh*.6,cy+(y-cy)*t+(RM()-.5)*3*t-sh]))}
+ const core=[cx-4-layers,cy-6-layers*1.2];
+ const ang=((T&&T.ang)||40)*Math.PI/180,ax=Math.cos(ang),ay=Math.sin(ang);
+ const colB=hueShift(st.base,(T&&T.bi?T.hue2*.35:22),.06);const milky=tex==="유백",clear=tex==="맑음";
+ const edge=tex==="결정질"?.3:clear?.2:.13;const ec=mix(st.light,"#FFFFFF",.55);
+ let out=P0!==P?`<polygon points="${polyStr(P0)}" fill="${mix(st.base,st.deep,.25)}" fill-opacity="${op}"/>`:"";const tri=(a,b,d,k)=>{const m=[(a[0]+b[0]+d[0])/3,(a[1]+b[1]+d[1])/3];const dx=(m[0]-cx)/rmax,dy=(m[1]-cy)/rmax;const r=Math.min(1,Math.hypot(dx,dy));const h=Math.sqrt(Math.max(0,1-r*r));
+  const nx=dx*1.15,ny=dy*1.15,nz=h+.25,nl=Math.hypot(nx,ny,nz);let lit=(nx*L3[0]+ny*L3[1]+nz*L3[2])/nl;lit=lit+(RM()-.5)*.16+(mod?mod[k%mod.length]*.07:0);
+  const s=clamp(((dx*ax+dy*ay)+1)/2,0,1);let col=mix(st.base,colB,s*.85);col=lit>.55?mix(col,st.light,clamp((lit-.55)*2.1,0,.85)):mix(st.deep,col,clamp(lit/.55,0,1)*.85+.15);if(milky)col=mix(col,"#FFFFFF",.24);
+  out+=`<polygon points="${polyStr([a,b,d])}" fill="${col}" fill-opacity="${op}" stroke="${ec}" stroke-opacity="${edge}" stroke-width=".6" stroke-linejoin="round"/>`};
+ let k=0;for(let l=0;l<layers;l++){const A=rings[l],B=rings[l+1];for(let i=0;i<n;i++){const j=(i+1)%n;if((i+l)%2){tri(A[i],A[j],B[j],k++);tri(A[i],B[j],B[i],k++)}else{tri(A[i],A[j],B[i],k++);tri(A[j],B[j],B[i],k++)}}}
+ const last=rings[layers];for(let i=0;i<n;i++)tri(last[i],last[(i+1)%n],core,k++);
+ return out}
 function facetsSVG(P,c,st,tex,R,op,mod){
  const [cx,cy]=c;const k=tex==="결정질"?.56:.48;const milky=tex==="유백";
  const I=P.map(([x,y])=>[cx+(x-cx)*k-5,cy+(y-cy)*k-7]);let out="";
@@ -203,7 +220,7 @@ function gemSVG(g,seed,key){
  let body="";
  C.forEach(cr=>{if(geode&&cr.main){const RG=rng(seed+"|geode");const cav=cr.P.map(([x,y])=>[cr.c[0]+(x-cr.c[0])*.74+(RG()-.5)*4,cr.c[1]+(y-cr.c[1])*.72+(RG()-.5)*4]);let dz="";for(let i=0;i<70;i++){const a=RG()*Math.PI*2,r=Math.sqrt(RG());const x=cr.c[0]+Math.cos(a)*r*48*ws,y=cr.c[1]+Math.sin(a)*r*40*hs;const sz=2.5+RG()*4.5*(1-r*.5);const lit=RG();dz+=`<polygon points="${polyStr([[x,y-sz],[x+sz*.7,y+sz*.5],[x-sz*.7,y+sz*.5]])}" fill="${lit>.6?st.light:lit>.25?st.base:st.deep}" opacity=".95"/>`}
    body+=`<g><polygon points="${polyStr(cr.P)}" fill="#9A8E80" stroke="#5E554A" stroke-width="1.4" stroke-linejoin="round"/><polygon points="${polyStr(cr.P.map(([x,y])=>[cr.c[0]+(x-cr.c[0])*.88,cr.c[1]+(y-cr.c[1])*.88]))}" fill="#C9BFB2" opacity=".7"/><polygon points="${polyStr(cav)}" fill="${st.deep}"/><g clip-path="url(#${id}cav)">${dz}</g><polygon points="${polyStr(cav)}" fill="none" stroke="${st.light}" stroke-opacity=".6" stroke-width="1"/></g>`;cr.cav=cav;return}
-  body+=`<g${cr.main?"":` opacity=".93"`}>${facetsSVG(cr.P,cr.c,st,tex,R,op,mod)}<polygon points="${polyStr(cr.P)}" fill="none" stroke="${st.deep}" stroke-opacity=".9" stroke-width="${(.45+hard*.33).toFixed(2)}" stroke-linejoin="round"/><polygon points="${polyStr(cr.P)}" fill="none" stroke="#FFFFFF" stroke-opacity="${(.1+hard*.08).toFixed(2)}" stroke-width=".8" stroke-linejoin="round" transform="translate(-.7,-.7)"/></g>`});
+  body+=`<g${cr.main?"":` opacity=".93"`}>${cr.smooth?facetsSVG(cr.P,cr.c,st,tex,R,op,mod):meshFacets(cr.P,cr.c,st,tex,R,op,mod,cr.main?clamp(2+Math.floor((facets-6)/3),2,4):2,T)}<polygon points="${polyStr(cr.P)}" fill="none" stroke="${st.deep}" stroke-opacity=".6" stroke-width="${(.35+hard*.23).toFixed(2)}" stroke-linejoin="round"/><polygon points="${polyStr(cr.P)}" fill="none" stroke="#FFFFFF" stroke-opacity="${(.1+hard*.08).toFixed(2)}" stroke-width=".8" stroke-linejoin="round" transform="translate(-.7,-.7)"/></g>`});
  const main=C.find(c=>c.main);const xs=main.P.map(p=>p[0]),ys=main.P.map(p=>p[1]);
  const bx=[Math.min(...xs),Math.max(...xs)],by=[Math.min(...ys),Math.max(...ys)];
  let over="";
