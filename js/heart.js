@@ -1,5 +1,5 @@
 "use strict";
-/* MIB CBT · 하루 한 질문 — 감정·경험·기억·취향을 하루에 하나씩 묻는다.
+/* MIB CBT · 오늘의 인터뷰 — 감정·경험·기억·취향을 하루에 하나씩 묻는다.
    준비한 질문(일곱 갈래)을 사람마다 다른 순서로 내고, 다섯 번에 한 번은 지난 대답을 이어받아 AI가 그 사람만의
    질문을 짓는다(끝이 없다). 대답은 ① 활동한 날로 쌓여 젬을 키우고 ② 일곱 갈래의 '마음 스펙트럼'과 배지로 남고
    ③ 다시 읽기 때 한 문장·육각 눈금의 근거가 되며 ④ 좋아하는 것은 '나만의 칭호'가 된다. */
@@ -28,7 +28,7 @@ function hqToday(st){const t=dayKey();const H=(st&&st.heart)||{};const all=hqLis
  return q}
 const hqWantsAI=st=>{const n=hqAnswered(st).length;const H=(st&&st.heart)||{};const t=dayKey();return n>=4&&n%5===4&&!(H.aiq&&H.aiq.day===t)&&!hqList(st).some(x=>x.day===t&&x.a)};
 async function hqMakeAI(st){const prev=hqAnswered(st).slice(-12).map(x=>`- ${x.q} → ${x.a}`).join("\n");const asked=hqList(st).slice(-40).map(x=>x.q).join(" / ");
- const j=await api.aiJSON({task:"quick",prompt:`아래는 한 사람이 '하루 한 질문'에 남긴 최근 대답이다. 이 사람에게 오늘 건넬 다음 질문 하나를 지어 JSON으로만 답한다.
+ const j=await api.aiJSON({task:"quick",prompt:`아래는 한 사람이 '오늘의 인터뷰'에 남긴 최근 대답이다. 이 사람에게 오늘 건넬 다음 질문 하나를 지어 JSON으로만 답한다.
 {"q":"한 문장 질문, 30자 이내, 물음표로 끝남","cat":"impress|treasure|joy|taste|wish|memory|feel 중 하나","ph":"대답 칸에 흐리게 보일 짧은 안내(12자 이내)"}
 규칙:
 - 지난 대답 하나를 자연스럽게 이어받아, 그 사람의 감정·경험·기억·취향을 한 걸음 더 묻는다. 가볍고 따뜻하게, 한 줄로 답할 수 있게.
@@ -41,7 +41,7 @@ ${prev}
  return {id:"ai_"+dayKey(),day:dayKey(),q,cat:HQ_CATS.some(c=>c[0]===j.cat)?j.cat:"feel",ph:String(j.ph||"").slice(0,16)}}
 function hqStats(st){const A=hqAnswered(st);const by={};HQ_CATS.forEach(c=>by[c[0]]=0);A.forEach(x=>{by[x.cat]=(by[x.cat]||0)+1});const days=[...new Set(A.map(x=>x.day))].sort();let best=0,run=0,prev=null;days.forEach(d=>{run=prev&&daysBetween(prev,d)===1?run+1:1;best=Math.max(best,run);prev=d});
  return {hq:A.length,hqDays:days.length,hqCats:Object.values(by).filter(v=>v>0).length,hqStreak:best,hqWhy:A.filter(x=>x.why).length,hqBy:by}}
-function hqPromptBlock(st){const A=hqAnswered(st);if(!A.length)return "";return `[하루 한 질문 — 본인이 직접 답한 감정·경험·기억·취향, 최근 ${Math.min(A.length,40)}개]\n`+A.slice(-40).map(x=>`- (${hqCat(x.cat)[1]}) ${x.q} ${x.a}${x.why?" — "+x.why:""}`).join("\n")+`\n→ 본인이 스스로 꺼낸 말이다. 무엇에 마음이 움직이고, 무엇을 아끼고, 무엇을 바라는지에서 가치(values)와 한 문장, 결(axes)의 근거를 찾는다. evidence에는 [질문]으로 표시한다. 대답을 평가하거나 감정 상태를 진단하지 않는다.`}
+function hqPromptBlock(st){const A=hqAnswered(st);if(!A.length)return "";return `[오늘의 인터뷰 — 본인이 직접 답한 감정·경험·기억·취향, 최근 ${Math.min(A.length,40)}개]\n`+A.slice(-40).map(x=>`- (${hqCat(x.cat)[1]}) ${x.q} ${x.a}${x.why?" — "+x.why:""}`).join("\n")+`\n→ 본인이 스스로 꺼낸 말이다. 무엇에 마음이 움직이고, 무엇을 아끼고, 무엇을 바라는지에서 가치(values)와 한 문장, 결(axes)의 근거를 찾는다. evidence에는 [질문]으로 표시한다. 대답을 평가하거나 감정 상태를 진단하지 않는다.`}
 /* 좋아하는 것·감명받은 것 → 나만의 칭호 */
 const hqJosa=(w,a,b)=>{const c=w.charCodeAt(w.length-1);return (c>=44032&&c<=55203)?((c-44032)%28?a:b):b};
 function hqTitleOf(x){if(!x||!x.a)return "";const a=String(x.a).trim();if(a.length<1||a.length>12||/[.!?]/.test(a))return "";
@@ -58,7 +58,7 @@ function HeartCard({st,update,toast,demo,canAI,onOpen}){
  function swap(){if(demo||!q||swaps>=2)return;update(s=>{const H={a:[],...(s.heart||{})};const cur=(H.skip&&H.skip.day===t)?H.skip.ids||[]:[];H.skip={day:t,ids:[...cur,q.id]};s.heart=H});setTxt("");setWhy("");track("heart_swap",{cat:q.cat})}
  const last=hqAnswered(st).slice(-1)[0];
  return html`<div className="panel stack heart">
-  <div className="row between"><span className="eyebrow">하루 한 질문</span><button className="linkbtn small" onClick=${()=>onOpen("heart")}>${S.hq?`지난 대답 ${S.hq}개 ›`:"어떻게 쓰이나요 ›"}</button></div>
+  <div className="row between"><span className="eyebrow">오늘의 인터뷰 · DAILY INTERVIEW</span><button className="linkbtn small" onClick=${()=>onOpen("heart")}>${S.hq?`지난 대답 ${S.hq}개 ›`:"어떻게 쓰이나요 ›"}</button></div>
   <div className="hq-spec" role="img" aria-label=${"마음 스펙트럼: "+HQ_CATS.map(c=>c[1]+" "+(S.hqBy[c[0]]||0)).join(", ")}>${HQ_CATS.map(c=>html`<span key=${c[0]} className=${"hq-dot"+(S.hqBy[c[0]]?" on":"")} style=${{"--c":c[2]}}><i style=${{height:Math.min(100,18+(S.hqBy[c[0]]||0)*16)+"%"}}></i><small>${c[1]}</small></span>`)}</div>
   ${q?html`<div className="stack" style=${{gap:"8px"}}>
     <b className="serif hq-q"><span className="hq-tag" style=${{"--c":hqCat(q.cat)[2]}}>${hqCat(q.cat)[1]}</span>${busy&&!q.ai?"":q.q}${q.ai&&html`<span className="hq-ai">지난 대답에서 이어진 질문</span>`}</b>
@@ -73,7 +73,7 @@ function HeartSheet({st,update,onClose,toast,demo,onAddItems,onReread,items}){
  const A=hqAnswered(st).slice().reverse();const S=hqStats(st);const [cat,setCat]=useState("all");const [del,setDel]=useState(null);const cur=st.flags&&st.flags.title;
  const list=A.filter(x=>cat==="all"||x.cat===cat);const since=st.analysis?A.filter(x=>x.at>(st.analysis.at||0)).length:0;
  const onShelf=x=>(items||[]).some(i=>String(i.name||"").replace(/\s/g,"")===String(x.a).replace(/\s/g,""));
- return html`<${Sheet} title="하루 한 질문" onClose=${onClose}>
+ return html`<${Sheet} title="오늘의 인터뷰" onClose=${onClose}>
   <p className="small muted">하루에 하나씩, 감정·경험·기억·취향을 묻습니다. 대답한 날은 젬이 자라는 '활동한 날'로 쌓이고, 다시 읽을 때 한 문장과 육각 눈금의 근거가 돼요. 대답은 나만 봅니다.</p>
   <div className="panel stack small">
    <div className="row between"><b>마음 스펙트럼</b><span className="faint">${S.hqCats}/7 갈래 · ${S.hqDays}일 · 가장 길게 ${S.hqStreak}일 연속</span></div>
@@ -90,7 +90,7 @@ function HeartSheet({st,update,onClose,toast,demo,onAddItems,onReread,items}){
      ${x.cat==="treasure"&&onAddItems&&!onShelf(x)&&x.a.length<=30&&html`<button className="linkbtn small" disabled=${demo} onClick=${()=>onAddItems([{id:"item-"+rid(),name:x.a.slice(0,30),category:"장비",since:"",story:(x.why||"").slice(0,60),photo:"",thumb:"",verify:"내가 적은 이야기",at:Date.now()}],{stay:true})}>선반에 담기</button>`}
      <span className="grow"></span>${del===x.id?html`<button className="linkbtn small" style=${{color:"var(--danger)"}} onClick=${()=>{update(s=>{s.heart.a=s.heart.a.filter(y=>y.id!==x.id);if(s.flags.title==="hq:"+x.id)s.flags.title=""});setDel(null)}}>정말 지우기</button>`:html`<button className="linkbtn small" style=${{color:"var(--ink-3)"}} disabled=${demo} onClick=${()=>setDel(x.id)}>지우기</button>`}
     </div></div>`})}</div>`
-  :html`<div className="panel tint small">${A.length?"이 갈래에는 아직 대답이 없어요.":"아직 대답이 없어요. '나' 탭의 '하루 한 질문'에 오늘의 대답을 남겨 보세요."}</div>`}
+  :html`<div className="panel tint small">${A.length?"이 갈래에는 아직 대답이 없어요.":"아직 대답이 없어요. '나' 탭의 '오늘의 인터뷰'에 오늘의 대답을 남겨 보세요."}</div>`}
   <p className="note">건강·종교·정치·재산 같은 것은 묻지 않아요. 대답은 공개 카드에 나가지 않고, '칭호로 달기'를 누른 한 줄만 닉네임 앞에 보여요. 다섯 번에 한 번은 지난 대답을 이어받아 AI가 나만의 질문을 지어요.</p>
  <//>`;
 }

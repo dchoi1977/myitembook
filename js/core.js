@@ -393,7 +393,7 @@ const BADGES=[
  {id:"bond1",g:"함께",rar:"common",name:"이름 붙인 사이",glyph:"하트",desc:"친구와 합의해 우리 사이에 이름을 붙였어요.",cond:"친구 1명과 관계 이름 확정하기",title:"이름 붙인 사이가 있는",test:s=>(s.bonds||0)>=1,prog:s=>BP(s.bonds,1)},
  {id:"bond3",g:"함께",rar:"rare",name:"여러 빛깔의 인연",glyph:"나비",desc:"서로 다른 세 가지 관계 이름을 가졌어요.",cond:"서로 다른 관계 이름 3가지 확정하기",title:"여러 빛깔의 인연을 가진",test:s=>(s.bondKinds||0)>=3,prog:s=>BP(s.bondKinds,3)},
  {id:"bond5",g:"함께",rar:"epic",name:"인연의 매듭",glyph:"무한",desc:"다섯 사람과 관계 이름을 맺었어요.",cond:"친구 5명과 관계 이름 확정하기",title:"인연의 매듭을 지은",test:s=>(s.bonds||0)>=5,prog:s=>BP(s.bonds,5)},
- {id:"hq1",g:"속마음",rar:"common",name:"첫 대답",glyph:"말풍선",desc:"하루 한 질문에 처음 답했어요.",cond:"하루 한 질문 1번 답하기",title:"마음을 연",test:s=>(s.hq||0)>=1,prog:s=>BP(s.hq,1)},
+ {id:"hq1",g:"속마음",rar:"common",name:"첫 대답",glyph:"말풍선",desc:"오늘의 인터뷰에 처음 답했어요.",cond:"오늘의 인터뷰 1번 답하기",title:"마음을 연",test:s=>(s.hq||0)>=1,prog:s=>BP(s.hq,1)},
  {id:"hq7",g:"속마음",rar:"rare",name:"일곱 날의 대답",glyph:"책",desc:"일곱 날 동안 나에게 답했어요.",cond:"서로 다른 7일에 답하기",title:"나에게 묻는",test:s=>(s.hqDays||0)>=7,prog:s=>BP(s.hqDays,7)},
  {id:"hq30",g:"속마음",rar:"epic",name:"서른 날의 대답",glyph:"산",desc:"서른 날의 대답이 쌓였어요.",cond:"서로 다른 30일에 답하기",title:"나를 아는",test:s=>(s.hqDays||0)>=30,prog:s=>BP(s.hqDays,30)},
  {id:"hq_streak5",g:"속마음",rar:"rare",name:"닷새의 문답",glyph:"고리",desc:"닷새를 내리 답했어요.",cond:"5일 연속으로 답하기",title:"닷새를 이은",test:s=>(s.hqStreak||0)>=5,prog:s=>BP(s.hqStreak,5)},
@@ -426,7 +426,7 @@ const BADGES=[
  {id:"allweek",g:"비밀",rar:"legend",secret:true,hint:"일곱 날, 하루도 빠짐없이",name:"일곱 빛깔",glyph:"별",desc:"일곱 날 모두 한 걸음이나 한 줄을 남겼어요.",cond:"활동한 날 7일 채우기",title:"일곱 날을 채운",frame:"seven",test:s=>s.active>=7,prog:s=>BP(s.active,7)}
 ];
 GROUPS["비밀"]="#5B4A7A";GROUPS["물길"]="#3E7F8F";GROUPS["속마음"]="#A0567A";GROUPS["발자취"]="#4F6F8F";GROUPS["연륜"]="#8C6A3A";GROUPS["휘장"]="#7A1F2B";
-const GROUP_DESC={"속마음":"하루 한 질문에 남긴 감정·경험·기억·취향","물길":"다른 곳에 쌓아 온 기록을 젬으로 이어 온 길","휘장":"내가 걸어온 길 — 뿌리·터전·배움·소속·영예·조명","연륜":"살아온 시간이 젬에 새긴 나이테","발자취":"머무른 곳이 남긴 길","지속":"꾸준히 이어 간 시간","도약":"나를 새로 발견한 순간","회복":"쉬고, 다듬고, 돌아온 일","함께":"사람들과 결을 주고받은 일","비밀":"조건이 숨겨진 업적"};
+const GROUP_DESC={"속마음":"오늘의 인터뷰에 남긴 감정·경험·기억·취향","물길":"다른 곳에 쌓아 온 기록을 젬으로 이어 온 길","휘장":"내가 걸어온 길 — 뿌리·터전·배움·소속·영예·조명","연륜":"살아온 시간이 젬에 새긴 나이테","발자취":"머무른 곳이 남긴 길","지속":"꾸준히 이어 간 시간","도약":"나를 새로 발견한 순간","회복":"쉬고, 다듬고, 돌아온 일","함께":"사람들과 결을 주고받은 일","비밀":"조건이 숨겨진 업적"};
 function frameOf(days){return days>=100?4:days>=60?3:days>=30?2:days>=7?1:0}
 /* 배지 v2 — 희귀도마다 다른 테두리 모양, 금속 테와 에나멜, 양각 광택 */
 const EMBOSS=(id,k=.5)=>`<filter id="${id}" x="-15%" y="-15%" width="130%" height="130%"><feGaussianBlur in="SourceAlpha" stdDeviation="1.1" result="bl"/><feSpecularLighting in="bl" surfaceScale="3" specularConstant=".75" specularExponent="16" lighting-color="#FFFFFF" result="sp"><feDistantLight azimuth="225" elevation="52"/></feSpecularLighting><feComposite in="sp" in2="SourceAlpha" operator="in" result="sp2"/><feComposite in="SourceGraphic" in2="sp2" operator="arithmetic" k1="0" k2="1" k3="${k}" k4="0"/></filter>`;
