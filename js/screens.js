@@ -25,7 +25,8 @@ function Progress({n}){return html`<div className="progress" aria-label=${`3단�
 function SourceCard({icon,title,desc,open,onToggle,filled,children}){
  return html`<div className="source"><button className="source-head" onClick=${onToggle} aria-expanded=${open}><span className="source-ico"><${Ico} n=${icon}/></span><span className="grow"><b>${title}</b><br/><span className="small faint">${desc}</span></span>${filled?html`<span className="chip">담김</span>`:html`<span className="faint">${open?"접기":"열기"}</span>`}</button>${open&&html`<div className="source-body">${children}</div>`}</div>`;
 }
-function Connect({draft,setDraft,rt,onNext,onBack,hasItems,allowEmpty,nextLabel,toast}){
+function Connect({draft,setDraft,rt,onNext,onBack,hasItems,allowEmpty,nextLabel,toast,update,demo}){
+ const U=k=>typeof uiOpen!=="function"||uiOpen(k);
  const [open,setOpen]=useState("story");const s=draft.sources;const set=(k,v)=>setDraft(d=>({...d,sources:{...d.sources,[k]:v}}));
  const maxPhotos=4;
  const canPhotos=true;
@@ -44,21 +45,22 @@ function Connect({draft,setDraft,rt,onNext,onBack,hasItems,allowEmpty,nextLabel,
    <${SourceCard} icon="yt" title="유튜브 채널" desc="채널 주소만 넣으면 업로드 목록을 읽어옵니다" open=${open==="youtube"} onToggle=${()=>tog("youtube")} filled=${!!s.youtube.trim()}>
     <${YouTubeSource} s=${s} set=${set} setDraft=${setDraft} ready=${rt.ytReady}/>
    <//>
-   ${typeof LinkSource==="function"&&html`<${SourceCard} icon="link" title="SNS·블로그 계정 연결" desc=${nLinks?`${nLinks}곳 연결됨 · 인스타그램·네이버 블로그·링크드인 등`:"인스타그램·페이스북·링크드인·틱톡·네이버 블로그 등 20곳"} open=${open==="links"} onToggle=${()=>tog("links")} filled=${nLinks>0}>
+   ${typeof LinkSource==="function"&&U("links")&&html`<${SourceCard} icon="link" title="SNS·블로그 계정 연결" desc=${nLinks?`${nLinks}곳 연결됨 · 인스타그램·네이버 블로그·링크드인 등`:"인스타그램·페이스북·링크드인·틱톡·네이버 블로그 등 20곳"} open=${open==="links"} onToggle=${()=>tog("links")} filled=${nLinks>0}>
     <${LinkSource} s=${s} setDraft=${setDraft} toast=${toast||(()=>{})}/>
    <//>`}
-   ${typeof ShotSource==="function"&&html`<${SourceCard} icon="photo" title="화면 한 장으로 읽기" desc=${nShots?`${nShots}가지 읽음 · 스크린 타임·홈 화면·알람·결산`:"스크린 타임·홈 화면·알람·연말 결산을 캡처 한 장으로"} open=${open==="shots"} onToggle=${()=>tog("shots")} filled=${nShots>0}>
+   ${typeof ShotSource==="function"&&U("shots")&&html`<${SourceCard} icon="photo" title="화면 한 장으로 읽기" desc=${nShots?`${nShots}가지 읽음 · 스크린 타임·홈 화면·알람·결산`:"스크린 타임·홈 화면·알람·연말 결산을 캡처 한 장으로"} open=${open==="shots"} onToggle=${()=>tog("shots")} filled=${nShots>0}>
     <${ShotSource} s=${s} setDraft=${setDraft} toast=${toast||(()=>{})}/>
    <//>`}
-   ${typeof TraceSource==="function"&&html`<${SourceCard} icon="data" title="폰·PC 속 흔적" desc=${nTraces?`${nTraces}가지 읽음 · 사진첩의 리듬·나와의 채팅·북마크`:"사진첩의 찍은 시각·장소, 카카오톡 나와의 채팅, 북마크"} open=${open==="traces"} onToggle=${()=>tog("traces")} filled=${nTraces>0}>
+   ${typeof TraceSource==="function"&&U("traces")&&html`<${SourceCard} icon="data" title="폰·PC 속 흔적" desc=${nTraces?`${nTraces}가지 읽음 · 사진첩의 리듬·나와의 채팅·북마크`:"사진첩의 찍은 시각·장소, 카카오톡 나와의 채팅, 북마크"} open=${open==="traces"} onToggle=${()=>tog("traces")} filled=${nTraces>0}>
     <${TraceSource} s=${s} setDraft=${setDraft} toast=${toast||(()=>{})}/>
    <//>`}
-   ${typeof AboutSource==="function"&&html`<${SourceCard} icon="pen" title="나를 소개한 글" desc=${nAbout?`${nAbout}편 읽음 · 다른 사람이 소개한 나`:"위키 문서·소개 페이지·인터뷰 기사의 주소"} open=${open==="about"} onToggle=${()=>tog("about")} filled=${nAbout>0}>
+   ${typeof AboutSource==="function"&&U("about")&&html`<${SourceCard} icon="pen" title="나를 소개한 글" desc=${nAbout?`${nAbout}편 읽음 · 다른 사람이 소개한 나`:"위키 문서·소개 페이지·인터뷰 기사의 주소"} open=${open==="about"} onToggle=${()=>tog("about")} filled=${nAbout>0}>
     <${AboutSource} s=${s} setDraft=${setDraft} toast=${toast||(()=>{})}/>
    <//>`}
-   ${typeof GoogleSource==="function"&&html`<${SourceCard} icon="cal" title="구글 계정으로 읽기" desc=${nGoogle?`${nGoogle}가지 읽음 · 캘린더·유튜브 구독과 좋아요`:"구글에서 허락 한 번으로 캘린더·유튜브 구독과 좋아요"} open=${open==="google"} onToggle=${()=>tog("google")} filled=${nGoogle>0}>
+   ${typeof GoogleSource==="function"&&U("google")&&html`<${SourceCard} icon="cal" title="구글 계정으로 읽기" desc=${nGoogle?`${nGoogle}가지 읽음 · 캘린더·유튜브 구독과 좋아요`:"구글에서 허락 한 번으로 캘린더·유튜브 구독과 좋아요"} open=${open==="google"} onToggle=${()=>tog("google")} filled=${nGoogle>0}>
     <${GoogleSource} s=${s} setDraft=${setDraft} toast=${toast||(()=>{})}/>
    <//>`}
+   ${update&&typeof LockedLine==="function"&&html`<${LockedLine} keys=${["links","shots","google","traces","about"]} update=${update} toast=${toast} demo=${demo}/>`}
    <${SourceCard} icon="cal" title="캘린더" desc="반복 일정이나 지난 한 달의 일정" open=${open==="calendar"} onToggle=${()=>tog("calendar")} filled=${!!s.calendar.trim()}>
     <div className="field"><label htmlFor="src-cal">일정 붙여 넣기</label><textarea id="src-cal" value=${s.calendar} onChange=${e=>set("calendar",e.target.value)} placeholder=${"예)\n매주 토 07:00 등산 모임\n화·목 20:00 영어 스터디\n11/3 후배 이력서 봐 주기"}></textarea></div>
     <div className="reads"><b>읽는 것</b><span>반복·주기·활동 종류</span><b>읽지 않음</b><span>함께한 사람 이름 (지워도 됩니다)</span></div>
@@ -162,7 +164,7 @@ function LifeCard({st,items,stats,onOpen,me}){
  const prev=(st.axesHistory||[]).length?st.axesHistory[st.axesHistory.length-1].axes:null;
  const eq=equipped(st,stats);const show=showcaseBadges(st,stats).map(badgeById);
  return html`<div className=${"lifecard"+(eq.frame?" frame-"+eq.frame:"")} data-age=${g&&g.rings?g.rings:undefined}>
-  <div className="row between"><span className="row" style=${{gap:"6px"}}><span className="chip gold">연마 ${stage}단계 · ${STAGES[stage]}</span>${eq.title&&html`<span className="chip plain title-chip">${eq.title}</span>`}</span><span className="row" style=${{gap:"10px"}}><button className="g3-btn" onClick=${()=>onOpen("gem3d")} aria-label="젬 3D로 보기">◇ 3D</button><button className="linkbtn small" onClick=${()=>setBack(b=>!b)} aria-pressed=${back}>${back?"앞면 보기":"뒷면 · 육각형"}</button></span></div>
+  <div className="row between"><span className="row" style=${{gap:"6px"}}><span className="chip gold">연마 ${stage}단계 · ${STAGES[stage]}</span>${eq.title&&html`<span className="chip plain title-chip">${eq.title}</span>`}</span><span className="row" style=${{gap:"10px"}}>${(typeof uiOpen!=="function"||uiOpen("gem3d"))&&html`<button className="g3-btn" onClick=${()=>onOpen("gem3d")} aria-label="젬 3D로 보기">◇ 3D</button>`}<button className="linkbtn small" onClick=${()=>setBack(b=>!b)} aria-pressed=${back}>${back?"앞면 보기":"뒷면 · 육각형"}</button></span></div>
   ${!back&&desk?html`<div className="lc-split"><div className="lc-gem">
    <${ZodiacSky} z=${myZodiac(st)} size=${210}/>
    <${GemView} g=${g} seed=${st.createdAt} size=${210}/>
@@ -199,23 +201,29 @@ function LifeCard({st,items,stats,onOpen,me}){
   </div>
  </div>`;
 }
-function MeTab({st,items,soc,stats,onOpen,names,top,mid,me}){
- const desk=useDesktop();
+function MeTab({st,items,soc,stats,onOpen,names,top,mid,me,update,toast,demo}){
+ const desk=useDesktop();const U=k=>typeof uiOpen!=="function"||uiOpen(k);const Sec=({t})=>desk?null:html`<div className="me-sec">${t}</div>`;
  const featured=items.filter(i=>(st.featured||[]).includes(i.id)).slice(0,4);
  const rows=[["evidence","눈","이렇게 읽은 이유","사실과 AI 해석을 나눠 보고, 맞다·숨기기"],["attrs","별","젬의 8가지 속성","결·색·빛·형·질·강·상·각"],["shelf","선반","나의 선반",`실제로 가진 것 ${items.length}개 · 얼마나 함께했는가`],["publish","문","공개할 모습",st.visibility.public?(st.visibility.audience==="friends"?"친구에게 공개 중":"CBT 1기에 공개 중")+" · 항목별로 고르기":"지금은 나만 보기"],["reread","새싹","새 기록 더하기",(()=>{const n=typeof linkStats==="function"?linkStats(st).links:0;return `${n?`기록 ${n}갈래 이어짐`:"계정·화면·폰 속 흔적 잇기"} · 나를 다시 읽기 · 지금까지 ${st.analyses||1}번`})()]];
  const achN=earnedIds(st,stats).length;rows.splice(2,0,["achieve","별","업적 도감 · 배지 보관함",`배지 ${achN}/${BADGES.length} · 칭호와 대표 배지 고르기`]);rows.splice(3,0,["identity","왕관","나의 휘장",(()=>{const I=idStats(st);return I.total?`휘장 ${I.total}개 · 진열 ${I.shown}/${ID_MAX_SHOW} · 뿌리·터전·배움·소속·영예·조명`:"뿌리·터전·배움·소속·영예·조명을 새겨 진열하기"})()]);
+ const menu=rows.filter(([k])=>U(k));if(!desk&&me)menu.unshift(["avatar","사람","프로필 이미지",me.avatar?"바꾸기 · 캐릭터 또는 내 사진":"고르기 · 캐릭터 또는 내 사진"]);
  return html`<div className="main wrap">
+  ${top&&html`<${Sec} t="오늘"/>`}
   ${top}
+  <${Sec} t="내 젬"/>
   <${LifeCard} st=${st} items=${items} stats=${stats} onOpen=${onOpen} me=${me}/>
   <button className="btn block cardview-btn" onClick=${()=>onOpen("cardview")}><span aria-hidden="true">✦</span> 카드 보기 · 앞면과 뒷면</button>
-  <div className="row"><button className="btn quiet sm grow" onClick=${()=>onOpen("cardimg")}><${Ico} n="share"/>카드 이미지 저장</button><button className="btn quiet sm grow" onClick=${()=>onOpen("mine")}><${Ico} n="chat"/>받은 공감 ${stats.reactionsReceived+stats.wordsReceived}</button></div>
+  ${U("share")&&html`<div className="row"><button className="btn quiet sm grow" onClick=${()=>onOpen("cardimg")}><${Ico} n="share"/>카드 이미지 저장</button><button className="btn quiet sm grow" onClick=${()=>onOpen("mine")}><${Ico} n="chat"/>받은 공감 ${stats.reactionsReceived+stats.wordsReceived}</button></div>`}
   ${(()=>{const ns=nextStage(st,stats);if(!ns)return html`<p className="note" style=${{textAlign:"center"}}>명품 단계에 이르렀어요.</p>`;const DT={3:3,4:5,5:7};const tgt=DT[ns.to];const cur=tgt?Math.min(stats.active,tgt):(stats.confirmed?1:0);const max=tgt||1;const pct=Math.round(cur/max*100);
    return html`<div className="nextcard"><div className="row between"><span className="eyebrow">LITTLE DAYS, NEW FACETS</span><span className="chip plain">연마 ${ns.to-1}단계</span></div><b className="serif nc-title">다음 변화는, ${tgt?`활동 ${tgt}일에.`:`${ns.need}에서.`}</b><span className="small muted">${ns.need} · 단계가 오르면 젬이 더 커지고 맑아지며, 무엇이 깨어날지 몰라요.</span><div className="nc-bar"><i style=${{width:pct+"%"}}></i></div><div className="row between small faint"><span>지금까지 ${tgt?`활동 ${stats.active}일`:cur?"확인함":"아직"}</span><span>${ns.name} 단계까지 ${tgt?Math.max(0,tgt-stats.active)+"일":"한 걸음"}</span></div></div>`})()}
-  <${MarksPanel} st=${st} stats=${stats}/>
-  ${mid}
-  ${featured.length>0&&html`<div className="stack"><div className="row between"><h2 className="h3">대표 아이템</h2><button className="linkbtn small" onClick=${()=>onOpen("shelf")}>선반 열기</button></div><div className="shelf feat">${featured.map(i=>html`<${ItemTile} key=${i.id} item=${i} featured=${true} onClick=${()=>onOpen("item:"+i.id)}/>`)}</div></div>`}
+  ${U("marks")&&html`<${MarksPanel} st=${st} stats=${stats}/>`}
+  ${featured.length>0&&U("shelf")&&html`<div className="stack"><div className="row between"><h2 className="h3">대표 아이템</h2><button className="linkbtn small" onClick=${()=>onOpen("shelf")}>선반 열기</button></div><div className="shelf feat">${featured.map(i=>html`<${ItemTile} key=${i.id} item=${i} featured=${true} onClick=${()=>onOpen("item:"+i.id)}/>`)}</div></div>`}
   ${soc.wordsTo.length>0&&html`<div className="stack"><h2 className="h3">사람들이 건넨 한 단어</h2><div className="wordchips">${soc.wordsTo.map((w,i)=>html`<span className="chip gold" key=${i} title=${(names[w.from_id]||{}).nickname||""}>${w.word}</span>`)}</div></div>`}
-  <div className="list">${rows.map(([k,gl,t,d])=>html`<button key=${k} className="list-row" onClick=${()=>onOpen(k)}><span className="ico"><${Glyph} name=${gl} size=${19}/></span><span className="grow"><span className="t">${t}</span><br/><span className="d">${d}</span></span><span className="chev">›</span></button>`)}</div>
+  ${mid&&html`<${Sec} t="함께 · 미션"/>`}
+  ${mid}
+  <${Sec} t="더 보기"/>
+  ${typeof UnlockCard==="function"&&update&&html`<${UnlockCard} st=${st} stats=${stats} update=${update} toast=${toast} demo=${demo}/>`}
+  <div className="list">${menu.map(([k,gl,t,d])=>html`<button key=${k} className="list-row" onClick=${()=>onOpen(k)}><span className="ico"><${Glyph} name=${gl} size=${19}/></span><span className="grow"><span className="t">${t}</span><br/><span className="d">${d}</span></span><span className="chev">›</span></button>`)}</div>
   ${!desk&&typeof UPDATES!=="undefined"&&html`<div className="list"><button className="list-row upd-row" onClick=${()=>onOpen("updates")}><span className="ico"><${Glyph} name="새싹" size=${19}/></span><span className="grow"><span className="t">업데이트 소식${hasNewUpdate(st)&&html` <span className="upd-new">NEW</span>`}</span><br/><span className="d">${latestUpdate().date} · ${latestUpdate().title}</span></span><span className="chev">›</span></button></div>`}
  </div>`;
 }
@@ -277,7 +285,7 @@ function ShelfSheet({st,items,onOpen,onClose,canAI}){
   <div className="panel tint small row between" style=${{alignItems:"center"}}><span>${st.visibility.public&&st.visibility.fields.shelf?html`<b>선반 공개 중</b> · ${items.filter(i=>!i.private).length}개 보임${items.some(i=>i.private)?` · ${items.filter(i=>i.private).length}개 숨김`:""}`:html`<b>선반은 나만 보기</b> · 카드 공개 설정에서 켤 수 있어요`}</span><button className="linkbtn small" onClick=${()=>onOpen("publish")}>공개 설정</button></div>
   <div className="segs" role="group" aria-label="카테고리">${["전체","장비","자격","반려"].map(c=>html`<button key=${c} aria-pressed=${cat===c} onClick=${()=>setCat(c)}>${c}</button>`)}</div>
   ${list.length?html`<div className="shelf">${list.map(i=>html`<${ItemTile} key=${i.id} item=${i} featured=${(st.featured||[]).includes(i.id)} onClick=${()=>onOpen("item:"+i.id)}/>`)}</div>`:html`<div className="panel tint small">아직 담은 아이템이 없습니다. 오래 쓴 카메라, 함께 사는 반려견, 준비해서 딴 자격증처럼 나와 함께한 것을 하나 담아 보세요.</div>`}
-  <div className="row"><button className="btn grow" onClick=${()=>onOpen("item:new")}>아이템 담기</button>${typeof ShelfScan==="function"&&html`<button className="btn quiet grow" onClick=${()=>onOpen("shelfscan")}>사진 한 장으로 여러 개</button>`}</div>
+  <div className="row"><button className="btn grow" onClick=${()=>onOpen("item:new")}>아이템 담기</button>${typeof ShelfScan==="function"&&(typeof uiOpen!=="function"||uiOpen("scan"))&&html`<button className="btn quiet grow" onClick=${()=>onOpen("shelfscan")}>사진 한 장으로 여러 개</button>`}</div>
   <p className="note">CBT에서는 장비·자격·반려 세 카테고리를 엽니다. 공간·이동·컬렉션·디지털 자산·기억의 물건은 다음 버전에서 열립니다.</p>
  <//>`;
 }

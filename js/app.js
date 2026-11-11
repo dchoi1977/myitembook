@@ -69,6 +69,7 @@ function App(){
  const socStats=useMemo(()=>{if(demo)return {friends:0,wordsReceived:0,wordsGiven:2,reactionsGiven:0,reactionsReceived:0,exitDone:false};return {friends:friendIds(uid,soc.friendships).length,wordsReceived:soc.wordsTo.length,wordsGiven:soc.wordsFrom.length,reactionsGiven:soc.reactFrom.length,reactionsReceived:soc.reactTo.filter(r=>r.target!=="feed").length,bonds:soc.friendships.filter(f=>f.status==="accepted"&&f.bond).length,bondKinds:new Set(soc.friendships.filter(f=>f.status==="accepted"&&f.bond).map(f=>f.bond)).size,exitDone:soc.feedback.some(f=>f.kind==="exit"),visitors:reach.visitors}},[soc,demo,uid,reach]);
  const day=profile?cbtDay(profile.joined_at):1;
  const stats=useMemo(()=>{if(!st)return null;const s={...statsOf(st,items,socStats),day,visitors:socStats.visitors||0};s.mv=markValues(st,s);return s},[st,items,socStats,day]);
+ if(typeof UI_CTX!=="undefined"){UI_CTX.st=st;UI_CTX.stats=stats;UI_CTX.items=items}
  stRef.current=st;const statsRef=useRef(null);statsRef.current=stats;
  // the last moment this person was here, and what their counters read then (for the welcome-back card)
  const seenCounts=s=>({friends:s.connections,cheers:s.reactionsReceived,words:s.wordsReceived,visitors:s.visitors||0});
@@ -166,6 +167,7 @@ function App(){
   if(k.startsWith("tab:")){setRoute("home");setTab(k.slice(4));setSheet(null);return}
   if(k==="cardview"){if(st&&st.analysis)setShow(myCardFaces(st,items,stats,profile));return}
   if(k==="week"&&day<7&&!(profile&&profile.role==="admin")){toast("7일 비교 카드는 Day 7에 열립니다.");return}
+  {const UK={gem3d:"gem3d",identity:"identity",shelf:"shelf",publish:"publish",achieve:"achieve",attrs:"attrs",identityproof:"proof",shelfscan:"scan"}[k.split(":")[0]];if(UK&&st&&!demo&&!((st.flags.used||{})[UK]))update(s=>{s.flags.used={...(s.flags.used||{}),[UK]:true}})}
   setSheet(k);
  }
  const openUser=(id,focus)=>{if(!id)return;setSheet("user:"+id+(focus?":"+focus:""))};
@@ -192,16 +194,15 @@ function App(){
 
  const top=!demo&&html`<div className="stack">
   ${typeof Reminders==="function"&&html`<${Reminders} uid=${uid} soc=${soc} notes=${notes} asksMe=${asksMe} names=${names} st=${st} update=${update} openUser=${openUser} onOpen=${openSheet} toast=${toast}/>`}
-  ${!desk&&html`<button className="merow" onClick=${()=>setSheet("avatar")}><${Avatar} p=${profile} size=${46}/><span className="grow"><b>${profile.nickname}</b><br/><span className="small faint">${profile.avatar?"프로필 이미지 바꾸기":"프로필 이미지 고르기 · 캐릭터 16종 또는 내 사진"}</span></span><span className="chev">›</span></button>`}
-  ${!desk&&typeof hasNewUpdate==="function"&&hasNewUpdate(st)&&html`<button className="panel updbar" onClick=${()=>setSheet("updates")}><span className="upd-new">NEW</span><span className="grow"><b>업데이트 소식</b><br/><span className="small muted">${latestUpdate().date} · ${latestUpdate().title}</span></span><span className="chev">›</span></button>`}
+  ${typeof LevelUpBanner==="function"&&st.analysis&&html`<${LevelUpBanner} st=${st} stats=${stats} update=${update} onOpen=${openSheet}/>`}
   ${!!newAnn&&html`<button className="panel ann" onClick=${()=>setSheet("inbox")}><span className="eyebrow">운영 공지</span><b>${anns[0].title}</b></button>`}
-  <${DailyQuestion} key=${"dq"+day} day=${day} answered=${dailyAnswered} toast=${toast} onDone=${reloadSoc}/>
+  ${typeof HeartCard==="function"&&html`<${HeartCard} st=${st} update=${update} toast=${toast} demo=${demo} canAI=${canAI} onOpen=${openSheet} onReread=${()=>openSheet("reread")}/>`}
 </div>`;
  const mid=!demo&&html`<div className="stack">
-  ${typeof HeartCard==="function"&&html`<${HeartCard} st=${st} update=${update} toast=${toast} demo=${demo} canAI=${canAI} onOpen=${openSheet} onReread=${()=>openSheet("reread")}/>`}
-  <${IdPrompt} st=${st} update=${update} onOpen=${openSheet} day=${day}/>
-  <${AskPanel} stat=${askStat} incoming=${asksMe} names=${names} onOpen=${openSheet} friendsCount=${friendIds(uid,soc.friendships).length}/>
+  <${DailyQuestion} key=${"dq"+day} day=${day} answered=${dailyAnswered} toast=${toast} onDone=${reloadSoc}/>
+  ${(typeof uiOpen!=="function"||uiOpen("ask"))&&html`<${AskPanel} stat=${askStat} incoming=${asksMe} names=${names} onOpen=${openSheet} friendsCount=${friendIds(uid,soc.friendships).length}/>`}
   <${Missions} day=${day} stats=${stats} onOpen=${openSheet}/>
+  ${(typeof uiOpen!=="function"||uiOpen("identity"))&&html`<${IdPrompt} st=${st} update=${update} onOpen=${openSheet} day=${day}/>`}
   ${day>=4&&stats.analyses<2&&html`<div className="panel tint stack"><b>중간 다시 읽기 · Day 4</b><span className="small muted">사흘 동안 남긴 한 줄과 한 걸음을 더해 나를 다시 읽어 보세요. 육각형에 지난 모습이 점선으로 겹쳐 보입니다.</span><button className="btn sm" onClick=${()=>openSheet("reread")}>새 기록 더해 다시 읽기</button></div>`}
   ${day>=7&&html`<div className="panel stack weekcard"><b className="serif" style=${{color:"var(--accent)",fontSize:"18px"}}>일주일 전 vs 지금</b><span className="small muted">Day 1의 젬과 오늘의 젬을 한 장에 담았어요.</span><div className="row"><button className="btn sm grow" onClick=${()=>{openSheet("week");api.postFeed("week",{})}}>7일 비교 카드 보기</button>${!stats.exitDone&&html`<button className="btn ghost sm grow" onClick=${()=>setSheet("exit")}>마무리 설문</button>`}</div></div>`}
  </div>`;
@@ -210,12 +211,12 @@ function App(){
  if(route==="welcome")body=html`<${Welcome} onStart=${startFlow} onDemo=${startDemo} rt=${rt} nickname=${profile.nickname}/>`;
  else if(route==="quick")body=html`<${QuickStart} draft=${draft} setDraft=${setDraft} onExit=${()=>setRoute("welcome")} onDone=${()=>setRoute("quickdone")}/>`;
  else if(route==="quickdone")body=html`<${QuickDone} draft=${draft} setDraft=${setDraft} aiReady=${aiReady} onMore=${()=>setRoute("connect")} onGo=${()=>runAnalysis()}/>`;
- else if(route==="connect")body=html`<${Connect} draft=${draft} setDraft=${setDraft} toast=${toast} rt=${rt} hasItems=${items.length>0} allowEmpty=${!!(draft.quick&&draft.quick.done)||!!st.analysis} nextLabel=${st.analysis?"새 기록으로 다시 읽기":draft.quick&&draft.quick.done?"자료 담고 돌아가기":"다음"} onBack=${()=>setRoute(st.analysis?"home":draft.quick&&draft.quick.done?"quickdone":"welcome")} onNext=${()=>st.analysis?runAnalysis():draft.quick&&draft.quick.done?setRoute("quickdone"):setRoute("quick")}/>`;
+ else if(route==="connect")body=html`<${Connect} update=${update} demo=${demo} draft=${draft} setDraft=${setDraft} toast=${toast} rt=${rt} hasItems=${items.length>0} allowEmpty=${!!(draft.quick&&draft.quick.done)||!!st.analysis} nextLabel=${st.analysis?"새 기록으로 다시 읽기":draft.quick&&draft.quick.done?"자료 담고 돌아가기":"다음"} onBack=${()=>setRoute(st.analysis?"home":draft.quick&&draft.quick.done?"quickdone":"welcome")} onNext=${()=>st.analysis?runAnalysis():draft.quick&&draft.quick.done?setRoute("quickdone"):setRoute("quick")}/>`;
  else if(route==="questions")body=html`<${Questions} draft=${draft} setDraft=${setDraft} onBack=${()=>setRoute("connect")} onNext=${()=>runAnalysis()}/>`;
  else if(route==="reading")body=html`<${Reading} status=${reading.status} chars=${reading.chars} error=${reading.error} onStop=${stopAnalysis} onRetry=${()=>runAnalysis()} onBack=${()=>setRoute(st.analysis?"connect":"quickdone")} onDemo=${startDemo}/>`;
  else if(route==="reveal"&&st.analysis)body=html`<${Reveal} st=${st} onOpen=${openSheet} onConfirm=${()=>{update(s=>{s.analysis.status="yes"});track("reveal_yes")}} onEdit=${(sent,kw)=>{update(s=>{s.analysis.editSentence=sent||s.analysis.sentence;s.analysis.editKeywords=kw.length?kw:s.analysis.keywords;s.analysis.status="edited";s.flags.edited=true});track("reveal_edit")}} onDiffer=${fb=>{track("reveal_differ");runAnalysis(fb)}}/>`;
  else if(st.analysis){
-  if(tab==="me")body=html`<${MeTab} me=${profile} st=${st} items=${items} soc=${demo?EMPTY_SOC:soc} stats=${stats} onOpen=${openSheet} names=${names} top=${desk?null:top} mid=${desk?null:mid}/>`;
+  if(tab==="me")body=html`<${MeTab} update=${update} toast=${toast} demo=${demo} me=${profile} st=${st} items=${items} soc=${demo?EMPTY_SOC:soc} stats=${stats} onOpen=${openSheet} names=${names} top=${desk?null:top} mid=${desk?null:mid}/>`;
   else if(tab==="step")body=html`<${StepTab} st=${st} update=${update} stats=${stats} canAI=${canAI} toast=${toast} onOpen=${openSheet} demo=${demo}/>`;
   else if(tab==="feed")body=html`<${FeedTab} uid=${uid} soc=${soc} names=${names} openUser=${openUser} toast=${toast} demo=${demo} reloadSoc=${reloadSoc} ensureNames=${ensureNames}/>`;
   else body=html`<${FriendsTab} uid=${uid} st=${st} soc=${soc} names=${names} reloadSoc=${reloadSoc} openUser=${openUser} toast=${toast} profile=${profile} demo=${demo} ensureNames=${ensureNames}/>`;
