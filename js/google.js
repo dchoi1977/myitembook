@@ -43,7 +43,7 @@ function GoogleSource({s,setDraft,toast}){
  const mine=linkList(s).filter(l=>linkSvc(l.kind).m==="google");const [cid,setCid]=useState(null);const [want,setWant]=useState({cal:true,yt:true});const [busy,setBusy]=useState(false);const [err,setErr]=useState("");const [note,setNote]=useState("");
  useEffect(()=>{let live=true;api.googleClientId().then(v=>{if(!live)return;setCid(v||"");if(v)loadGIS().catch(()=>{})});return()=>{live=false}},[]);
  async function go(){if(!cid||busy||(!want.cal&&!want.yt))return;setBusy(true);setErr("");setNote("구글 창에서 허락해 주세요…");let tok=null;
-  try{await loadGIS();const r=await gToken(cid,[want.cal&&G_SCOPE.cal,want.yt&&G_SCOPE.yt].filter(Boolean).join(" "));tok=r.access_token;const granted=String(r.scope||"");const got=[];let lastErr=null;
+  try{const scope=[want.cal&&G_SCOPE.cal,want.yt&&G_SCOPE.yt].filter(Boolean).join(" ");/* 사파리는 누른 순간 바로 창을 열어야 팝업을 막지 않으므로, 준비돼 있으면 기다림 없이 연다 */const r=await((window.google&&google.accounts&&google.accounts.oauth2)?gToken(cid,scope):loadGIS().then(()=>gToken(cid,scope)));tok=r.access_token;const granted=String(r.scope||"");const got=[];let lastErr=null;
    if(want.cal&&(!granted||granted.includes(G_SCOPE.cal))){setNote("캘린더를 읽는 중…");try{const l=await gCalendar(tok);trPut(setDraft,l);got.push("캘린더")}catch(e){lastErr=e}}
    if(want.yt&&(!granted||granted.includes(G_SCOPE.yt))){setNote("유튜브를 읽는 중…");try{const l=await gYouTube(tok);trPut(setDraft,l);got.push("유튜브")}catch(e){lastErr=e}}
    if(got.length){toast(`구글 ${got.join("·")} · 읽었어요`);track("google_add",{got:got.join(",")})}if(!got.length||lastErr){if(!got.length)throw lastErr||{code:"g_empty"};setErr(`일부는 읽지 못했어요. ${LINK_ERR[lastErr.code]||""}`)}}
