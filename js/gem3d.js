@@ -50,22 +50,40 @@ function buildGem3D(THREE,S){const grp=new THREE.Group();const V=THREE.Vector2,R
   parts.push([crystal(r*1.1,H,.42,.2,sides),0,.12,0,0]);
   for(let i=0;i<n;i++){const a=(i/n)*Math.PI*2+R()*.4;const sc=.45+R()*.35;const tilt=.35+R()*.35;parts.push([crystal(r*sc*1.1,H*sc,.36*sc,.12,6),Math.cos(a)*.34,-.32+sc*.1,Math.sin(a)*.34,0,{tiltA:a,tilt}])}}
  else{const r=.95*ws;
-  if(S.cut==="브릴리언트"||S.cut==="마키즈"||S.cut==="트릴리언"){const geo=lathe([[0,.38],[r*.55,.38],[r,.06],[r,-.02],[0,-.92]],S.cut==="트릴리언"?3:S.cut==="마키즈"?12:16,Math.PI/16);if(S.cut==="마키즈")geo.scale(1,1,.55);geo.rotateX(-.35);parts.push([geo,0,0,0,0])}
-  else if(S.cut==="에메랄드 컷"){const geo=lathe([[0,.32],[r*.62,.32],[r*.86,.12],[r*.9,-.08],[r*.6,-.5],[0,-.62]],8,Math.PI/8);geo.scale(1,1,.72);geo.rotateX(-.4);parts.push([geo,0,0,0,0])}
-  else if(S.cut==="카보숑"){const pts=[[0,-.1],[r*.98,-.1]];for(let i=0;i<=10;i++){const t=i/10*Math.PI/2;pts.push([Math.cos(t)*r,Math.sin(t)*r*.62])}const geo=lathe(pts,40);geo.rotateX(-.5);parts.push([geo,0,0,0,0])}
+  /* 2D 카드처럼 테이블(윗면)이 정면을 보도록 세운다 — 돌리면 옆모습(크라운·파빌리온)이 드러난다 */
+  const faceOn=geo=>{geo.rotateX(Math.PI/2);return geo};
+  if(S.cut==="브릴리언트"){const geo=faceOn(lathe([[0,.36],[r*.56,.36],[r,.06],[r,-.02],[0,-.86]],16,Math.PI/16));geo.scale(1,hs,1);parts.push([geo,0,0,0,0])}
+  else if(S.cut==="마키즈"){const geo=faceOn(lathe([[0,.34],[r*.55,.34],[r,.06],[r,-.02],[0,-.8]],12,0));geo.scale(.56,1.12,1);parts.push([geo,0,0,0,0])}
+  else if(S.cut==="트릴리언"){const sh=new THREE.Shape();for(let i=0;i<3;i++){const a=Math.PI/2+i*2*Math.PI/3,x=Math.cos(a)*r*1.12,y=Math.sin(a)*r*1.12;i?sh.lineTo(x,y):sh.moveTo(x,y)}sh.closePath();const geo=new THREE.ExtrudeGeometry(sh,{depth:.16,bevelEnabled:true,bevelThickness:.34,bevelSize:.2,bevelSegments:2,curveSegments:1});geo.center();geo.scale(1,hs,1);parts.push([geo,0,-.06,0,0])}
+  else if(S.cut==="에메랄드 컷"){const geo=faceOn(lathe([[0,.3],[r*.62,.3],[r*.86,.12],[r*.9,-.06],[r*.6,-.46],[0,-.58]],8,Math.PI/8));geo.scale(1.04,.8,1);parts.push([geo,0,0,0,0])}
+  else if(S.cut==="쿠션"){const sh=new THREE.Shape(),w=r*.86,h=r*.86,c=r*.36;sh.moveTo(-w+c,-h);sh.lineTo(w-c,-h);sh.quadraticCurveTo(w,-h,w,-h+c);sh.lineTo(w,h-c);sh.quadraticCurveTo(w,h,w-c,h);sh.lineTo(-w+c,h);sh.quadraticCurveTo(-w,h,-w,h-c);sh.lineTo(-w,-h+c);sh.quadraticCurveTo(-w,-h,-w+c,-h);
+   const geo=new THREE.ExtrudeGeometry(sh,{depth:.3,bevelEnabled:true,bevelThickness:.3,bevelSize:.18,bevelSegments:3,curveSegments:5});geo.center();geo.scale(1,hs,1);parts.push([geo,0,0,0,0])}
+  else if(S.cut==="카보숑"){const pts=[[0,-.18],[r*.96,-.18]];for(let i=0;i<=12;i++){const t=i/12*Math.PI/2;pts.push([Math.cos(t)*r,Math.sin(t)*r*.62])}const geo=faceOn(lathe(pts,40));geo.scale(1.06,hs*.88,1);parts.push([geo,0,0,0,0])}
   else if(S.cut==="물방울"){const pts=[];for(let i=0;i<=14;i++){const t=i/14*Math.PI;pts.push([Math.sin(t)*Math.pow(Math.sin(t/2),.9)*r*.8,-Math.cos(t)*r*1.05])}const geo=lathe(pts,S.facets+4);parts.push([geo,0,0,0,Math.PI])}
-  else{const geo=new THREE.IcosahedronGeometry(r*.92,S.cut==="쿠션"?1:0);const p=geo.attributes.position;const seen={};for(let i=0;i<p.count;i++){const k=[p.getX(i),p.getY(i),p.getZ(i)].map(v=>v.toFixed(3)).join();if(!seen[k])seen[k]=.86+R()*.26;const f=seen[k];p.setXYZ(i,p.getX(i)*f*ws,p.getY(i)*f*.88*hs,p.getZ(i)*f)}geo.computeVertexNormals();parts.push([geo,0,0,0,0])}}
+  else{const geo=new THREE.IcosahedronGeometry(r*.92,0);const p=geo.attributes.position;const seen={};for(let i=0;i<p.count;i++){const k=[p.getX(i),p.getY(i),p.getZ(i)].map(v=>v.toFixed(3)).join();if(!seen[k])seen[k]=.86+R()*.26;const f=seen[k];p.setXYZ(i,p.getX(i)*f*ws,p.getY(i)*f*.88*hs,p.getZ(i)*f)}geo.computeVertexNormals();parts.push([geo,0,0,0,0])}}
  /* material: faceted, two-tone by height, clear stones let light through */
  const base=new THREE.Color(S.st.base),light=new THREE.Color(S.st.light),deep=new THREE.Color(S.st.deep),bi=S.bi?new THREE.Color(S.bi):null;
  const clear=S.tex==="맑음",milky=S.tex==="유백";
  parts.forEach(([geo,x,y,z,rz,o])=>{geo=geo.index?geo.toNonIndexed():geo;geo.computeBoundingBox();const bb=geo.boundingBox;const p=geo.attributes.position;const cols=[];
-  for(let i=0;i<p.count;i+=3){const cy=(p.getY(i)+p.getY(i+1)+p.getY(i+2))/3;const cx=(p.getX(i)+p.getX(i+1)+p.getX(i+2))/3;const t=(cy-bb.min.y)/((bb.max.y-bb.min.y)||1);let c=deep.clone().lerp(base,clamp(t*1.6,0,1)).lerp(light,clamp((t-.6)*1.2,0,.45));if(bi)c.lerp(bi,clamp((cx-bb.min.x)/((bb.max.x-bb.min.x)||1)-.35,0,.6));if(milky)c.lerp(new THREE.Color("#FFFFFF"),.22);const j=(R()-.5)*.08;c.offsetHSL(0,0,j);for(let k=0;k<3;k++)cols.push(c.r,c.g,c.b)}
+  for(let i=0;i<p.count;i+=3){const cy=(p.getY(i)+p.getY(i+1)+p.getY(i+2))/3;const cx=(p.getX(i)+p.getX(i+1)+p.getX(i+2))/3;const t=(cy-bb.min.y)/((bb.max.y-bb.min.y)||1);let c=deep.clone().lerp(base,clamp(t*1.25,0,1)).lerp(light,clamp((t-.72)*1.3,0,.32));if(bi)c.lerp(bi,clamp((cx-bb.min.x)/((bb.max.x-bb.min.x)||1)-.35,0,.6));if(milky)c.lerp(new THREE.Color("#FFFFFF"),.22);const j=(R()-.5)*.08;c.offsetHSL(0,0,j);for(let k=0;k<3;k++)cols.push(c.r,c.g,c.b)}
   geo.setAttribute("color",new THREE.Float32BufferAttribute(cols,3));geo.computeVertexNormals();
-  const mat=new THREE.MeshPhysicalMaterial({vertexColors:true,flatShading:true,roughness:clear?.06:milky?.42:S.tex==="비단결"?.24:.14,metalness:.04,clearcoat:clear?.8:.4,clearcoatRoughness:.08,transparent:clear,opacity:clear?.9:1,sheen:S.tex==="비단결"?1:0,emissive:new THREE.Color(S.st.deep).multiplyScalar(.12)});
+  const mat=new THREE.MeshPhysicalMaterial({vertexColors:true,flatShading:true,roughness:clear?.06:milky?.42:S.tex==="비단결"?.24:.14,metalness:.04,clearcoat:clear?.8:.4,clearcoatRoughness:.08,transparent:clear,opacity:clear?.95:1,sheen:S.tex==="비단결"?1:0,emissive:new THREE.Color(S.st.deep).multiplyScalar(.12)});
   const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);if(o&&o.tilt!=null){m.rotation.z=-Math.cos(o.tiltA)*o.tilt;m.rotation.x=Math.sin(o.tiltA)*o.tilt}else m.rotation.z=rz;grp.add(m);
   const edges=new THREE.LineSegments(new THREE.EdgesGeometry(geo,18),new THREE.LineBasicMaterial({color:new THREE.Color(S.st.light).lerp(new THREE.Color("#FFFFFF"),.5),transparent:true,opacity:S.tex==="결정질"?.45:.18}));edges.position.copy(m.position);edges.rotation.copy(m.rotation);grp.add(edges)});
  const s=S.scale*1.15;grp.scale.set(s,s,s);return grp}
 
+/* 2D 카드의 연출(후광·나이테·발현 장식·받침·인연석·별무리·휘장)을 그대로 3D 무대에 걸어 둔다.
+   뒤판(후광·받침) → 3D 보석 → 속빛(상징·금빛 결·발현의 빛) → 앞판(인연석·별) 순으로 겹쳐, 카드와 같은 젬이 입체로 돈다. */
+function svgTexture(THREE,svg){const tex=new THREE.Texture();tex.encoding=THREE.sRGBEncoding;tex.anisotropy=4;const img=new Image();img.onload=()=>{const c=document.createElement("canvas");c.width=800;c.height=860;c.getContext("2d").drawImage(img,0,0,800,860);tex.image=c;tex.needsUpdate=true};img.src="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg);return tex}
+function addGemStage(THREE,scene,gem,g,seed,cam,aspect){
+ const L=gemSVG(g,seed,"g3",{layers:true});gem.updateMatrixWorld(true);const bb=new THREE.Box3().setFromObject(gem);const gs=new THREE.Vector3();bb.getSize(gs);const gc=new THREE.Vector3();bb.getCenter(gc);
+ const B=L.box;const bodyH=Math.max(10,B.y1-B.y0);const k=gs.y/bodyH;const cx=(B.x0+B.x1)/2,cy=(B.y0+B.y1)/2;
+ const pcx=gc.x+(100-cx)*k,pcy=gc.y-(107.5-cy)*k;const PW=200*k,PH=215*k;
+ const half=Math.tan(16*Math.PI/180);const d=Math.max((PH*.5*1.04)/half,(PW*.5*1.06)/(half*aspect));
+ cam.position.set(0,pcy,d);cam.lookAt(0,pcy,0);
+ const plane=(svg,z,order,o)=>{const sc=(d-z)/d;const m=new THREE.Mesh(new THREE.PlaneGeometry(PW*sc,PH*sc),new THREE.MeshBasicMaterial({map:svgTexture(THREE,svg),transparent:true,depthWrite:false,depthTest:!(o&&o.over),toneMapped:false,opacity:(o&&o.op)||1}));m.position.set(pcx*sc,pcy+(pcy-pcy)*sc,z);m.renderOrder=order;scene.add(m);return m};
+ const back=plane(L.back,-Math.max(1.4,gs.z*.9),-1);const inner=plane(L.inner,0,5,{over:true,op:.88});const front=plane(L.front,Math.min(1.1,d*.3),10,{over:true});
+ return {back,inner,front,d,pcy}}
 function Gem3DView({g,seed,name,onClose}){useBackLayer(onClose);
  const host=useRef(null);const [state,setState]=useState("loading");
  useEffect(()=>{let alive=true,raf=0,ren=null,cleanup=()=>{};
@@ -73,13 +91,13 @@ function Gem3DView({g,seed,name,onClose}){useBackLayer(onClose);
    ren=new THREE.WebGLRenderer({antialias:true,alpha:true});ren.setPixelRatio(Math.min(2,window.devicePixelRatio||1));ren.setSize(W,H);ren.outputEncoding=THREE.sRGBEncoding;el.appendChild(ren.domElement);
    const scene=new THREE.Scene();const cam=new THREE.PerspectiveCamera(32,W/H,.1,50);cam.position.set(0,.25,6.2);cam.lookAt(0,0,0);
    const S=gem3dSpec(g,seed);
-   scene.add(new THREE.HemisphereLight(0xffffff,0x2a3a36,.5));const k=new THREE.DirectionalLight(0xffffff,1.05);k.position.set(-3,4,5);scene.add(k);const rim=new THREE.DirectionalLight(new THREE.Color(S.glow),.9);rim.position.set(3,-1,-4);scene.add(rim);const fill=new THREE.PointLight(new THREE.Color(S.st.light),.6,12);fill.position.set(2,1,3);scene.add(fill);
-   const gem=buildGem3D(THREE,S);scene.add(gem);
+   scene.add(new THREE.HemisphereLight(0xffffff,0x2a3a36,.42));const k=new THREE.DirectionalLight(0xffffff,1.05);k.position.set(-3,4,5);scene.add(k);const rim=new THREE.DirectionalLight(new THREE.Color(S.glow),.9);rim.position.set(3,-1,-4);scene.add(rim);const fill=new THREE.PointLight(new THREE.Color(S.st.light),.6,12);fill.position.set(2,1,3);scene.add(fill);
+   const gem=buildGem3D(THREE,S);scene.add(gem);const stage=addGemStage(THREE,scene,gem,g,seed,cam,W/H);gem.position.y+=0;
    let rx=-.12,ry=0,vx=0,vy=.006,drag=null,idle=0;
    const down=e=>{drag={x:e.clientX,y:e.clientY};idle=0;el.setPointerCapture&&el.setPointerCapture(e.pointerId)};
    const move=e=>{if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag={x:e.clientX,y:e.clientY};vy=dx*.008;vx=dy*.006;ry+=vy;rx=clamp(rx+vx,-1.1,1.1)};
    const up=()=>{drag=null};el.addEventListener("pointerdown",down);el.addEventListener("pointermove",move);window.addEventListener("pointerup",up);
-   const tick=()=>{if(!drag){idle++;vy+=((idle>40?.006:0)-vy)*.04;vx*=.92;ry+=vy;rx+=(-.12-rx)*.01}gem.rotation.set(rx,ry,0);ren.render(scene,cam);raf=requestAnimationFrame(tick)};tick();setState("ready");
+   const tick=()=>{if(!drag){idle++;vy+=((idle>40?.006:0)-vy)*.04;vx*=.92;ry+=vy;rx+=(-.12-rx)*.01}gem.rotation.set(rx,ry,0);const tt=performance.now()/1000;stage.inner.material.opacity=.62+.26*Math.max(0,Math.cos(ry))*(.92+.08*Math.sin(tt*1.6));stage.back.material.opacity=.92+.08*Math.sin(tt*.9);ren.render(scene,cam);raf=requestAnimationFrame(tick)};tick();setState("ready");
    cleanup=()=>{el.removeEventListener("pointerdown",down);el.removeEventListener("pointermove",move);window.removeEventListener("pointerup",up)};
   }).catch(()=>alive&&setState("fail"));
   const k=e=>{if(e.key==="Escape")onClose()};window.addEventListener("keydown",k);
