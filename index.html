@@ -723,9 +723,9 @@ button.crest{cursor:pointer;border-radius:12px}button.crest:hover{background:rgb
 
 .gemfeat{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:-4px;font-size:12.5px;font-weight:700;color:#A0782E;letter-spacing:.02em}
 .mg-codex{margin:2px 0 12px;border:1px solid rgba(244,241,233,.14);border-radius:14px;padding:8px 12px;color:rgba(244,241,233,.85)}
-.mg-codex summary{display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-size:13px;font-weight:700;list-style:none}
+.mg-codex summary{display:flex;justify-content:space-between;align-items:center;gap:10px;cursor:pointer;font-size:13px;font-weight:700;list-style:none}
 .mg-codex summary::-webkit-details-marker{display:none}
-.mg-cx-n{font-weight:500;font-size:12.5px}.mg-cx-n b{color:#FFE2A0}
+.mg-codex summary>span:first-child{flex:none;white-space:nowrap}.mg-cx-n{font-weight:500;font-size:12.5px;text-align:right;word-break:keep-all}.mg-cx-n>span{white-space:nowrap}.mg-cx-n b{color:#FFE2A0}
 .mg-cx-h{margin-top:12px;font-size:11.5px;font-weight:700;letter-spacing:.06em;opacity:.7}
 .mg-cx-vars{display:grid;gap:5px;margin-top:6px}
 .mg-cx-vrow{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:12px}
@@ -858,7 +858,7 @@ button.crest{cursor:pointer;border-radius:12px}button.crest:hover{background:rgb
 .mg-tray{display:grid;gap:8px;padding:10px;border-radius:16px;background:radial-gradient(circle at 50% 0%,rgba(255,255,255,.06),transparent 60%),#0A1C1B;box-shadow:inset 0 2px 10px rgba(0,0,0,.5)}
 .mg-slot{position:relative;min-height:108px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;padding:6px 4px 8px;border-radius:12px;border:1px solid rgba(216,180,101,.28);background:radial-gradient(circle at 50% 38%,rgba(169,210,198,.16),rgba(255,255,255,.02) 60%);font:inherit;color:inherit;cursor:pointer;overflow:hidden;transition:transform .15s,border-color .15s}
 .mg-slot:hover,.mg-slot:focus-visible{transform:translateY(-2px);border-color:#D8B465;outline:none;box-shadow:0 0 0 2px rgba(216,180,101,.5)}
-.mg-new{position:absolute;top:-7px;left:50%;transform:translateX(-50%);z-index:3;padding:2px 7px;border-radius:999px;background:#E0563F;color:#fff;font-size:10px;font-weight:800;letter-spacing:.06em;line-height:1.3;box-shadow:0 2px 6px rgba(0,0,0,.4);pointer-events:none}
+.mg-new{position:absolute;top:4px;left:50%;transform:translateX(-50%);z-index:3;padding:1px 5px;border-radius:999px;background:#E0563F;color:#fff;font-size:9px;font-weight:800;letter-spacing:.04em;line-height:1.3;box-shadow:0 2px 6px rgba(0,0,0,.4);pointer-events:none}
 .mg-slot.empty{cursor:default;border-style:dashed;border-color:rgba(244,241,233,.12);background:rgba(255,255,255,.015)}
 .mg-slot.add{justify-content:center;border-style:dashed;border-color:rgba(216,180,101,.45);background:none}
 .mg-plus{font-size:28px;line-height:1;color:#D8B465}
@@ -931,32 +931,32 @@ button.crest{cursor:pointer;border-radius:12px}button.crest:hover{background:rgb
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/htm@3.1.1/dist/htm.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
-<script src="js/config.js?v=90"></script>
-<script src="js/core.js?v=90"></script>
-<script src="js/zodiac.js?v=90"></script>
-<script src="js/api.js?v=90"></script>
-<script src="js/support.js?v=90"></script>
-<script src="js/avatars.js?v=90"></script>
-<script src="js/links.js?v=90"></script>
-<script src="js/traces.js?v=90"></script>
-<script src="js/google.js?v=90"></script>
-<script src="js/screens.js?v=90"></script>
-<script src="js/social.js?v=90"></script>
-<script src="js/ops.js?v=90"></script>
-<script src="js/quick.js?v=90"></script>
-<script src="js/heart.js?v=90"></script>
-<script src="js/evolve.js?v=90"></script>
-<script src="js/achieve.js?v=90"></script>
-<script src="js/bonds.js?v=90"></script>
-<script src="js/gems.js?v=90"></script>
-<script src="js/showcase.js?v=90"></script>
-<script src="js/ask.js?v=90"></script>
-<script src="js/places.js?v=90"></script>
-<script src="js/updates.js?v=90"></script>
-<script src="js/insignia.js?v=90"></script>
-<script src="js/gem3d.js?v=90"></script>
-<script src="js/gemwhy.js?v=90"></script>
-<script src="js/samples.js?v=90"></script>
-<script src="js/app.js?v=90"></script>
+<script src="js/config.js?v=91"></script>
+<script src="js/core.js?v=91"></script>
+<script src="js/zodiac.js?v=91"></script>
+<script src="js/api.js?v=91"></script>
+<script src="js/support.js?v=91"></script>
+<script src="js/avatars.js?v=91"></script>
+<script src="js/links.js?v=91"></script>
+<script src="js/traces.js?v=91"></script>
+<script src="js/google.js?v=91"></script>
+<script src="js/screens.js?v=91"></script>
+<script src="js/social.js?v=91"></script>
+<script src="js/ops.js?v=91"></script>
+<script src="js/quick.js?v=91"></script>
+<script src="js/heart.js?v=91"></script>
+<script src="js/evolve.js?v=91"></script>
+<script src="js/achieve.js?v=91"></script>
+<script src="js/bonds.js?v=91"></script>
+<script src="js/gems.js?v=91"></script>
+<script src="js/showcase.js?v=91"></script>
+<script src="js/ask.js?v=91"></script>
+<script src="js/places.js?v=91"></script>
+<script src="js/updates.js?v=91"></script>
+<script src="js/insignia.js?v=91"></script>
+<script src="js/gem3d.js?v=91"></script>
+<script src="js/gemwhy.js?v=91"></script>
+<script src="js/samples.js?v=91"></script>
+<script src="js/app.js?v=91"></script>
 </body>
 </html>
