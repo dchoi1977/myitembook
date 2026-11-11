@@ -198,10 +198,9 @@ function App(){
   <${DailyQuestion} key=${"dq"+day} day=${day} answered=${dailyAnswered} toast=${toast} onDone=${reloadSoc}/>
 </div>`;
  const mid=!demo&&html`<div className="stack">
+  ${typeof HeartCard==="function"&&html`<${HeartCard} st=${st} update=${update} toast=${toast} demo=${demo} canAI=${canAI} onOpen=${openSheet} onReread=${()=>openSheet("reread")}/>`}
   <${IdPrompt} st=${st} update=${update} onOpen=${openSheet} day=${day}/>
   <${AskPanel} stat=${askStat} incoming=${asksMe} names=${names} onOpen=${openSheet} friendsCount=${friendIds(uid,soc.friendships).length}/>
-  ${typeof HeartCard==="function"&&html`<${HeartCard} st=${st} update=${update} toast=${toast} demo=${demo} canAI=${canAI} onOpen=${openSheet}/>`}
-  <${KnowCard} st=${st} update=${update} toast=${toast} demo=${demo} onReread=${()=>openSheet("reread")}/>
   <${Missions} day=${day} stats=${stats} onOpen=${openSheet}/>
   ${day>=4&&stats.analyses<2&&html`<div className="panel tint stack"><b>중간 다시 읽기 · Day 4</b><span className="small muted">사흘 동안 남긴 한 줄과 한 걸음을 더해 나를 다시 읽어 보세요. 육각형에 지난 모습이 점선으로 겹쳐 보입니다.</span><button className="btn sm" onClick=${()=>openSheet("reread")}>새 기록 더해 다시 읽기</button></div>`}
   ${day>=7&&html`<div className="panel stack weekcard"><b className="serif" style=${{color:"var(--accent)",fontSize:"18px"}}>일주일 전 vs 지금</b><span className="small muted">Day 1의 젬과 오늘의 젬을 한 장에 담았어요.</span><div className="row"><button className="btn sm grow" onClick=${()=>{openSheet("week");api.postFeed("week",{})}}>7일 비교 카드 보기</button>${!stats.exitDone&&html`<button className="btn ghost sm grow" onClick=${()=>setSheet("exit")}>마무리 설문</button>`}</div></div>`}

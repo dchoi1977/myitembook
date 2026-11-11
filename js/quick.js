@@ -110,13 +110,20 @@ function QuickDone({draft,setDraft,onMore,onGo,aiReady}){
 }
 
 /* ───────── 알아가기 card on home ───────── */
-function KnowCard({st,update,toast,demo,onReread}){
+function KnowCard({st,update,toast,demo,onReread,embed}){
  const t=dayKey();const know=st.know||[];const todayN=know.filter(k=>k.day===t).length;
  const nextQ=KNOW.find(q=>!know.some(k=>k.id===q.id));
  const [txt,setTxt]=useState("");const [sel,setSel]=useState(null);
  const since=st.analysis?know.filter(k=>k.at>(st.analysis.at||0)).length:0;const clar=clarityOf(st);
  function save(val){if(demo||!nextQ)return;const v=String(val||"").trim().slice(0,160);if(!v)return;update(s=>{s.know=[...(s.know||[]).filter(k=>k.id!==nextQ.id),{id:nextQ.id,q:nextQ.q,a:v,day:t,at:Date.now()}]});setTxt("");setSel(null);track("know_answer",{id:nextQ.id});toast(`젬이 조금 더 선명해졌어요 · 선명도 ${clarityOf({...st,know:[...know,{a:v}]})}%`)}
  const done=!nextQ||todayN>=2;
+ if(embed){if(done)return null;return html`<div className="know-embed stack">
+  <div className="row between"><span className="small faint"><b>한 번 누르기</b> · 고르기만 해도 젬이 선명해져요</span><span className="small faint">오늘 ${todayN}/2</span></div>
+  <b className="serif" style=${{fontSize:"15.5px",color:"var(--accent)"}}>${nextQ.q}</b>
+  ${nextQ.type==="text"?html`<div className="row" style=${{flexWrap:"nowrap"}}><input type="text" aria-label=${nextQ.q} value=${txt} maxLength="160" placeholder=${nextQ.ph||""} onChange=${e=>setTxt(e.target.value)} style=${{flex:1,minWidth:0}}/><button className="btn sm" disabled=${!txt.trim()||demo} onClick=${()=>save(txt)}>답하기</button></div>`:
+   html`<div className=${nextQ.type==="two"?"qc-two slim":"qc-grid"}>${nextQ.opts.map(o=>html`<button key=${o} className="qc-opt" aria-pressed=${sel===o} disabled=${demo} onClick=${()=>{setSel(o);setTimeout(()=>save(o),160)}}>${o}</button>`)}</div>`}
+  <button className="linkbtn small" style=${{alignSelf:"flex-start",color:"var(--ink-3)"}} onClick=${()=>{if(demo)return;update(s=>{s.know=[...(s.know||[]),{id:nextQ.id,q:nextQ.q,a:"",day:t,at:Date.now(),skip:true}]});track("know_skip",{id:nextQ.id})}}>넘기기</button>
+ </div>`}
  return html`<div className="panel stack know">
   <div className="row between"><span className="eyebrow">알아가기 · 하루 두 개까지</span><span className="small faint">젬 선명도 ${clar}%</span></div>
   <div className="meter" aria-label=${"젬 선명도 "+clar+"%"}><i style=${{width:clar+"%"}}></i></div>

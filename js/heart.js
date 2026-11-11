@@ -67,7 +67,7 @@ function hqTitleOf(x){if(!x||!x.a)return "";const a=String(x.a).trim();if(a.leng
  if(x.cat==="taste")return `${a}${hqJosa(a,"을","를")} 좋아하는`;if(x.cat==="impress")return `${a}에 마음이 움직인`;if(x.cat==="treasure")return `${a}${hqJosa(a,"을","를")} 아끼는`;if(x.cat==="wish"&&/^w_(go|learn)/.test(x.id))return x.id.startsWith("w_go")?`${a}${hqJosa(a,"을","를")} 꿈꾸는`:`${a}${hqJosa(a,"을","를")} 배우고 싶은`;return ""}
 const hqTitleById=(st,tid)=>{const id=String(tid||"").replace(/^hq:/,"");return hqTitleOf(hqAnswered(st).find(x=>x.id===id))};
 
-function HeartCard({st,update,toast,demo,canAI,onOpen}){
+function HeartCard({st,update,toast,demo,canAI,onOpen,onReread}){
  const [more,setMore]=useState(false);const P=hqPace(st);const q=hqToday(st,more);const [txt,setTxt]=useState("");const [why,setWhy]=useState("");const [busy,setBusy]=useState(false);const S=hqStats(st);const t=dayKey();
  const swaps=(st.heart&&st.heart.skip&&st.heart.skip.day===t)?(st.heart.skip.ids||[]).length:0;const swapMax=P.max+1;const offer=!q&&P.todayN>=1&&P.left>0;
  useEffect(()=>{if(demo||!offer)return;if(((st.heart&&st.heart.offers)||[]).some(o=>o.day===t))return;update(s=>{const H={a:[],...(s.heart||{})};H.offers=[...(H.offers||[]),{day:t,taken:false}].slice(-6);s.heart=H})},[offer]);
@@ -80,6 +80,7 @@ function HeartCard({st,update,toast,demo,canAI,onOpen}){
  const last=hqAnswered(st).slice(-1)[0];
  return html`<div className="panel stack heart">
   <div className="row between"><span className="eyebrow">오늘의 인터뷰 · DAILY INTERVIEW</span><button className="linkbtn small" onClick=${()=>onOpen("heart")}>${S.hq?`지난 대답 ${S.hq}개 ›`:"어떻게 쓰이나요 ›"}</button></div>
+  ${(()=>{const c=typeof clarityOf==="function"?clarityOf(st):0;return html`<div className="hq-clar"><span className="small faint">젬 선명도</span><div className="meter" aria-label=${"젬 선명도 "+c+"%"}><i style=${{width:c+"%"}}></i></div><span className="small faint">${c}%</span></div>`})()}
   <div className="hq-spec" style=${{gridTemplateColumns:`repeat(${HQ_CATS.length},1fr)`}} role="img" aria-label=${"마음 스펙트럼: "+HQ_CATS.map(c=>c[1]+" "+(S.hqBy[c[0]]||0)).join(", ")}>${HQ_CATS.map(c=>html`<span key=${c[0]} className=${"hq-dot"+(S.hqBy[c[0]]?" on":"")} style=${{"--c":c[2]}}><i style=${{height:Math.min(100,18+(S.hqBy[c[0]]||0)*16)+"%"}}></i><small>${c[1]}</small></span>`)}</div>
   ${q?html`<div className="stack" style=${{gap:"8px"}}>
     ${P.todayN===0&&P.why&&P.max!==1&&html`<span className="small faint">${P.why} · 오늘은 ${P.max}개까지</span>`}${P.todayN===0&&P.max===1&&/오랜만/.test(P.why)&&html`<span className="small faint">${P.why}</span>`}${P.todayN>0&&html`<span className="small faint">오늘 ${P.todayN+1}번째 · ${P.max}개까지</span>`}
@@ -91,6 +92,8 @@ function HeartCard({st,update,toast,demo,canAI,onOpen}){
   :html`<div className="stack" style=${{gap:"6px"}}>${last&&html`<p className="small" style=${{margin:0}}><span className="faint">${last.q}</span> <b>${last.a}</b></p>`}
     ${offer?html`<div className="hq-more"><span className="small"><b>하나 더 준비했어요</b> · 오늘 ${P.todayN}/${P.max}${P.why?html`<br/><span className="faint">${P.why}</span>`:""}</span><button className="btn sm" disabled=${demo} onClick=${takeMore}>하나 더 답하기</button></div>`
     :html`<p className="small muted" style=${{margin:0}}>${P.max>1?`오늘의 인터뷰 ${P.todayN}개를 모두 마쳤어요. 내일 새 질문이 열려요.`:"오늘의 질문에 답했어요. 내일 새 질문이 열려요."}</p>`}</div>`}
+ ${typeof KnowCard==="function"&&html`<${KnowCard} st=${st} update=${update} toast=${toast} demo=${demo} embed=${true}/>`}
+  ${(()=>{if(!onReread||!st.analysis)return null;const at=st.analysis.at||0;const n=hqAnswered(st).filter(x=>x.at>at).length+(st.know||[]).filter(k=>k.a&&k.at>at).length;return n>=3?html`<div className="panel tint stack small"><span>지난번 읽은 뒤로 새로 알게 된 것이 ${n}개 쌓였어요. 다시 읽으면 젬과 한 문장이 더 나다워져요.</span><button className="btn sm" onClick=${onReread}>새로 알게 된 것으로 다시 읽기</button></div>`:null})()}
  </div>`;
 }
 function HeartSheet({st,update,onClose,toast,demo,onAddItems,onReread,items}){
