@@ -25,6 +25,27 @@ function buildGem3D(THREE,S){const grp=new THREE.Group();const V=THREE.Vector2,R
   else if(S.cut==="왕관")parts.push([lathe([[0,-H/2-.32],[r*.7,-H/2],[r*.74,H*.05],[r*1.25,H*.3],[r*1.15,H/2],[0,H/2+.4]],sides,Math.PI/sides),0,0,0,0]);
   else if(S.cut==="쌍정"){parts.push([crystal(r*.85,H*.85,.42,.3,sides),-.22,0,0,-.42]);parts.push([crystal(r*.9,H*.95,.45,.32,sides),.2,.05,0,.38])}
   else parts.push([crystal(r,H,.46,.36,sides),0,0,0,0])}
+ else if(S.cut==="정동"){ /* 정동: 바위 껍질을 반으로 가른 단면 — 안쪽에 결정이 빼곡히 돋은 모습 (2D 카드와 같은 형태) */
+  const RX=1.02*ws,RY=.9*hs,N=30,jit=[...Array(N)].map(()=>.93+R()*.12);
+  const pt=(i,k)=>{const t=i/N*Math.PI*2;return [Math.cos(t)*RX*jit[i%N]*k,Math.sin(t)*RY*jit[i%N]*k]};
+  const outer=new THREE.Shape();for(let i=0;i<=N;i++){const [x,y]=pt(i,1);i?outer.lineTo(x,y):outer.moveTo(x,y)}
+  const hole=new THREE.Path();for(let i=N;i>=0;i--){const [x,y]=pt(i,.76);i===N?hole.moveTo(x,y):hole.lineTo(x,y)}const ringShape=outer.clone();ringShape.holes.push(hole);
+  const rockC=new THREE.Color("#8C7A68"),rockD=new THREE.Color("#5E5044"),rockL=new THREE.Color("#C9B9A4");
+  const rockMat=new THREE.MeshStandardMaterial({vertexColors:true,flatShading:true,roughness:.92,metalness:0});
+  const paint=(geo,f)=>{geo=geo.index?geo.toNonIndexed():geo;const p=geo.attributes.position;const cols=[];for(let i=0;i<p.count;i+=3){const c=f((p.getZ(i)+p.getZ(i+1)+p.getZ(i+2))/3,(p.getX(i)+p.getX(i+1)+p.getX(i+2))/3,(p.getY(i)+p.getY(i+1)+p.getY(i+2))/3);c.offsetHSL(0,0,(R()-.5)*.07);for(let k=0;k<3;k++)cols.push(c.r,c.g,c.b)}geo.setAttribute("color",new THREE.Float32BufferAttribute(cols,3));geo.computeVertexNormals();return geo};
+  const ring=new THREE.ExtrudeGeometry(ringShape,{depth:.62,bevelEnabled:true,bevelThickness:.12,bevelSize:.07,bevelSegments:1,curveSegments:2});ring.translate(0,0,-.45);
+  grp.add(new THREE.Mesh(paint(ring,z=>z>.12?rockL.clone().lerp(new THREE.Color("#E9DFD0"),.35):z>-.1?rockC.clone():rockD.clone()),rockMat));
+  const back=new THREE.ExtrudeGeometry(outer,{depth:.22,bevelEnabled:true,bevelThickness:.1,bevelSize:.05,bevelSegments:1,curveSegments:2});back.translate(0,0,-.62);grp.add(new THREE.Mesh(paint(back,()=>rockD.clone()),rockMat));
+  const base=new THREE.Color(S.st.base),light=new THREE.Color(S.st.light),deep=new THREE.Color(S.st.deep);
+  const floor=new THREE.ShapeGeometry(new THREE.Shape(hole.getPoints().reverse()));floor.translate(0,0,-.36);
+  const crysMat=new THREE.MeshPhysicalMaterial({vertexColors:true,flatShading:true,roughness:.12,metalness:.04,clearcoat:.8,clearcoatRoughness:.06,emissive:deep.clone().multiplyScalar(.18)});
+  grp.add(new THREE.Mesh(paint(floor,()=>deep.clone().lerp(base,.45)),new THREE.MeshStandardMaterial({vertexColors:true,side:THREE.DoubleSide,roughness:.5,emissive:deep.clone().multiplyScalar(.25)})));
+  const cones=[];const inside=(x,y)=>(x*x)/(RX*.72*RX*.72)+(y*y)/(RY*.72*RY*.72)<1;let tries=0;
+  while(cones.length<120&&tries++<2000){const x=(R()*2-1)*RX*.74,y=(R()*2-1)*RY*.74;if(!inside(x,y)||cones.some(c=>Math.hypot(c.x-x,c.y-y)<.07))continue;const d=Math.sqrt((x/RX)**2+(y/RY)**2);const h=.2+R()*.26+(1-d)*.14,r=.07+R()*.07;
+   const g=new THREE.ConeGeometry(r,h,4+Math.floor(R()*3),1);g.rotateX(Math.PI/2);g.rotateZ(R()*Math.PI);const lean=(1-d)*.0+d*.55;g.rotateX(-y/RY*lean);g.rotateY(x/RX*lean);g.translate(x,y,-.36+h/2);g.x=x;g.y=y;cones.push(g)}
+  cones.forEach(g=>grp.add(new THREE.Mesh(paint(g,z=>deep.clone().lerp(base,clamp((z+.36)/.3,0,1)).lerp(light,clamp((z+.1)/.25,0,.6))),crysMat)));
+  const sp=new THREE.PointLight(new THREE.Color(S.st.light),.55,3);sp.position.set(0,0,.6);grp.add(sp);
+  grp.rotation.x=-.08}
  else if(S.form==="군집"){const H=1.45*hs,r=.36*ws;const n=S.cut==="부채"?5:4+Math.floor(R()*2);
   parts.push([crystal(r*1.1,H,.42,.2,sides),0,.12,0,0]);
   for(let i=0;i<n;i++){const a=(i/n)*Math.PI*2+R()*.4;const sc=.45+R()*.35;const tilt=.35+R()*.35;parts.push([crystal(r*sc*1.1,H*sc,.36*sc,.12,6),Math.cos(a)*.34,-.32+sc*.1,Math.sin(a)*.34,0,{tiltA:a,tilt}])}}
