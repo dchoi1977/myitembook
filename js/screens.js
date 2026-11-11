@@ -162,10 +162,10 @@ function GemFeat({g,seed,onMore,max=2}){const I=gemIdentity(g,seed);
 function useViewport(){const [v,setV]=useState(()=>({w:window.innerWidth,h:window.innerHeight}));useEffect(()=>{const f=()=>setV({w:window.innerWidth,h:window.innerHeight});window.addEventListener("resize",f);return()=>window.removeEventListener("resize",f)},[]);return v}
 function GemHero({st,stats,onOpen}){
  const desk=useDesktop();const v=useViewport();const g=livingGem(st);if(!g)return null;const stage=stageOf(st,stats);
- const size=Math.round(Math.max(200,Math.min(desk?400:v.w*.84,v.h*(desk?.52:.5))));
+ const heroH=desk?Math.max(560,Math.min(v.h-140,760)):0;const size=Math.round(Math.max(200,desk?Math.min(420,heroH*.56):Math.min(v.w*.84,v.h*.5)));
  const stn=STONES[g.stone]||STONES["오팔"];const glow=hueShift(stn.light==="#FFFFFF"?stn.tint:stn.light,0,.1);
  const z=myZodiac(st);
- return html`<section className=${"gem-hero"+(desk?" desk":"")} style=${{"--hero-glow":`rgba(${hex2rgb(glow).join(",")},.46)`,"--hero-deep":`rgba(${hex2rgb(stn.deep).join(",")},.14)`}} aria-label=${gemName(g)}>
+ return html`<section className=${"gem-hero"+(desk?" desk":"")} style=${{...(desk?{height:heroH+"px"}:{}),"--hero-glow":`rgba(${hex2rgb(glow).join(",")},.46)`,"--hero-deep":`rgba(${hex2rgb(stn.deep).join(",")},.14)`}} aria-label=${gemName(g)}>
   <div className="hero-bg" aria-hidden="true"></div>
   <div className="hero-stage">${z&&html`<div className="hero-sky"><${ZodiacSky} z=${z} size=${Math.round(size*.98)}/></div>`}<button className="hero-gem" onClick=${()=>onOpen((typeof uiOpen!=="function"||uiOpen("gem3d"))?"gem3d":"gemwhy")} aria-label=${gemName(g)+" 젬 크게 보기"}><${GemView} g=${g} seed=${st.createdAt} size=${size}/></button></div>
   <h1 className="hero-name serif">${gemName(g)}</h1>
