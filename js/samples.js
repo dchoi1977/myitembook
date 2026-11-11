@@ -74,11 +74,11 @@ function sampleState(p,now){now=now||Date.now();const R=rng("sample|"+p.id);cons
   items:(p.items||[]).map(([name,category,since])=>({name,category,since,story:"",verify:""})),tags:p.tags||[],zodiac:z?z.k:null,crests:ent.map(publicCrest),motto:real?"공개 자료로 만든 헌정 샘플 · 본인이 참여하지 않았어요":idLine(st)};
  return {p,day,active,stage:stg,friends,cheers,todayAct,card,logs:Math.floor(active*1.4)}}
 
-function SampleGallery({onClose,toast}){useBackLayer(onClose);
- const [age,setAge]=useState("전체");const [open,setOpen]=useState(null);const [g3,setG3]=useState(null);const [why,setWhy]=useState(null);const now=Date.now();
+function SampleGallery({onClose,toast,mine}){useBackLayer(onClose);
+ const [age,setAge]=useState("전체");const [open,setOpen]=useState(null);const [g3,setG3]=useState(null);const [why,setWhy]=useState(null);const [how,setHow]=useState(null);const now=Date.now();
  const list=useMemo(()=>SAMPLE_PEOPLE.map(p=>sampleState(p,now)),[]);
  const shown=list.filter(x=>age==="전체"||x.p.age===age||(age==="50대+"&&["50대","60대"].includes(x.p.age)));
- useEffect(()=>{track("samples_open");const k=e=>{if(e.key==="Escape"&&!open&&!g3)onClose()};window.addEventListener("keydown",k);return()=>window.removeEventListener("keydown",k)},[open,g3]);
+ useEffect(()=>{track("samples_open");const k=e=>{if(e.key==="Escape"&&!open&&!g3&&!how&&!why)onClose()};window.addEventListener("keydown",k);return()=>window.removeEventListener("keydown",k)},[open,g3,how,why]);
  return html`<div className="sg" role="dialog" aria-modal="true" aria-label="샘플 아틀리에">
   <div className="sg-in">
    <div className="row between"><span className="eyebrow">A WINDOW INTO OTHER LIVES</span><button className="g3-x sg-x" onClick=${onClose} aria-label="닫기">✕</button></div>
@@ -91,11 +91,12 @@ function SampleGallery({onClose,toast}){useBackLayer(onClose);
     <div className="sg-gn">${x.card.gemName}<span className="small faint"> · 연마 ${x.stage}단계</span></div>
     <p className="sg-s serif">${x.p.s}</p>
     <div className="kw sg-kw">${x.p.kw.map(k=>html`<span key=${k} className="chip">${k}</span>`)}</div>
-    <div className="sg-foot"><span className="small faint">${x.p.real?html`공개 자료 기반 · 본인 참여 아님<br/><span className="sg-credit">사진: ${x.p.credit}</span>`:"오늘 · "+x.todayAct}</span><span className="row" style=${{gap:"8px"}}><button className="g3-btn" onClick=${()=>setWhy(x)}>왜?</button><button className="g3-btn" onClick=${()=>setG3(x)}>◇ 3D</button><button className="linkbtn small" onClick=${()=>setOpen(x)}>카드 보기 ›</button></span></div>
+    <div className="sg-foot"><span className="small faint">${x.p.real?html`공개 자료 기반 · 본인 참여 아님<br/><span className="sg-credit">사진: ${x.p.credit}</span>`:"오늘 · "+x.todayAct}</span><span className="row" style=${{gap:"8px"}}><button className="g3-btn" onClick=${()=>{setHow(x);track("sample_how",{id:x.p.id})}}>되려면?</button><button className="g3-btn" onClick=${()=>setWhy(x)}>왜?</button><button className="g3-btn" onClick=${()=>setG3(x)}>◇ 3D</button><button className="linkbtn small" onClick=${()=>setOpen(x)}>카드 보기 ›</button></span></div>
    </article>`)}</div>
    <p className="note" style=${{textAlign:"center"}}>가상 인물과 그 이야기는 지어낸 것이에요. 헌정 샘플은 공개 자료의 사실만 담았고, 해당 인물과 제휴·후원 관계가 없으며 CBT 기간에만 보여요.</p>
   </div>
   ${open&&html`<${CardShowcase} key=${open.p.id} faces=${otherCardFaces({data:open.card},open.p.name,null)} toast=${toast||(()=>{})} onClose=${()=>setOpen(null)}/>`}
+  ${how&&html`<div className="sg-why"><${SampleHowSheet} x=${how} mine=${mine} onClose=${()=>setHow(null)}/></div>`}
   ${why&&html`<div className="sg-why"><${GemWhySheet} g=${why.card.gem} seed=${why.card.gemName} name=${why.p.name} onClose=${()=>setWhy(null)}/></div>`}
   ${g3&&html`<${Gem3DView} g=${g3.card.gem} seed=${g3.card.gemName} name=${g3.p.name} onClose=${()=>setG3(null)}/>`}
  </div>`}
@@ -103,3 +104,30 @@ function SampleGallery({onClose,toast}){useBackLayer(onClose);
 /* a small strip that opens the gallery (Friends tab) */
 function SampleStrip({onOpen}){const list=useMemo(()=>SAMPLE_PEOPLE.slice(0,6).map(p=>sampleState(p)),[]);
  return html`<button className="panel sg-strip" onClick=${onOpen}><span className="eyebrow">SAMPLE ATELIERS</span><span className="grow"><b>샘플 아틀리에 24곳 둘러보기</b><br/><span className="small muted">젬이 어떻게 자라는지 미리 보세요</span></span><span className="sg-strip-gems">${list.map(x=>html`<span key=${x.p.id}><${GemView} g=${x.card.gem} seed=${x.card.gemName} size=${34}/></span>`)}</span></button>`}
+
+/* ── 샘플 젬처럼 되려면 — 그 젬의 각 요소가 무엇으로 생겼는지, 나는 지금 어디쯤인지 ── */
+function sampleHowRows(x,mine){
+ const g=x.card.gem||{};const me=(mine&&mine.g)||null;const mst=mine&&mine.st;const rows=[];
+ const lvOf=(k)=>((me&&me.marks)||{})[k]||0;
+ const stg=x.stage||g.polish||1;const myStg=mst?Math.max(1,(mst.flags&&mst.flags.maxStage)||(mst.analysis?1:0)):0;
+ rows.push({t:`연마 ${stg}단계 · ${STAGES[stg]}`,how:STAGE_RULES.slice(2,stg+1).map((r,i)=>`${i+2}단계 ${r.need}`).join(" → ")||"첫 해석을 받으면 1단계",me:mst?`나는 ${myStg}단계`:"",done:myStg>=stg});
+ MARKS.forEach(m=>{const lv=(g.marks||{})[m.k]||0;if(!lv)return;const need=m.steps[lv-1];const my=lvOf(m.k);rows.push({t:m.k==="sat"?markTitle(m,lv):`${m.label} · ${markTitle(m,lv)}`,how:`${m.src} ${need}${m.unit}`,me:me?`나는 ${my?markTitle(m,my):"아직 없음"}`:"",done:my>=lv})});
+ const hd=clamp(g.hardness||1,1,5);if(hd>=3)rows.push({t:`강(모서리) ${hd} / 5`,how:`처음 해석의 '오래 이어 온 일'에 더해, 활동한 날이 ${HARD_STEPS.slice(0,Math.max(0,hd-2)).join("·")||3}일을 넘을 때마다 한 단계씩`,me:me?`나는 ${clamp(me.hardness||1,1,5)} / 5`:"",done:me&&(me.hardness||1)>=hd});
+ if((g.grain||0)>=1)rows.push({t:`금빛 결 ${g.grain}줄`,how:"기록 속 전환점, 그리고 쉬었다가 다시 시작한 날마다 한 줄씩",me:me?`나는 ${me.grain||0}줄`:"",done:me&&(me.grain||0)>=g.grain});
+ const im=g.idm||{};if(im.roots||im.laurel||im.spot||(im.banners||[]).length)rows.push({t:"휘장의 흔적",how:[im.roots&&"뿌리·터전 → 젬 아래 뿌리",(im.banners||[]).length&&"소속 → 빛깔 리본",im.laurel&&"영예 → 월계관",im.spot&&"조명 → 스포트라이트"].filter(Boolean).join(" · ")+" ('나의 휘장'에서 새기기)",me:"",done:!!(me&&me.idm)});
+ if(g.rings)rows.push({t:"연륜 나이테",how:"'공개할 모습'에서 태어난 해를 고르면 살아온 시간만큼 나이테가 생겨요",me:"",done:!!(me&&me.rings)});
+ if(x.card.zodiac)rows.push({t:"젬 뒤의 별자리",how:"'공개할 모습'에서 생일(월·일)을 고르면 떠요",me:"",done:!!(mst&&typeof myZodiac==="function"&&myZodiac(mst))});
+ return rows}
+function SampleHowSheet({x,mine,onClose}){
+ const rows=sampleHowRows(x,mine);const I=gemIdentity(x.card.gem||{},x.card.gemName);const real=!!x.p.real;const done=rows.filter(r=>r.done).length;
+ return html`<${Sheet} title=${`${x.p.name}의 젬처럼 되려면`} onClose=${onClose}>
+  <div className="why-top"><${GemView} g=${x.card.gem} seed=${x.card.gemName} size=${120}/>${mine&&mine.g&&html`<span className="how-vs">→</span><${GemView} g=${mine.g} seed=${mine.seed} size=${96}/>`}</div>
+  <p className="small muted" style=${{textAlign:"center",margin:"4px 0 0"}}>${mine&&mine.g?`왼쪽이 ${x.p.name}, 오른쪽이 지금의 내 젬이에요. 아래 ${rows.length}가지 중 ${done}가지를 갖췄어요.`:`이 젬의 모습은 아래처럼 쌓여서 생겼어요.`}</p>
+  ${real&&html`<div className="panel tint small">헌정 샘플은 공개 이력을 바탕으로 '명품' 단계를 미리 채워 둔 상징 값이에요. 실제로는 오래 꾸준히 쌓아야 닿는 모습이에요.</div>`}
+  <div className="stack"><h2 className="h3">쌓아서 생기는 것</h2>
+   <div className="how-list">${rows.map(r=>html`<div key=${r.t} className=${"how-row"+(r.done?" done":"")}><span className="how-ck" aria-hidden="true">${r.done?"✓":""}</span><span className="grow"><b>${r.t}</b><br/><span className="small muted">${r.how}</span>${r.me&&html`<br/><span className="small faint">${r.me}</span>`}</span></div>`)}</div></div>
+  <div className="stack"><h2 className="h3">타고나는 것</h2>
+   <p className="small muted" style=${{margin:0}}>빛깔 <b>${I.variant}</b>${I.rareVariant?" (희귀 변종)":""}, 모양 <b>${I.cut}</b>${I.pattern?`, 무늬 <b>${I.pattern}</b>`:""}${I.feats.length?`, 숨은 특성 <b>${I.feats.map(k=>INCLUSIONS[k].name).join("·")}</b>`:""}은 이 사람의 기록과 고유한 무늬에서 정해져요. 따라 할 수는 없고, 내 젬에는 나만의 빛깔과 모양이 있어요.${(I.aw||[]).length?` 발현(${I.aw.map(a=>a.n).join("·")})은 연마 단계가 오를 때 깨어나는데, 무엇이 깨어날지는 사람마다 달라요.`:""}</p></div>
+  <p className="note">샘플은 비교하라고 있는 게 아니라, 젬이 어떻게 자라는지 미리 보여 주려고 있어요.</p>
+ <//>`;
+}
