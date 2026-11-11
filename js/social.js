@@ -57,7 +57,10 @@ function FriendsTab({uid,st,soc,names,reloadSoc,openUser,toast,profile,demo,ensu
  </div>`;
 }
 
-function ProfileSheet({id,uid,st,soc,names,onClose,openUser,reloadSoc,toast,demo,ensureNames}){
+/* 알림에서 넘어왔을 때: 답해야 할 자리로 바로 데려가 잠깐 빛나게 한다 */
+function useFocusJump(focus,dep){useEffect(()=>{if(!focus)return;let n=0,t;const go=()=>{const el=document.querySelector(`[data-focus="${focus}"]`);if(el){try{el.scrollIntoView({block:"center",behavior:"smooth"})}catch(e){el.scrollIntoView()}el.classList.add("focus-pulse");setTimeout(()=>el.classList.remove("focus-pulse"),2800);const inp=el.querySelector("input:not([type=checkbox]),textarea");if(inp){try{inp.focus({preventScroll:true})}catch(e){}}}else if(n++<10)t=setTimeout(go,250)};t=setTimeout(go,150);return()=>clearTimeout(t)},[focus,dep])}
+function ProfileSheet({id,uid,st,soc,names,onClose,openUser,reloadSoc,toast,demo,ensureNames,focus}){
+ useFocusJump(focus,id);
  const [card,setCard]=useState(undefined);const [asked,setAsked]=useState(null);const [show,setShow]=useState(false);const [words,setWords]=useState([]);const [fof,setFof]=useState([]);const [busy,setBusy]=useState(false);
  const [word,setWord]=useState("");const [rep,setRep]=useState(null);const [g3,setG3]=useState(false);
  const isMe=id===uid;const rel=relation(uid,id,soc.friendships);
@@ -87,8 +90,8 @@ function ProfileSheet({id,uid,st,soc,names,onClose,openUser,reloadSoc,toast,demo
    </div>`}
   ${g3&&card&&html`<${Gem3DView} g=${card.data.gem} seed=${card.data.gemName} name=${nick(names,id)} onClose=${()=>setG3(false)}/>`}${show&&card&&html`<${CardShowcase} faces=${otherCardFaces(card,nick(names,id),id)} toast=${toast} onClose=${()=>setShow(false)}/>`}
   </div>`:rel==="friend"&&!isMe?html`<div className="panel tint stack small"><span>${nick(names,id)}님은 아직 카드를 공개하지 않았어요.</span><span className="muted">공개를 부탁하면 알림으로 전해져요. 공개되면 나에게도 알림이 와요.</span><button className="btn sm" disabled=${demo||asked==="sent"||asked==="busy"} onClick=${requestCard}>${asked==="sent"||asked==="already_asked"?"요청을 보냈어요":"카드 공개 요청하기"}</button></div>`:html`<div className="panel tint small">${isMe?"아직 카드를 공개하지 않았어요.":rel==="friend"?"아직 카드를 공개하지 않았어요.":"카드를 공개하지 않았거나, 친구에게만 공개한 참여자예요. 친구가 되면 볼 수 있을지도 몰라요."}</div>`}
-  ${!isMe&&html`<div className="row"><${FriendButton} uid=${uid} other=${id} soc=${soc} reloadSoc=${reloadSoc} toast=${toast} demo=${demo}/>${rel==="friend"&&html`<button className="linkbtn small" onClick=${async()=>{await api.friendRemove(uid,id);track("unfriend");reloadSoc();toast("친구를 끊었어요.")}}>친구 끊기</button>`}</div>`}
-  ${rel==="friend"&&!isMe&&html`<${BondPanel} uid=${uid} other=${id} name=${nick(names,id)} soc=${soc} reloadSoc=${reloadSoc} toast=${toast} demo=${demo}/>`}
+  ${!isMe&&html`<div className="row" data-focus="friend"><${FriendButton} uid=${uid} other=${id} soc=${soc} reloadSoc=${reloadSoc} toast=${toast} demo=${demo}/>${rel==="friend"&&html`<button className="linkbtn small" onClick=${async()=>{await api.friendRemove(uid,id);track("unfriend");reloadSoc();toast("친구를 끊었어요.")}}>친구 끊기</button>`}</div>`}
+  ${rel==="friend"&&!isMe&&html`<div data-focus="bond"><${BondPanel} uid=${uid} other=${id} name=${nick(names,id)} soc=${soc} reloadSoc=${reloadSoc} toast=${toast} demo=${demo}/></div>`}
   ${card&&!isMe&&html`<div className="stack"><span className="eyebrow">공감 남기기 — 숫자는 주인에게만 보여요</span><div className="react-row">${Object.entries(REACT).map(([k,v])=>html`<button key=${k} className="react" aria-pressed=${!!mine(k)} disabled=${busy} onClick=${()=>toggle(k)}><${Glyph} name=${v.glyph} size=${18}/>${v.label}</button>`)}</div></div>`}
   ${card&&!isMe&&card.data.acceptWords&&html`<div className="stack"><span className="eyebrow">한 단어 추천사</span><div className="row"><input type="text" aria-label="한 단어 (8자 이내)" maxLength="8" value=${word} placeholder="예) 든든함" onChange=${e=>setWord(e.target.value)} style=${{flex:1}}/><button className="btn sm" disabled=${busy||!word.trim()||(myWord&&myWord.word===word.trim())} onClick=${sendWord}>${myWord?"고치기":"건네기"}</button></div></div>`}
   ${fof.length>0&&html`<div className="stack"><span className="eyebrow">${isMe?"내 친구":nick(names,id)+"의 친구"} · 파도타기</span><div className="wordchips">${fof.map(f=>html`<button key=${f.id} className="chip plain chipbtn" onClick=${()=>openUser(f.id)}>${f.nickname}${f.has_card?" ◆":""}</button>`)}</div></div>`}
@@ -151,15 +154,56 @@ function FeedTab({uid,soc,names,openUser,toast,demo,reloadSoc,ensureNames}){
 const NOTE_TEXT={friend_request:"님이 친구를 요청했어요",friend_accept:"님과 친구가 되었어요",word:"님이 한 단어를 건넸어요",reaction:"님이 공감을 남겼어요",card_request:"님이 내 카드를 보고 싶어 해요",card_opened:"님이 카드를 공개했어요",ask:"님이 질문을 보냈어요",ask_answer:"님이 내 질문에 답했어요",bond_request:"님이 관계 이름을 제안했어요",bond_accept:"님이 관계 제안을 수락했어요",bond_decline:"님이 관계 제안을 사양했어요"};
 function InboxSheet({uid,notes,anns,names,soc,onClose,openUser,reloadSoc,toast,onPublish,isPublic,onAsk,asksMe}){
  useEffect(()=>{const ids=notes.filter(n=>!n.read_at).map(n=>n.id);if(ids.length)api.markRead(ids).catch(()=>{});try{localStorage.setItem("mib-ann-seen",String(anns[0]?anns[0].id:0))}catch(e){}track("open_inbox",{unread:ids.length})},[]);
+ const go=n=>{const p=n.payload||{};track("inbox_go",{kind:n.kind});switch(n.kind){
+  case "bond_request":case "bond_accept":case "bond_decline":return openUser(n.actor_id,"bond");
+  case "friend_request":case "friend_accept":return openUser(n.actor_id,"friend");
+  case "ask":return onAsk&&onAsk("answer:"+(p.round||""));
+  case "ask_answer":return onAsk&&onAsk("asks");
+  case "word":case "reaction":return onAsk&&onAsk("mine");
+  case "card_request":return (!isPublic&&onPublish)?onPublish():openUser(n.actor_id);
+  default:return openUser(n.actor_id)}};
+ const stop=fn=>e=>{e.stopPropagation();fn&&fn(e)};
  return html`<${Sheet} title="알림" onClose=${onClose}>
   ${anns.length>0&&html`<div className="stack"><h2 className="h3">운영 공지</h2>${anns.slice(0,5).map(a=>html`<div className="panel stack small" key=${a.id}><div className="row between"><b>${a.title}</b><span className="faint">${ago(a.created_at)}</span></div>${a.body&&html`<span className="muted prewrap">${a.body}</span>`}</div>`)}</div>`}
   <div className="stack"><h2 className="h3">나에게 온 소식</h2>
-   ${notes.length?html`<div className="list">${notes.map(n=>{const p=n.payload||{};let t=NOTE_TEXT[n.kind]||"새 소식";if(n.kind==="reaction")t=p.kind==="like"?`님이 내 ${LIKE_T[p.target]||"공간"}에 좋아요를 남겼어요`:p.target==="feed"?"님이 내 소식을 응원했어요":`님이 내 카드에 '${(REACT[p.kind]||{}).label||"공감"}'를 남겼어요`;if(n.kind==="bond_request")t=p.name?`님이 우리 사이를 '${p.name}'(으)로 하자고 해요`:"님이 관계 이름을 지우자고 해요";if(n.kind==="bond_accept"&&p.name)t=`님과 이제 '${p.name}' 사이예요`;if(n.kind==="word")t=`님이 한 단어 '${p.word||""}'를 건넸어요`;if(n.kind==="ask"&&p.q)t=`님이 물어요 · "${p.q}"`;if(n.kind==="ask_answer"&&p.q)t=`님이 답했어요 · "${p.q}"`;return html`<div className="list-row" key=${n.id} style=${{cursor:"default"}}>
+   ${notes.length?html`<div className="list">${notes.map(n=>{const p=n.payload||{};let t=NOTE_TEXT[n.kind]||"새 소식";if(n.kind==="reaction")t=p.kind==="like"?`님이 내 ${LIKE_T[p.target]||"공간"}에 좋아요를 남겼어요`:p.target==="feed"?"님이 내 소식을 응원했어요":`님이 내 카드에 '${(REACT[p.kind]||{}).label||"공감"}'를 남겼어요`;if(n.kind==="bond_request")t=p.name?`님이 우리 사이를 '${p.name}'(으)로 하자고 해요`:"님이 관계 이름을 지우자고 해요";if(n.kind==="bond_accept"&&p.name)t=`님과 이제 '${p.name}' 사이예요`;if(n.kind==="word")t=`님이 한 단어 '${p.word||""}'를 건넸어요`;if(n.kind==="ask"&&p.q)t=`님이 물어요 · "${p.q}"`;if(n.kind==="ask_answer"&&p.q)t=`님이 답했어요 · "${p.q}"`;return html`<div className="list-row note-row" key=${n.id} role="button" tabIndex="0" onClick=${()=>go(n)} onKeyDown=${e=>{if(e.key==="Enter"&&e.target===e.currentTarget)go(n)}}>
     <span className=${"dotmark"+(n.read_at?"":" on")} aria-hidden="true"></span><${Avatar} p=${names[n.actor_id]||{id:n.actor_id}} size=${32}/>
-    <span className="grow small"><button className="linkbtn" style=${{padding:0}} onClick=${()=>openUser(n.actor_id)}>${nick(names,n.actor_id)}</button>${t}<br/><span className="d">${ago(n.created_at)}</span></span>
-    ${n.kind==="card_request"&&!isPublic&&onPublish&&html`<button className="btn sm" onClick=${onPublish}>카드 공개하기</button>`}${n.kind==="bond_request"&&html`<button className="btn sm" onClick=${()=>openUser(n.actor_id)}>답하기</button>`}${n.kind==="card_opened"&&html`<button className="btn quiet sm" onClick=${()=>openUser(n.actor_id)}>카드 보기</button>`}${n.kind==="ask"&&onAsk&&html`<button className="btn sm" onClick=${()=>onAsk("answer:"+((n.payload||{}).round||""))}>${(asksMe||[]).some(x=>x.round===(n.payload||{}).round&&x.answer)?"내 답 보기":"답하기"}</button>`}${n.kind==="ask_answer"&&onAsk&&html`<button className="btn quiet sm" onClick=${()=>onAsk("asks")}>답 보기</button>`}
-    ${n.kind==="friend_request"&&relation(uid,n.actor_id,soc.friendships)==="incoming"&&html`<${FriendButton} uid=${uid} other=${n.actor_id} soc=${soc} reloadSoc=${reloadSoc} toast=${toast} small=${true}/>`}
+    <span className="grow small"><button className="linkbtn" style=${{padding:0}} onClick=${stop(()=>openUser(n.actor_id))}>${nick(names,n.actor_id)}</button>${t}<br/><span className="d">${ago(n.created_at)}</span></span>
+    ${n.kind==="card_request"&&!isPublic&&onPublish&&html`<button className="btn sm" onClick=${stop(onPublish)}>카드 공개하기</button>`}${n.kind==="bond_request"&&html`<button className="btn sm" onClick=${stop(()=>openUser(n.actor_id,"bond"))}>답하기</button>`}${n.kind==="card_opened"&&html`<button className="btn quiet sm" onClick=${stop(()=>openUser(n.actor_id))}>카드 보기</button>`}${n.kind==="ask"&&onAsk&&html`<button className="btn sm" onClick=${stop(()=>onAsk("answer:"+((n.payload||{}).round||"")))}>${(asksMe||[]).some(x=>x.round===(n.payload||{}).round&&x.answer)?"내 답 보기":"답하기"}</button>`}${n.kind==="ask_answer"&&onAsk&&html`<button className="btn quiet sm" onClick=${stop(()=>onAsk("asks"))}>답 보기</button>`}
+    ${n.kind==="friend_request"&&relation(uid,n.actor_id,soc.friendships)==="incoming"&&html`<span onClick=${e=>e.stopPropagation()}><${FriendButton} uid=${uid} other=${n.actor_id} soc=${soc} reloadSoc=${reloadSoc} toast=${toast} small=${true}/></span>`}
    </div>`})}</div>`:html`<p className="small faint">아직 알림이 없어요.</p>`}
   </div>
  <//>`;
+}
+
+/* ───────── 기다리는 요청 다시 알려 주기 ─────────
+   친구 요청·관계 이름 제안·친구의 질문처럼 '내 답을 기다리는 일'이 12시간 넘게 그대로면 '나' 탭 맨 위에 다시 띄운다.
+   '나중에'를 누르면 그 건은 하루 동안 쉬고, 사흘이 지나면 한 번 더 또렷하게 알려 준다. */
+const REMIND_AFTER=12*36e5,REMIND_SNOOZE=24*36e5;
+function pendingAsks({uid,soc,notes,asksMe}){
+ const out=[];const noteAt=(kind,actor)=>{const n=(notes||[]).find(x=>x.kind===kind&&x.actor_id===actor);return n?Date.parse(n.created_at):NaN};
+ ((soc&&soc.friendships)||[]).forEach(f=>{
+  if(f.status==="pending"&&f.addressee===uid)out.push({key:"fr:"+f.requester,kind:"friend",who:f.requester,at:Date.parse(f.created_at)||noteAt("friend_request",f.requester)});
+  if(f.status==="accepted"&&f.bond_by&&f.bond_by!==uid&&(f.requester===uid||f.addressee===uid))out.push({key:"bd:"+f.bond_by+":"+(f.bond_prop||""),kind:"bond",who:f.bond_by,name:f.bond_prop||"",at:noteAt("bond_request",f.bond_by)})});
+ (asksMe||[]).filter(a=>!a.answer).forEach(a=>out.push({key:"ask:"+a.round,kind:"ask",who:a.owner,round:a.round,q:a.text,at:Date.parse(a.at)}));
+ return out}
+function dueReminders(p,st,now){now=now||Date.now();const sn=(st&&st.flags&&st.flags.remind)||{};return pendingAsks(p).map(x=>({...x,age:Number.isFinite(x.at)?now-x.at:REMIND_AFTER})).filter(x=>x.age>=REMIND_AFTER&&!(sn[x.key]>now)).sort((a,b)=>b.age-a.age)}
+function Reminders({uid,soc,notes,asksMe,names,st,update,openUser,onOpen,toast}){
+ const due=dueReminders({uid,soc,notes,asksMe},st);const shown=useRef(false);
+ useEffect(()=>{if(due.length&&!shown.current){shown.current=true;track("remind_show",{n:due.length,kinds:[...new Set(due.map(d=>d.kind))].join(",")})}},[due.length]);
+ useEffect(()=>{const sn=(st.flags&&st.flags.remind)||{};const live=new Set(pendingAsks({uid,soc,notes,asksMe}).map(x=>x.key));const dead=Object.keys(sn).filter(k=>!live.has(k)&&sn[k]<Date.now());if(dead.length&&soc&&soc.friendships)update(s=>{const r={...(s.flags.remind||{})};dead.forEach(k=>delete r[k]);s.flags.remind=r})},[due.length]);
+ if(!due.length)return null;
+ const go=d=>{track("remind_go",{kind:d.kind});if(d.kind==="ask")onOpen("answer:"+d.round);else openUser(d.who,d.kind==="bond"?"bond":"friend")};
+ const later=d=>{update(s=>{s.flags.remind={...(s.flags.remind||{}),[d.key]:Date.now()+REMIND_SNOOZE}});track("remind_later",{kind:d.kind});toast("내일 다시 알려 드릴게요.")};
+ const txt=d=>d.kind==="friend"?"님이 친구 요청을 보냈어요":d.kind==="bond"?(d.name?`님이 우리 사이를 '${d.name}'(으)로 하자고 해요`:"님이 관계 이름을 지우자고 해요"):`님이 물었어요 · "${String(d.q||"").slice(0,40)}"`;
+ const wait=d=>{const h=Math.floor(d.age/36e5);return h>=72?`${Math.floor(h/24)}일째 기다리는 중`:h>=24?`${Math.floor(h/24)}일 전`:`${h}시간 전`};
+ return html`<div className="panel stack remind" role="region" aria-label="답을 기다리는 요청">
+  <div className="row between"><span className="eyebrow">답을 기다리고 있어요</span><span className="small faint">${due.length}건</span></div>
+  ${due.slice(0,4).map(d=>html`<div key=${d.key} className=${"remind-row"+(d.age>=72*36e5?" old":"")}>
+   <${Avatar} p=${names[d.who]||{id:d.who}} size=${34}/>
+   <span className="grow small" style=${{minWidth:0}}><b>${nick(names,d.who)}</b>${txt(d)}<br/><span className="faint">${wait(d)}</span></span>
+   <span className="remind-acts"><button className="btn sm" onClick=${()=>go(d)}>${d.kind==="ask"?"답하기":d.kind==="bond"?"답하기":"확인하기"}</button><button className="linkbtn small" onClick=${()=>later(d)}>나중에</button></span>
+  </div>`)}
+  ${due.length>4&&html`<button className="linkbtn small" onClick=${()=>onOpen("inbox")}>알림에서 모두 보기 · ${due.length-4}건 더</button>`}
+ </div>`;
 }

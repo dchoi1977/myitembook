@@ -52,11 +52,12 @@ function AnswersSheet({stat,names,onClose,openUser}){
 }
 
 function AnswerSheet({incoming,names,onClose,toast,onDone,focus}){
- const list=[...(incoming||[])].sort((a,b)=>(a.answer?1:0)-(b.answer?1:0)||(focus&&a.round===focus?-1:0));
+ if(typeof useFocusJump==="function")useFocusJump(focus?"ask-"+focus:null,(incoming||[]).length);
+ const list=[...(incoming||[])].sort((a,b)=>((focus&&b.round===focus)?1:0)-((focus&&a.round===focus)?1:0)||(a.answer?1:0)-(b.answer?1:0));
  const [vals,setVals]=useState({});const [busy,setBusy]=useState(null);
  async function answer(a){const v=(vals[a.round]||"").trim();if(!v)return;setBusy(a.round);try{const r=await api.askAnswer(a.round,v);if(r==="ok"){track("ask_answer");toast(`${nick(names,a.owner)}님에게 답을 보냈어요.`);onDone()}else toast(r==="already_answered"?"이미 답한 질문이에요.":"보내지 못했어요.")}catch(e){toast("보내지 못했어요.")}finally{setBusy(null)}}
  return html`<${Sheet} title="나에게 온 질문" onClose=${onClose}>
-  ${list.length?list.map(a=>html`<div key=${a.round} className="panel stack ask-in">
+  ${list.length?list.map(a=>html`<div key=${a.round} data-focus=${"ask-"+a.round} className="panel stack ask-in">
    <div className="row" style=${{gap:"10px"}}><${Avatar} p=${names[a.owner]||{id:a.owner}} size=${36}/><span className="grow"><${UName} id=${a.owner} names=${names}/>님이 물어요<br/><span className="small faint">${a.hint||""}</span></span></div>
    <b className="serif ask-text">"${a.text}"</b>
    ${a.answer?html`<div className="ask-mine"><span className="small faint">내 답</span><span>${a.answer}</span></div>`

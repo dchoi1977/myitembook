@@ -168,8 +168,8 @@ function App(){
   if(k==="week"&&day<7&&!(profile&&profile.role==="admin")){toast("7일 비교 카드는 Day 7에 열립니다.");return}
   setSheet(k);
  }
- const openUser=id=>{if(!id)return;setSheet("user:"+id)};
- window.__openUser=openUser;window.__uid=uid;
+ const openUser=(id,focus)=>{if(!id)return;setSheet("user:"+id+(focus?":"+focus:""))};
+ window.__openUser=openUser;window.__uid=uid;window.__reloadSoc=reloadSoc;
 
  // ── render
  if(boot||route==="loading")return html`<div className="app"><div className="splash wrap"><div className="stack" style=${{alignItems:"center"}}><div className="pulse"><${GemView} g=${{stone:"오팔",form:"결정",texture:"유백",light:"번짐",hardness:2,grain:1,facets:8}} seed="splash" size=${120}/></div><p className="faint small">MyItemBook을 여는 중</p></div></div></div>`;
@@ -191,6 +191,7 @@ function App(){
  const rt={aiReady,ytReady};
 
  const top=!demo&&html`<div className="stack">
+  ${typeof Reminders==="function"&&html`<${Reminders} uid=${uid} soc=${soc} notes=${notes} asksMe=${asksMe} names=${names} st=${st} update=${update} openUser=${openUser} onOpen=${openSheet} toast=${toast}/>`}
   ${!desk&&html`<button className="merow" onClick=${()=>setSheet("avatar")}><${Avatar} p=${profile} size=${46}/><span className="grow"><b>${profile.nickname}</b><br/><span className="small faint">${profile.avatar?"프로필 이미지 바꾸기":"프로필 이미지 고르기 · 캐릭터 16종 또는 내 사진"}</span></span><span className="chev">›</span></button>`}
   ${!desk&&typeof hasNewUpdate==="function"&&hasNewUpdate(st)&&html`<button className="panel updbar" onClick=${()=>setSheet("updates")}><span className="upd-new">NEW</span><span className="grow"><b>업데이트 소식</b><br/><span className="small muted">${latestUpdate().date} · ${latestUpdate().title}</span></span><span className="chev">›</span></button>`}
   ${!!newAnn&&html`<button className="panel ann" onClick=${()=>setSheet("inbox")}><span className="eyebrow">운영 공지</span><b>${anns[0].title}</b></button>`}
@@ -226,7 +227,7 @@ function App(){
  else if(sheet==="avatar")sheetEl=html`<${AvatarSheet} profile=${profile} uid=${uid} onClose=${close} onSaved=${onAvatarSaved} toast=${toast}/>`;
  else if(sheet==="inbox")sheetEl=html`<${InboxSheet} uid=${uid} notes=${notes} anns=${anns} names=${names} soc=${soc} onClose=${()=>{close();loadInbox()}} openUser=${openUser} reloadSoc=${reloadSoc} toast=${toast} isPublic=${!!(st&&st.visibility.public)} onPublish=${st&&st.analysis?()=>setSheet("publish"):null} onAsk=${k=>setSheet(k)} asksMe=${asksMe}/>`;
  else if(sheet==="data")sheetEl=html`<${DataSheet} st=${st} items=${items} profile=${profile} onClose=${close} onWipe=${wipe} onReread=${()=>openSheet("reread")} onLogout=${logout} toast=${toast} demo=${demo} setQuiet=${setQuiet}/>`;
- else if(sheet&&sheet.startsWith("user:"))sheetEl=html`<${ProfileSheet} key=${sheet} id=${sheet.slice(5)} uid=${uid} st=${st} soc=${soc} names=${names} onClose=${close} openUser=${openUser} reloadSoc=${reloadSoc} toast=${toast} demo=${demo} ensureNames=${ensureNames}/>`;
+ else if(sheet&&sheet.startsWith("user:"))sheetEl=html`<${ProfileSheet} key=${sheet} id=${sheet.split(":")[1]} focus=${sheet.split(":")[2]||null} uid=${uid} st=${st} soc=${soc} names=${names} onClose=${close} openUser=${openUser} reloadSoc=${reloadSoc} toast=${toast} demo=${demo} ensureNames=${ensureNames}/>`;
  else if(sheet&&st.analysis){
   if(sheet==="evidence")sheetEl=html`<${EvidenceSheet} st=${st} update=${update} onClose=${close}/>`;
   else if(sheet==="attrs")sheetEl=html`<${AttrsSheet} st=${st} update=${update} onClose=${close}/>`;
