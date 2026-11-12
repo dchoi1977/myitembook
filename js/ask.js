@@ -1,6 +1,10 @@
 "use strict";
 /* MIB CBT · 친구에게 묻기 — 나에 대한 질문을 친구에게 한 번씩, 질문지는 날마다 하나씩 열림 */
 
+/* 받는 사람 눈으로 — 질문 속 '나'를 묻는 사람 이름으로 바꾼다 ("나를 한마디로" → "영태님을 한마디로") */
+function askFor(text,who){const W=String(who||"친구")+"님";const M={"를":"을","는":"은","의":"의","에게":"에게","한테":"한테","와":"과","랑":"이랑","도":"도","만":"만","이":"이","란":"이란","라는":"이라는","에 대해":"에 대해","":""};
+ return String(text||"").replace(/(^|[\s"'“‘(,])나(에게|한테|에 대해|라는|를|는|의|와|랑|도|만|란)?(?=[\s.,?!"'”’)]|$)/g,(m,a,j)=>a+W+(M[j||""]??""))
+  .replace(/(^|[\s"'“‘(,])내가(?=\s)/g,(m,a)=>a+W+"이").replace(/(^|[\s"'“‘(,])내(?=\s)/g,(m,a)=>a+W+"의").replace(/(^|[\s"'“‘(,])저를(?=\s)/g,(m,a)=>a+W+"을").replace(/(^|[\s"'“‘(,])제가(?=\s)/g,(m,a)=>a+W+"이").replace(new RegExp(W+"이 잘 모르는 "+W+"의 ","g"),W+" 스스로는 잘 모르는 ")}
 function askSummary(stat,skip){
  const qs=(stat&&stat.questions)||[];const sk=new Set(skip||[]);
  const next=qs.find(q=>q.open&&!q.round&&!sk.has(q.id));
@@ -20,7 +24,7 @@ function AskPanel({stat,incoming,names,onOpen,friendsCount,st,update,toast}){
  const pending=(incoming||[]).filter(a=>!a.answer);
  return html`<div className="panel stack ask-panel">
   <div className="row between"><b>친구에게 묻기</b><span className="small faint">질문지 ${sent.length} / ${stat.questions.length}</span></div>
-  ${pending.length>0&&html`<button className="ask-incoming" onClick=${()=>onOpen("answer")}><span className="ask-dot" aria-hidden="true"></span><span className="grow"><b>${nick(names,pending[0].owner)}</b>님${pending.length>1?` 외 ${pending.length-1}명`:""}이 묻고 있어요<br/><span className="small">"${pending[0].text}"</span></span><span className="chev">답하기 ›</span></button>`}
+  ${pending.length>0&&html`<button className="ask-incoming" onClick=${()=>onOpen("answer")}><span className="ask-dot" aria-hidden="true"></span><span className="grow"><b>${nick(names,pending[0].owner)}</b>님${pending.length>1?` 외 ${pending.length-1}명`:""}이 묻고 있어요<br/><span className="small">"${askFor(pending[0].text,nick(names,pending[0].owner))}"</span></span><span className="chev">답하기 ›</span></button>`}
   ${next?html`<div className="ask-q"><span className="ask-no">Q${next.ord}</span><span className="grow"><b className="serif">${next.text}</b><br/><span className="small muted">친구들에게 한 번만 물을 수 있어요 · 답은 나만 봐요</span></span></div>
    <div className="row" style=${{gap:"8px"}}><button className="btn sm grow" disabled=${!friendsCount} onClick=${()=>onOpen("ask:"+next.id)}>${friendsCount?"친구에게 묻기":"친구를 맺으면 물을 수 있어요"}</button>${update&&html`<button className="btn ghost sm" onClick=${()=>pass(next)} aria-label="이 질문 넘기고 다른 질문 보기">다른 질문</button>`}</div>`
   :locked?html`<div className="ask-q locked"><span className="ask-no">🔒</span><span className="grow"><b>다음 질문은 Day ${locked.unlock_day}에 열려요</b><br/><span className="small muted">질문지는 하루에 하나씩 늘어나요</span></span></div>`
@@ -30,12 +34,12 @@ function AskPanel({stat,incoming,names,onOpen,friendsCount,st,update,toast}){
  </div>`;
 }
 
-function AskSheet({q,fids,names,onClose,toast,onSent}){
+function AskSheet({q,fids,names,onClose,toast,onSent,myName}){
  const [pick,setPick]=useState(()=>new Set(fids));const [busy,setBusy]=useState(false);
  const toggle=id=>setPick(s=>{const n=new Set(s);n.has(id)?n.delete(id):n.add(id);return n});
  async function send(){setBusy(true);try{const r=await api.askSend(q.id,[...pick]);if(r==="sent"){track("ask_send",{q:q.ord,n:pick.size});toast(`${pick.size}명에게 물었어요. 답이 오면 알려 드릴게요.`);onSent()}else toast(r==="already_asked"?"이 질문은 이미 보냈어요.":r==="locked"?"아직 열리지 않은 질문이에요.":"보내지 못했어요.")}catch(e){toast("보내지 못했어요.")}finally{setBusy(false)}}
  return html`<${Sheet} title="친구에게 묻기" onClose=${onClose}>
-  <div className="ask-hero"><span className="ask-no big">Q${q.ord}</span><h2 className="serif">${q.text}</h2>${q.hint&&html`<p className="small muted">${q.hint} · 답은 ${q.max_len}자까지</p>`}</div>
+  <div className="ask-hero"><span className="ask-no big">Q${q.ord}</span><h2 className="serif">${q.text}</h2><p className="small muted">친구에게는 <b>"${askFor(q.text,myName||"나")}"</b>처럼 내 이름으로 바뀌어 보여요.</p>${q.hint&&html`<p className="small muted">${q.hint} · 답은 ${q.max_len}자까지</p>`}</div>
   <div className="stack" style=${{gap:"8px"}}><div className="row between"><b>누구에게 물을까요?</b><button className="linkbtn small" onClick=${()=>setPick(pick.size===fids.length?new Set():new Set(fids))}>${pick.size===fids.length?"모두 해제":"모두 선택"}</button></div>
    <div className="ask-friends">${fids.map(id=>html`<button key=${id} className="ask-friend" aria-pressed=${pick.has(id)} onClick=${()=>toggle(id)}><${Avatar} p=${names[id]||{id}} size=${40}/><span>${nick(names,id)}</span></button>`)}</div></div>
   <div className="panel tint small">이 질문은 <b>한 번만</b> 보낼 수 있어요. 받은 답은 나만 보고, 다른 사람에게는 보이지 않아요.</div>
@@ -67,10 +71,11 @@ function AnswerSheet({incoming,names,onClose,toast,onDone,focus,st,update}){
  async function answer(a){const v=(vals[a.round]||"").trim();if(!v)return;setBusy(a.round);try{const r=await api.askAnswer(a.round,v);if(r==="ok"){track("ask_answer");toast(`${nick(names,a.owner)}님에게 답을 보냈어요.`);onDone()}else toast(r==="already_answered"?"이미 답한 질문이에요.":"보내지 못했어요.")}catch(e){toast("보내지 못했어요.")}finally{setBusy(null)}}
  return html`<${Sheet} title="나에게 온 질문" onClose=${onClose}>
   ${list.length?list.map(a=>html`<div key=${a.round} data-focus=${"ask-"+a.round} className="panel stack ask-in">
-   <div className="row" style=${{gap:"10px"}}><${Avatar} p=${names[a.owner]||{id:a.owner}} size=${36}/><span className="grow"><${UName} id=${a.owner} names=${names}/>님이 물어요<br/><span className="small faint">${a.hint||""}</span></span></div>
-   <b className="serif ask-text">"${a.text}"</b>
+   <div className="row" style=${{gap:"10px"}}><${Avatar} p=${names[a.owner]||{id:a.owner}} size=${36}/><span className="grow"><${UName} id=${a.owner} names=${names}/>님이 <b>자기 자신</b>에 대해 물어요<br/><span className="small faint">${askFor(a.hint||"",nick(names,a.owner))}</span></span></div>
+   <span className="ask-about">${nick(names,a.owner)}님에 대한 질문 · 내 얘기가 아니에요</span>
+   <b className="serif ask-text">"${askFor(a.text,nick(names,a.owner))}"</b>
    ${a.answer?html`<div className="ask-mine"><span className="small faint">내 답</span><span>${a.answer}</span></div>`
-   :html`<div className="field" style=${{margin:0}}><label htmlFor=${"ans-"+a.round} className="sr-only">답</label><textarea id=${"ans-"+a.round} rows=${a.max_len<=20?1:2} maxLength=${a.max_len} value=${vals[a.round]||""} onChange=${e=>setVals(v=>({...v,[a.round]:e.target.value}))} placeholder=${a.max_len<=20?"한마디로":"짧게 적어 주세요"}></textarea><span className="hint">${(vals[a.round]||"").length} / ${a.max_len} · 한 번 보내면 고칠 수 없어요 · ${nick(names,a.owner)}님만 봐요</span></div>
+   :html`<div className="field" style=${{margin:0}}><label htmlFor=${"ans-"+a.round} className="sr-only">답</label><textarea id=${"ans-"+a.round} rows=${a.max_len<=20?1:2} maxLength=${a.max_len} value=${vals[a.round]||""} onChange=${e=>setVals(v=>({...v,[a.round]:e.target.value}))} placeholder=${`${nick(names,a.owner)}님은 ${a.max_len<=20?"한마디로?":"어떤 사람인가요?"}`}></textarea><span className="hint">${nick(names,a.owner)}님에 대해 적어 주세요 · ${(vals[a.round]||"").length} / ${a.max_len} · 한 번 보내면 고칠 수 없어요 · ${nick(names,a.owner)}님만 봐요</span></div>
     <div className="row" style=${{gap:"8px"}}><button className="btn sm grow" disabled=${!(vals[a.round]||"").trim()||busy===a.round} onClick=${()=>answer(a)}>${busy===a.round?"보내는 중…":"답 보내기"}</button>${update&&(passed[a.round]?html`<button className="btn ghost sm" onClick=${()=>unpass(a)}>다시 답하기</button>`:html`<button className="btn ghost sm" onClick=${()=>pass(a)} aria-label="이 질문은 답하지 않고 넘기기">넘기기</button>`)}</div>`}
   </div>`):html`<p className="small faint">${nPassed?"남은 질문은 모두 넘겼어요.":"아직 받은 질문이 없어요."}</p>`}
   ${nPassed>0&&!showPassed&&html`<button className="linkbtn small" style=${{color:"var(--ink-3)"}} onClick=${()=>setShowPassed(true)}>넘긴 질문 ${nPassed}개 보기</button>`}

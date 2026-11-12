@@ -235,7 +235,7 @@ function App(){
   else if(sheet==="shelf")sheetEl=html`<${ShelfSheet} st=${st} items=${items} onOpen=${openSheet} onClose=${close} canAI=${canAI}/>`;
   else if(sheet==="shelfscan"&&typeof ShelfScan==="function")sheetEl=html`<${ShelfScan} canAI=${canAI} demo=${demo} toast=${toast} onAdd=${addItems} onClose=${()=>setSheet("shelf")}/>`;
   else if(sheet.startsWith("item:")){const id=sheet.slice(5);const it=id==="new"?null:items.find(i=>i.id===id);sheetEl=html`<${ItemEditor} key=${sheet} item=${it} st=${st} canAI=${canAI} demo=${demo} toast=${toast} onSave=${saveItem} onDelete=${deleteItem} onClose=${()=>setSheet("shelf")}/>`}
-  else if(sheet.startsWith("ask:")){const q=askStat&&askStat.questions.find(x=>String(x.id)===sheet.slice(4));sheetEl=q?html`<${AskSheet} q=${q} fids=${friendIds(uid,soc.friendships)} names=${names} toast=${toast} onClose=${close} onSent=${()=>{close();reloadSoc()}}/>`:null}
+  else if(sheet.startsWith("ask:")){const q=askStat&&askStat.questions.find(x=>String(x.id)===sheet.slice(4));sheetEl=q?html`<${AskSheet} myName=${profile.nickname} q=${q} fids=${friendIds(uid,soc.friendships)} names=${names} toast=${toast} onClose=${close} onSent=${()=>{close();reloadSoc()}}/>`:null}
   else if(sheet==="asks")sheetEl=html`<${AnswersSheet} stat=${askStat} names=${names} onClose=${close} openUser=${openUser}/>`;
   else if(sheet==="answer"||sheet.startsWith("answer:"))sheetEl=html`<${AnswerSheet} incoming=${asksMe} st=${st} update=${update} names=${names} focus=${+sheet.split(":")[1]||null} toast=${toast} onClose=${close} onDone=${reloadSoc}/>`;
   else if(sheet==="updates")sheetEl=html`<${UpdatesSheet} st=${st} update=${update} onClose=${close} onOpen=${k=>setSheet(k)}/>`;
