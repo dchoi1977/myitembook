@@ -116,7 +116,9 @@ function DeskSide({tab,setTab,openSheet,profile,day,pending,unread,onFeedback,on
 function DeskRail({tab,st,stats,openSheet,setTab,top,mid}){
  const g=livingGem(st);const stage=stageOf(st,stats);const ns=nextStage(st,stats);
  const near=BADGES.filter(b=>!isEarned(st,stats,b)&&!b.secret).map(b=>({b,p:badgeProg(b,stats)})).sort((x,y)=>y.p.pct-x.p.pct).slice(0,2);
- return html`<aside className="rail" aria-label="요약">
+ const [quiet,setQuiet]=useState(()=>tab==="me"&&window.scrollY<120);
+ useEffect(()=>{if(tab!=="me"){setQuiet(false);return}const f=()=>setQuiet(window.scrollY<120);f();window.addEventListener("scroll",f,{passive:true});return()=>window.removeEventListener("scroll",f)},[tab]);
+ return html`<aside className=${"rail"+(quiet?" rail-quiet":"")} aria-label="요약">
   ${tab==="me"?html`${top}${mid}`:html`
    <button className="rail-gem" onClick=${()=>{setTab("me");window.scrollTo(0,0)}} aria-label="내 카드로">
     <${GemView} g=${g} seed=${st.createdAt} size=${120}/>
