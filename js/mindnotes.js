@@ -5,13 +5,15 @@ const MN_EMO=[["👏","박수"],["🎉","축하"],["😍","멋져요"],["🥹","
 const MN_TXT_MAX=40;
 const MN_DUST=Array.from({length:18},(_,k)=>{const a=k/18*Math.PI*2;return [Math.round(Math.cos(a)*(60+(k%3)*40)),Math.round(-120-(k%5)*36+Math.sin(a)*30),(k%6)*.05,k%3===0?"♡":k%3===1?"✦":"·"]});
 function MnSend({fid,name,ctx,toast,demo}){
- const [sent,setSent]=useState([]);const [txt,setTxt]=useState("");const [busy,setBusy]=useState(false);const [err,setErr]=useState("");
- async function send(kind,body){if(demo||busy||!fid||!body)return;setBusy(true);setErr("");try{await api.heartSend(fid,kind,body,ctx);setSent(L=>[...L,{kind,body}]);if(kind==="text")setTxt("");track("mind_send",{kind});toast&&toast(kind==="emoji"?`${body} 를 건넸어요. ${name}님이 다음에 들어오면 보여요.`:`한마디를 건넸어요. ${name}님이 다음에 들어오면 보여요.`)}catch(e){const m=/row-level|policy|violates/i.test(String(e&&e.message||""))?"오늘은 충분히 건넸어요. 내일 또 건네 주세요.":"마음을 건네지 못했어요. 잠시 뒤 다시 눌러 주세요.";setErr(m);toast&&toast(m);track("mind_fail",{kind,code:String((e&&e.code)||"error").slice(0,20)})}finally{setBusy(false)}}
- return html`<div className="gn-cheer">
-  <div className="mn-emos" role="group" aria-label="감정 아이콘 건네기">${MN_EMO.map(([e,l])=>html`<button key=${e} type="button" className=${"mn-emo"+(sent.some(x=>x.body===e)?" on":"")} aria-label=${l+" 건네기"} title=${l} disabled=${busy||demo} onClick=${()=>send("emoji",e)}>${e}</button>`)}</div>
-  <div className="gn-word"><input type="text" aria-label=${name+"님에게 한마디"} maxLength=${MN_TXT_MAX} value=${txt} placeholder=${`${name}님에게 한마디`} onChange=${e=>setTxt(e.target.value)} onKeyDown=${e=>{if(e.key==="Enter"&&!e.isComposing)send("text",txt.trim())}}/><button className="btn sm" disabled=${busy||demo||!txt.trim()} onClick=${()=>send("text",txt.trim())}>건네기</button></div>
+ /* 소식 한 번에 마음 한 번 — 보내는 순간 아이콘과 한마디 모두 잠근다(연타·두 번 보내기 막기) */
+ const [sent,setSent]=useState(null);const [txt,setTxt]=useState("");const [busy,setBusy]=useState(false);const [err,setErr]=useState("");const lock=useRef(false);
+ const done=!!sent;const off=busy||demo||done;
+ async function send(kind,body){if(lock.current||demo||!fid||!body)return;lock.current=true;setBusy(true);setErr("");try{await api.heartSend(fid,kind,body,ctx);setSent({kind,body});track("mind_send",{kind});toast&&toast(`${name}님에게 마음을 건넸어요. 다음에 들어오면 보여요.`)}catch(e){lock.current=false;const m=/row-level|policy|violates/i.test(String(e&&e.message||""))?"오늘은 충분히 건넸어요. 내일 또 건네 주세요.":"마음을 건네지 못했어요. 잠시 뒤 다시 눌러 주세요.";setErr(m);toast&&toast(m);track("mind_fail",{kind,code:String((e&&e.code)||"error").slice(0,20)})}finally{setBusy(false)}}
+ return html`<div className=${"gn-cheer"+(done?" mn-done":"")}>
+  <div className="mn-emos" role="group" aria-label="감정 아이콘 건네기">${MN_EMO.map(([e,l])=>html`<button key=${e} type="button" className=${"mn-emo"+(sent&&sent.body===e?" on":"")} aria-label=${l+" 건네기"} title=${l} disabled=${off} aria-disabled=${off} onClick=${()=>send("emoji",e)}>${e}</button>`)}</div>
+  <div className="gn-word"><input type="text" aria-label=${name+"님에게 한마디"} maxLength=${MN_TXT_MAX} value=${sent&&sent.kind==="text"?sent.body:txt} placeholder=${`${name}님에게 한마디`} disabled=${off} onChange=${e=>setTxt(e.target.value)} onKeyDown=${e=>{if(e.key==="Enter"&&!e.isComposing){e.preventDefault();send("text",txt.trim())}}}/><button className="btn sm" disabled=${off||!txt.trim()} onClick=${()=>send("text",txt.trim())}>${busy?"보내는 중…":done?"보냈어요":"건네기"}</button></div>
   ${err&&html`<p className="small mn-err" role="alert">${err}</p>`}
-  ${sent.length>0&&html`<p className="small">건넨 마음 ${sent.map(x=>x.kind==="emoji"?x.body:"💬").join(" ")} · 한 번 보면 사라지는 쪽지예요</p>`}
+  ${done&&html`<p className="small mn-sent" role="status">✓ ${sent.kind==="emoji"?sent.body:"한마디"}를 건넸어요 · 한 번 보면 사라지는 쪽지예요</p>`}
  </div>`}
 
 /* 받은 쪽 — 보낸 사람별로 한 장씩 */
