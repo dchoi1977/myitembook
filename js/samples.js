@@ -61,7 +61,7 @@ function sampleState(p,now){now=now||Date.now();const R=rng("sample|"+p.id);cons
  const active=Math.floor(day*Math.min(1,.55+p.pace*.3));const stage=active>=Math.round(14/p.pace)?5:active>=Math.round(8/p.pace)?4:active>=Math.round(4/p.pace)?3:active>=1?2:1;
  const real=!!p.real;const friends=Math.min(12,Math.floor(active*.7*p.pace)+1);const cheers=Math.floor(active*1.6*p.pace);const visitors=Math.floor(active*2.2*p.pace);
  const lv=(v,steps)=>steps.filter(x=>v>=x).length;
- const marks=real?{setting:0,sat:0,aura:3,stars:0}:{setting:lv(day,[3,7,30,100,365]),sat:lv(friends,[1,3,5,10,20]),aura:lv(cheers,[3,10,30,60,100]),stars:lv(visitors,[5,15,30,60,100])};const stg=real?5:stage;
+ const marks=real?{setting:0,sat:0,aura:5,stars:4}:{setting:lv(day,[3,7,30,100,365]),sat:lv(friends,[1,3,5,10,20]),aura:lv(cheers,[3,10,30,60,100]),stars:lv(visitors,[5,15,30,60,100])};const stg=real?7:stage;
  const ent=p.crests.map((c,i)=>({id:p.id+"c"+i,display:true,shownAt:i,...c}));
  const st={identity:{entries:ent}};const idm=idMarks(st);
  const fp=(()=>{const F=rng("fp|"+p.id);return {hue:Math.round((F()-.5)*20),sat:+((F()-.5)*.3).toFixed(2),ws:+(.92+F()*.16).toFixed(2),hs:+(.94+F()*.1).toFixed(2),tilt:Math.round((F()-.5)*12),side:2+Math.floor(F()*3),mod:[...Array(8)].map(()=>+((F()*2-1)).toFixed(2))}})();
