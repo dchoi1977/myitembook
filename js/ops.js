@@ -158,7 +158,7 @@ async function renderShareImage(kind,{st,stats,profile}){
   x.font=`700 30px ${SANS}`;x.fillStyle="#66706E";x.fillText("Day 1",290,700);x.fillText("Day "+Math.min(stats.day||7,99),W-290,700);
   x.font=`700 34px ${SERIF}`;x.fillStyle="#173D3B";x.fillText(gemName(f.gem),290,750);x.fillText(gemName(now),W-290,750);
   x.fillStyle="#A87B2A";x.font=`700 60px ${SANS}`;x.fillText("→",W/2,470);
-  const rows=[["걸어온 날",stats.days],["남긴 한 줄",stats.logs],["다시 읽기",Math.max(0,stats.analyses-1)],["친구",stats.connections],["받은 공감",stats.reactionsReceived+stats.wordsReceived]];
+  const rows=[["걸어온 날",stats.active],["남긴 한 줄",stats.logs],["다시 읽기",Math.max(0,stats.analyses-1)],["친구",stats.connections],["받은 공감",stats.reactionsReceived+stats.wordsReceived]];
   const bw=(W-180)/rows.length;rows.forEach(([k,v],i)=>{const cx=90+bw*i+bw/2;x.fillStyle="#FBFAF5";x.fillRect(90+bw*i+8,820,bw-16,150);x.fillStyle="#173D3B";x.font=`700 56px ${SERIF}`;x.fillText(String(v),cx,905);x.fillStyle="#66706E";x.font=`500 24px ${SANS}`;x.fillText(k,cx,945)});
   const diff=[];if(now.hardness>(f.gem.hardness||1))diff.push(`강(剛) ${f.gem.hardness}→${now.hardness}`);if(now.grain>(f.gem.grain||0))diff.push(`금빛 결 +${now.grain-(f.gem.grain||0)}`);if(now.facets>(f.gem.facets||8))diff.push(`각(角) ${f.gem.facets}→${now.facets}면`);if(now.stone!==f.gem.stone)diff.push(`색 ${f.gem.stone}→${now.stone}`);
   x.fillStyle="#1F2A28";x.font=`500 32px ${SANS}`;x.fillText(diff.length?"젬이 달라진 곳 · "+diff.join(" · "):"젬의 모양은 그대로, 걸어온 시간은 쌓였습니다",W/2,1050);

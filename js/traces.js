@@ -71,8 +71,8 @@ function ShotSource({s,setDraft,toast}){
   ${kind&&html`<div className="panel lk-panel stack">
    <div className="row between" style=${{flexWrap:"nowrap"}}><span className="row" style=${{gap:"10px",flexWrap:"nowrap"}}><${LinkMono} svc=${kind}/><b>${kind.n}</b></span><button className="linkbtn small" onClick=${()=>setSel(null)}>닫기</button></div>
    <p className="small" style=${{margin:0}}>${kind.how}</p>
-   <div className="thumbs">${urls.map((u,i)=>html`<img key=${i} src=${u} alt=${`올린 캡처 ${i+1}`}/>`)}</div>
-   <div className="row"><label className="btn quiet sm filebtn">캡처 고르기<input type="file" id="shot-file" accept="image/jpeg,image/png,image/webp" multiple onChange=${e=>setCaps([...e.target.files].slice(0,3))}/></label><button className="btn sm" disabled=${busy||!caps.length} onClick=${read}>${busy?"읽는 중…":"이 화면 읽기"}</button></div>
+   <${PickThumbs} urls=${urls} files=${caps} onChange=${setCaps} max=${3} id="shot-file" label="캡처 고르기" alt="올린 캡처" toast=${toast}/>
+   <button className="btn sm" style=${{alignSelf:"flex-start"}} disabled=${busy||!caps.length} onClick=${read}>${busy?"읽는 중…":`이 화면 ${caps.length||""}장 읽기`}</button>
    <span className="hint">캡처는 읽는 데만 쓰고 저장하지 않아요. 오늘의 AI 읽기 1회를 써요. 금융·건강 앱은 이름 대신 갈래로만 적어요.</span>
    ${err&&html`<p className="err" role="alert" style=${{margin:0}}>${err}</p>`}</div>`}
  </div>`;

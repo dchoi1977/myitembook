@@ -227,8 +227,8 @@ function LinkPanel({svc,cur,onDone,onClose}){
     <div className="segs mini" role="group" aria-label="건네는 방법">${svc.modes.map(m=>html`<button key=${m} aria-pressed=${mode===m} onClick=${()=>{setMode(m);setErr("")}}>${MODE_N[m]}</button>`)}</div>
     ${mode==="cap"&&html`<div className="stack">
       <p className="small" style=${{margin:0}}><b>가장 빨라요.</b> 내 프로필 화면(소개와 게시물 목록이 보이게)을 캡처해 1~3장 올리면, 보이는 것만 AI가 읽어요.</p>
-      <div className="thumbs">${urls.map((u,i)=>html`<img key=${i} src=${u} alt=${`올린 캡처 ${i+1}`}/>`)}</div>
-      <div className="row"><label className="btn quiet sm filebtn">캡처 고르기<input type="file" id="lk-caps" accept="image/jpeg,image/png,image/webp" multiple onChange=${e=>setCaps([...e.target.files].slice(0,3))}/></label><button className="btn sm" disabled=${busy||!caps.length} onClick=${readCaps}>${busy?"읽는 중…":"이 화면 읽기"}</button></div>
+      <${PickThumbs} urls=${urls} files=${caps} onChange=${setCaps} max=${3} id="lk-caps" label="캡처 고르기" alt="올린 캡처"/>
+      <button className="btn sm" style=${{alignSelf:"flex-start"}} disabled=${busy||!caps.length} onClick=${readCaps}>${busy?"읽는 중…":`이 화면 ${caps.length||""}장 읽기`}</button>
       <span className="hint">캡처는 읽는 데만 쓰고 저장하지 않아요. 오늘의 AI 읽기 1회를 써요. 다른 사람이 보이는 화면은 피해 주세요.</span></div>`}
     ${mode==="file"&&html`<div className="stack">
       <p className="small" style=${{margin:0}}><b>가장 정확해요.</b> ${svc.n}에서 직접 받은 '내 정보' 파일을 올리면 전체 게시 기록의 수·기간·주기까지 읽어요.</p>

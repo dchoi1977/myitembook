@@ -1,26 +1,31 @@
 "use strict";
 /* MIB CBT · 친구에게 묻기 — 나에 대한 질문을 친구에게 한 번씩, 질문지는 날마다 하나씩 열림 */
 
-function askSummary(stat){
- const qs=(stat&&stat.questions)||[];
- const next=qs.find(q=>q.open&&!q.round);
+function askSummary(stat,skip){
+ const qs=(stat&&stat.questions)||[];const sk=new Set(skip||[]);
+ const next=qs.find(q=>q.open&&!q.round&&!sk.has(q.id));
+ const skipped=qs.filter(q=>q.open&&!q.round&&sk.has(q.id));
  const locked=qs.find(q=>!q.open);
  const sent=qs.filter(q=>q.round);
  const answers=sent.reduce((n,q)=>n+((q.round.targets||[]).filter(t=>t.answer).length),0);
- return {qs,next,locked,sent,answers};
+ return {qs,next,locked,sent,answers,skipped};
 }
 
-function AskPanel({stat,incoming,names,onOpen,friendsCount}){
+function AskPanel({stat,incoming,names,onOpen,friendsCount,st,update,toast}){
  if(!stat)return null;
- const {next,locked,sent,answers}=askSummary(stat);
+ const skip=(st&&st.flags&&st.flags.askSkip)||[];
+ const {next,locked,sent,answers,skipped}=askSummary(stat,skip);
+ const pass=q=>{if(!update)return;update(s=>{s.flags.askSkip=[...new Set([...(s.flags.askSkip||[]),q.id])]});track("ask_skip",{q:q.ord});toast&&toast("이 질문은 넘겼어요. 나중에 다시 꺼낼 수 있어요.")};
+ const unskip=()=>{update&&update(s=>{s.flags.askSkip=[]});track("ask_unskip")};
  const pending=(incoming||[]).filter(a=>!a.answer);
  return html`<div className="panel stack ask-panel">
   <div className="row between"><b>친구에게 묻기</b><span className="small faint">질문지 ${sent.length} / ${stat.questions.length}</span></div>
   ${pending.length>0&&html`<button className="ask-incoming" onClick=${()=>onOpen("answer")}><span className="ask-dot" aria-hidden="true"></span><span className="grow"><b>${nick(names,pending[0].owner)}</b>님${pending.length>1?` 외 ${pending.length-1}명`:""}이 묻고 있어요<br/><span className="small">"${pending[0].text}"</span></span><span className="chev">답하기 ›</span></button>`}
   ${next?html`<div className="ask-q"><span className="ask-no">Q${next.ord}</span><span className="grow"><b className="serif">${next.text}</b><br/><span className="small muted">친구들에게 한 번만 물을 수 있어요 · 답은 나만 봐요</span></span></div>
-   <button className="btn sm" disabled=${!friendsCount} onClick=${()=>onOpen("ask:"+next.id)}>${friendsCount?"친구에게 묻기":"친구를 맺으면 물을 수 있어요"}</button>`
+   <div className="row" style=${{gap:"8px"}}><button className="btn sm grow" disabled=${!friendsCount} onClick=${()=>onOpen("ask:"+next.id)}>${friendsCount?"친구에게 묻기":"친구를 맺으면 물을 수 있어요"}</button>${update&&html`<button className="btn ghost sm" onClick=${()=>pass(next)} aria-label="이 질문 넘기고 다른 질문 보기">다른 질문</button>`}</div>`
   :locked?html`<div className="ask-q locked"><span className="ask-no">🔒</span><span className="grow"><b>다음 질문은 Day ${locked.unlock_day}에 열려요</b><br/><span className="small muted">질문지는 하루에 하나씩 늘어나요</span></span></div>`
   :html`<p className="small muted">준비된 질문을 모두 물었어요. 새 질문이 생기면 여기 나타나요.</p>`}
+  ${skipped.length>0&&html`<button className="linkbtn small" style=${{color:"var(--ink-3)"}} onClick=${unskip}>넘긴 질문 ${skipped.length}개 다시 꺼내기</button>`}
   ${sent.length>0&&html`<button className="linkbtn small" onClick=${()=>onOpen("asks")}>친구들이 본 나 · 답 ${answers}개 ›</button>`}
  </div>`;
 }
@@ -51,9 +56,13 @@ function AnswersSheet({stat,names,onClose,openUser}){
  <//>`;
 }
 
-function AnswerSheet({incoming,names,onClose,toast,onDone,focus}){
+function AnswerSheet({incoming,names,onClose,toast,onDone,focus,st,update}){
+ const passed=(st&&st.flags&&st.flags.askPass)||{};const [showPassed,setShowPassed]=useState(false);
  if(typeof useFocusJump==="function")useFocusJump(focus?"ask-"+focus:null,(incoming||[]).length);
- const list=[...(incoming||[])].sort((a,b)=>((focus&&b.round===focus)?1:0)-((focus&&a.round===focus)?1:0)||(a.answer?1:0)-(b.answer?1:0));
+ const nPassed=(incoming||[]).filter(a=>!a.answer&&passed[a.round]).length;
+ const pass=a=>{update(s=>{s.flags.askPass={...(s.flags.askPass||{}),[a.round]:Date.now()}});track("ask_pass");toast("이 질문은 넘겼어요. 답하지 않아도 괜찮아요.")};
+ const unpass=a=>update(s=>{const m={...(s.flags.askPass||{})};delete m[a.round];s.flags.askPass=m});
+ const list=[...(incoming||[])].filter(a=>showPassed||a.answer||!passed[a.round]||a.round===focus).sort((a,b)=>((focus&&b.round===focus)?1:0)-((focus&&a.round===focus)?1:0)||(a.answer?1:0)-(b.answer?1:0));
  const [vals,setVals]=useState({});const [busy,setBusy]=useState(null);
  async function answer(a){const v=(vals[a.round]||"").trim();if(!v)return;setBusy(a.round);try{const r=await api.askAnswer(a.round,v);if(r==="ok"){track("ask_answer");toast(`${nick(names,a.owner)}님에게 답을 보냈어요.`);onDone()}else toast(r==="already_answered"?"이미 답한 질문이에요.":"보내지 못했어요.")}catch(e){toast("보내지 못했어요.")}finally{setBusy(null)}}
  return html`<${Sheet} title="나에게 온 질문" onClose=${onClose}>
@@ -62,8 +71,10 @@ function AnswerSheet({incoming,names,onClose,toast,onDone,focus}){
    <b className="serif ask-text">"${a.text}"</b>
    ${a.answer?html`<div className="ask-mine"><span className="small faint">내 답</span><span>${a.answer}</span></div>`
    :html`<div className="field" style=${{margin:0}}><label htmlFor=${"ans-"+a.round} className="sr-only">답</label><textarea id=${"ans-"+a.round} rows=${a.max_len<=20?1:2} maxLength=${a.max_len} value=${vals[a.round]||""} onChange=${e=>setVals(v=>({...v,[a.round]:e.target.value}))} placeholder=${a.max_len<=20?"한마디로":"짧게 적어 주세요"}></textarea><span className="hint">${(vals[a.round]||"").length} / ${a.max_len} · 한 번 보내면 고칠 수 없어요 · ${nick(names,a.owner)}님만 봐요</span></div>
-    <button className="btn sm" disabled=${!(vals[a.round]||"").trim()||busy===a.round} onClick=${()=>answer(a)}>${busy===a.round?"보내는 중…":"답 보내기"}</button>`}
-  </div>`):html`<p className="small faint">아직 받은 질문이 없어요.</p>`}
+    <div className="row" style=${{gap:"8px"}}><button className="btn sm grow" disabled=${!(vals[a.round]||"").trim()||busy===a.round} onClick=${()=>answer(a)}>${busy===a.round?"보내는 중…":"답 보내기"}</button>${update&&(passed[a.round]?html`<button className="btn ghost sm" onClick=${()=>unpass(a)}>다시 답하기</button>`:html`<button className="btn ghost sm" onClick=${()=>pass(a)} aria-label="이 질문은 답하지 않고 넘기기">넘기기</button>`)}</div>`}
+  </div>`):html`<p className="small faint">${nPassed?"남은 질문은 모두 넘겼어요.":"아직 받은 질문이 없어요."}</p>`}
+  ${nPassed>0&&!showPassed&&html`<button className="linkbtn small" style=${{color:"var(--ink-3)"}} onClick=${()=>setShowPassed(true)}>넘긴 질문 ${nPassed}개 보기</button>`}
+  <p className="small faint">넘긴 질문은 묻는 사람에게 따로 알리지 않아요.</p>
  <//>`;
 }
 

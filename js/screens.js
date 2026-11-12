@@ -67,8 +67,7 @@ function Connect({draft,setDraft,rt,onNext,onBack,hasItems,allowEmpty,nextLabel,
    <//>
    ${canPhotos?html`<${SourceCard} icon="photo" title="사진 갤러리" desc=${`나를 보여 주는 사진 최대 ${maxPhotos}장`} open=${open==="photo"} onToggle=${()=>tog("photo")} filled=${draft.photos.length>0}>
     <p className="small muted">취미·여가·특기·관심사가 드러나는 사진을 골라 주세요. 사진은 해석에만 쓰고 저장하지 않으며, 얼굴로 사람을 알아보지 않습니다.</p>
-    <div className="thumbs">${urls.map((u,i)=>html`<img key=${i} src=${u} alt=${`고른 사진 ${i+1}`}/>`)}</div>
-    <div className="row"><label className="btn quiet sm filebtn">사진 고르기<input type="file" id="src-photos" accept="image/jpeg,image/png,image/webp" multiple onChange=${e=>{const f=[...e.target.files].slice(0,maxPhotos);setDraft(d=>({...d,photos:f}))}}/></label>${draft.photos.length>0&&html`<button className="linkbtn" onClick=${()=>setDraft(d=>({...d,photos:[]}))}>모두 빼기</button>`}</div>
+    <${PickThumbs} urls=${urls} files=${draft.photos} onChange=${f=>setDraft(d=>({...d,photos:f}))} max=${maxPhotos} id="src-photos" label="사진 고르기" alt="고른 사진"/>
    <//>`:null}
   </div>
   ${hasItems&&html`<p className="small muted">선반에 담은 아이템도 함께 읽습니다.</p>`}
@@ -273,7 +272,7 @@ function AttrsSheet({st,update,onClose}){
  return html`<${Sheet} title="젬의 8가지 속성" onClose=${onClose}>
   <${GemView} g=${g} seed=${st.createdAt} size=${200}/>
   <p className="small muted" style=${{textAlign:"center"}}>모든 젬은 같은 크기와 같은 밝기로 그려집니다. 다른 것은 모양과 결이고, 좋고 나쁜 값은 없습니다.</p>
-  ${a.stoneSuggest&&a.stoneSuggest!==g.stone&&html`<div className="panel tint stack small"><span>다시 읽어 보니 <b>${a.stoneSuggest}</b>(${STONES[a.stoneSuggest].meaning})의 결이 짙어졌어요. 젬의 색을 바꿀까요?</span><div className="row"><button className="btn sm" onClick=${()=>{update(x=>{x.gemOverride={...x.gemOverride,stone:x.analysis.stoneSuggest};x.analysis.stoneSuggest=null;x.flags.celebrate=true});track("stone_accept")}}>${a.stoneSuggest}로 바꾸기</button><button className="btn ghost sm" onClick=${()=>{update(x=>{x.analysis.stoneSuggest=null});track("stone_keep")}}>지금 색 그대로</button></div></div>`}
+  ${a.stoneSuggest&&a.stoneSuggest!==g.stone&&html`<div className="panel tint stack small"><span>다시 읽어 보니 <b>${a.stoneSuggest}</b>(${STONES[a.stoneSuggest].meaning})의 결이 짙어졌어요. 젬의 색을 바꿀까요?</span><div className="row"><button className="btn sm" onClick=${()=>{update(x=>{x.gemOverride={...x.gemOverride,stone:x.analysis.stoneSuggest};x.analysis.stoneSuggest=null;x.flags.celebrate=true});track("stone_accept")}}>${josa(a.stoneSuggest,"으로")} 바꾸기</button><button className="btn ghost sm" onClick=${()=>{update(x=>{x.analysis.stoneSuggest=null});track("stone_keep")}}>지금 색 그대로</button></div></div>`}
   <div>${ATTRS.map(t=>html`<div className="attr" key=${t.k}>
    <div className="k">${t.k}${t.h&&html`<small>${t.h}</small>`}</div>
    <div className="stack" style=${{gap:"4px"}}>
@@ -455,8 +454,8 @@ function StepTab({st,update,stats,canAI,toast,onOpen,demo}){
   </div>
   <${DailyLog} st=${st} update=${update} toast=${toast} demo=${demo}/>
   <${StayCard} st=${st} onOpen=${onOpen}/>
-  <div className="stack"><h2 className="h3">이번 주</h2><div className="week">${week.map(d=>{const dt=new Date(d+"T00:00:00");const c=st.steps.done.includes(d)?"done":st.steps.rests.includes(d)?"rest":"";return html`<div className="day" key=${d}><span>${dn[dt.getDay()]}</span><span className=${"dot "+c+(d===t?" today":"")} aria-label=${d+(c==="done"?" 완료":c==="rest"?" 쉼":"")}>${c==="done"?"✓":c==="rest"?"쉼":dt.getDate()}</span></div>`})}</div></div>
-  <div className="stat"><div><b>${stats.days}</b><span>걸어온 날</span></div><div><b>${stats.logs}</b><span>남긴 한 줄</span></div><div><b>${stats.rests}</b><span>쉬어간 날</span></div><div><b>${stats.comebacks}</b><span>다시 시작</span></div></div>
+  <div className="stack"><h2 className="h3">이번 주</h2><div className="week">${(()=>{const act=activeDaySet(st);return week.map(d=>{const dt=new Date(d+"T00:00:00");const c=st.steps.done.includes(d)?"done":act.has(d)?"trace":st.steps.rests.includes(d)?"rest":"";return html`<div className="day" key=${d}><span>${dn[dt.getDay()]}</span><span className=${"dot "+c+(d===t?" today":"")} aria-label=${d+(c==="done"?" 한 걸음 완료":c==="trace"?" 기록을 남김":c==="rest"?" 쉼":"")}>${c==="done"?"✓":c==="rest"?"쉼":dt.getDate()}</span></div>`})})()}</div><span className="small faint">✓ 한 걸음을 한 날 · 옅게 칠한 날은 한 줄·인터뷰·머문 곳을 남긴 날</span></div>
+  <div className="stat"><div><b>${stats.active}</b><span>걸어온 날</span></div><div><b>${stats.logs}</b><span>남긴 한 줄</span></div><div><b>${stats.rests}</b><span>쉬어간 날</span></div><div><b>${stats.comebacks}</b><span>다시 시작</span></div></div>
   <p className="note">남은 거리 대신 걸어온 거리를 셉니다. 연속 기록이 끊겨도 아무것도 잃지 않아요.</p>
   <${Reflection} st=${st} update=${update} canAI=${canAI} existing=${thisRef} wk=${wk} toast=${toast}/>
   <div className="stack"><div className="row between"><h2 className="h3">배지 시즌 1</h2><span className="small faint">${earnedIds(st,stats).length} / ${BADGES.length}</span></div>

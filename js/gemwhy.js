@@ -7,7 +7,7 @@ const WHY_TEX={"맑음":"하루의 리듬이 가볍고 투명해서 속이 비�
 function gemWhyRows(g,seed,own){g=g||{};const I=gemIdentity(g,seed);const st=STONES[g.stone]||STONES["오팔"];const B=(own&&g.basis)||{},Rz=(own&&g.reasons)||{};const ev=k=>[B[k],Rz[k]].filter(Boolean).join(" · ").replace(/\bnull\b/g,"아직 모름");
  const facets=clamp(Math.round(g.facets||8),6,14),layers=clamp(2+Math.floor((facets-6)/3),2,4);
  return [
-  {k:"색",sub:"바탕과 속빛",v:I.variant,why:`핵심 가치 '${st.meaning}'에서 ${g.stone||"오팔"}이 됐어요. 같은 ${g.stone||"오팔"}이라도 빛깔은 사람마다 달라서, 이 젬은 '${I.variant}' 빛깔을 타고났어요.`,ev:ev("색")},
+  {k:"색",sub:"바탕과 속빛",v:I.variant,why:`핵심 가치 '${st.meaning}'에서 ${josa(g.stone||"오팔","이")} 됐어요. 같은 ${josa(g.stone||"오팔","이라도")} 빛깔은 사람마다 달라서, 이 젬은 '${I.variant}' 빛깔을 타고났어요.`,ev:ev("색")},
   {k:"형",sub:"실루엣",v:`${g.form||"덩이"} · ${I.cut}`,why:`${WHY_FORM[g.form]||WHY_FORM["덩이"]} 세부 모양 '${I.cut}'${(I.aw||[]).some(a=>a.kind==="모양")?"은 연마 단계가 오르며 깨어난 모양이에요.":"은 이 젬이 타고난 개성이에요."}`,ev:ev("형")},
   {k:"빛",sub:"퍼지는 방식",v:g.light||"번짐",why:`${WHY_LIGHT[g.light]||WHY_LIGHT["번짐"]} 밝기는 모든 젬이 같고, 퍼지는 무늬만 달라요.`,ev:ev("빛")},
   {k:"질",sub:"표면의 리듬",v:g.texture||"맑음",why:WHY_TEX[g.texture]||WHY_TEX["맑음"],ev:ev("질")},

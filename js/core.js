@@ -5,6 +5,9 @@ const html=htm.bind(React.createElement);
 
 /* ───────── utilities ───────── */
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+/* 받침에 맞는 조사 — josa("호박","으로") → "호박으로", josa("오팔","으로") → "오팔로", josa("진주","이") → "진주가" */
+function josa(w,p){w=String(w||"");const c=w.charCodeAt(w.length-1);const has=c>=0xAC00&&c<=0xD7A3?(c-0xAC00)%28:0;const pairs={"이":["가","이"],"가":["가","이"],"을":["를","을"],"를":["를","을"],"은":["는","은"],"는":["는","은"],"과":["와","과"],"와":["와","과"],"이라도":["라도","이라도"],"이에요":["예요","이에요"]};
+ if(p==="으로"||p==="로")return w+(has&&has!==8?"으로":"로");const q=pairs[p];return q?w+(has?q[1]:q[0]):w+p}
 const pad=n=>String(n).padStart(2,"0");
 const dayKey=(d=new Date())=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 const addDays=(k,n)=>{const [y,m,d]=k.split("-").map(Number);return dayKey(new Date(y,m-1,d+n))};
@@ -493,7 +496,8 @@ function displaySentence(a){return (a&&(a.editSentence||a.sentence))||""}
 function displayKeywords(a){return (a&&(a.editKeywords||a.keywords))||[]}
 function visibleAxes(a){if(!a)return [];return a.axes.map((x,i)=>({...x,i})).filter(x=>!(a.hiddenAxes||[]).includes(x.i))}
 const HARD_STEPS=[3,7,21,60];
-function activeDays(st){return new Set([...((st.heart&&st.heart.a)||[]).filter(x=>x&&x.a).map(x=>x.day),...(st.steps.done||[]),...(st.logs||[]).map(l=>l.day),...(st.stays||[]).map(x=>x.day)]).size}
+function activeDaySet(st){return new Set([...((st.heart&&st.heart.a)||[]).filter(x=>x&&x.a).map(x=>x.day),...(st.steps.done||[]),...(st.logs||[]).map(l=>l.day),...(st.stays||[]).map(x=>x.day)].filter(Boolean))}
+function activeDays(st){return activeDaySet(st).size}
 function livingGem(st){
  const a=st.analysis;if(!a)return null;const g={...a.gem,...(st.gemOverride||{})};
  const days=activeDays(st);
@@ -647,6 +651,7 @@ function errCopy(e){const c=e&&e.code;switch(c){
  case "prompt_too_large":return "건넨 기록이 너무 깁니다. 조금 줄여서 다시 시도해 주세요.";
  case "image_rejected":return "사진 중 읽을 수 없는 파일이 있습니다. 다른 사진으로 바꿔 주세요.";
  case "invalid_json":return "AI 답을 읽지 못했습니다. 한 번 더 시도해 주세요.";
+ case "too_long":return "한 번에 읽을 내용이 많았어요. 사진을 1~2장씩 나눠서 다시 올려 주세요.";
  case "network":return "인터넷 연결을 확인한 뒤 다시 시도해 주세요.";
  case "cancelled":return "읽기를 멈췄습니다.";
  default:return "해석 결과를 받지 못했습니다. 다시 시도해 주세요.";}}
@@ -655,6 +660,14 @@ async function imageForAI(file){const d=await compressImage(file,1280,.82);retur
 async function compressImage(file,max,q){const url=URL.createObjectURL(file);try{const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=url});const s=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight));const c=document.createElement("canvas");c.width=Math.max(1,Math.round(img.naturalWidth*s));c.height=Math.max(1,Math.round(img.naturalHeight*s));c.getContext("2d").drawImage(img,0,0,c.width,c.height);return c.toDataURL("image/jpeg",q)}finally{URL.revokeObjectURL(url)}}
 
 /* ───────── small UI pieces ───────── */
+/* 여러 장 고르기 — 고를 때마다 더해지고(최대 max장), 사진마다 ×로 뺄 수 있다 */
+function addPicks(prev,list,max){const key=f=>f.name+"|"+f.size+"|"+f.lastModified;const seen=new Set(prev.map(key));const out=[...prev];for(const f of list){if(out.length>=max)break;if(!seen.has(key(f))){seen.add(key(f));out.push(f)}}return out}
+function PickThumbs({urls,files,onChange,max,id,label,alt,toast}){
+ const choose=e=>{const fl=[...(e.target.files||[])];e.target.value="";if(!fl.length)return;const next=addPicks(files,fl,max);if(toast&&files.length+fl.length>max)toast(`최대 ${max}장까지 올릴 수 있어요.`);onChange(next)};
+ return html`<div className="stack" style=${{gap:"8px"}}>
+  ${files.length>0&&html`<div className="thumbs">${urls.map((u,i)=>html`<span key=${u} className="thumb-x"><img src=${u} alt=${`${alt||"고른 사진"} ${i+1}`}/><button type="button" className="thumb-del" aria-label=${`${alt||"고른 사진"} ${i+1} 빼기`} onClick=${()=>onChange(files.filter((_,j)=>j!==i))}>×</button></span>`)}</div>`}
+  <div className="row" style=${{gap:"10px",alignItems:"center"}}>${files.length<max&&html`<label className="btn quiet sm filebtn">${files.length?"+ 더 고르기":label||"사진 고르기"}<input type="file" id=${id} accept="image/jpeg,image/png,image/webp" multiple onChange=${choose}/></label>`}<span className="small faint">${files.length} / ${max}장</span>${files.length>1&&html`<button type="button" className="linkbtn small" onClick=${()=>onChange([])}>모두 빼기</button>`}</div>
+ </div>`}
 const ICON={
  link:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a4.5 4.5 0 006.4 0l3-3a4.5 4.5 0 00-6.4-6.4l-1.2 1.2"/><path d="M14 10a4.5 4.5 0 00-6.4 0l-3 3a4.5 4.5 0 006.4 6.4l1.2-1.2"/></svg>`,
  me:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3l7 6-7 12-7-12z"/><path d="M5 9h14M12 3v18"/></svg>`,
@@ -687,9 +700,14 @@ function useBackLayer(onClose){const ref=useRef(onClose);ref.current=onClose;
   /* a page that replaces another in the same moment reuses its history entry */
   if(BACK.pend>0)BACK.pend--;else{try{history.pushState({mib:"layer"},"")}catch(e){}}
   return()=>{const i=BACK.layers.indexOf(layer);if(i>=0){BACK.layers.splice(i,1);if(!layer.byPop){BACK.pend++;if(!BACK.timer)BACK.timer=setTimeout(backFlush,0)}}}},[])}
+/* PC에서는 '나를 꾸미는 화면'을 옆 창 대신 가운데 본문 페이지로 연다 */
+const PageCtx=React.createContext(false);
+const PAGE_KEYS=["identity","identityproof","shelf","shelfscan","publish","achieve","badgebox","attrs","evidence"];
 function Sheet({title,onClose,children}){
+ const page=React.useContext(PageCtx);
  useBackLayer(onClose);
- const ref=useRef(null);useEffect(()=>{ref.current&&ref.current.focus();const prev=document.body.style.overflow;document.body.style.overflow="hidden";const k=e=>{if(e.key==="Escape")onClose()};window.addEventListener("keydown",k);return()=>{window.removeEventListener("keydown",k);document.body.style.overflow=prev}},[]);
+ const ref=useRef(null);useEffect(()=>{if(page){window.scrollTo(0,0);ref.current&&ref.current.focus({preventScroll:true})}else ref.current&&ref.current.focus();const prev=document.body.style.overflow;if(!page)document.body.style.overflow="hidden";const k=e=>{if(e.key==="Escape"&&!(page&&document.querySelector(".sheet")))onClose()};window.addEventListener("keydown",k);return()=>{window.removeEventListener("keydown",k);if(!page)document.body.style.overflow=prev}},[]);
+ if(page)return html`<section className="main wrap page-sheet" aria-label=${title}><div className="page-head"><button className="linkbtn page-back" ref=${ref} onClick=${onClose}><${Ico} n="back"/>나로 돌아가기</button><h1 className="h2">${title}</h1></div><div className="page-body">${children}</div></section>`;
  return html`<div className="sheet" role="dialog" aria-modal="true" aria-label=${title}><div className="sheet-inner"><div className="sheet-head wrap"><button className="iconbtn" ref=${ref} onClick=${onClose} aria-label="닫기"><${Ico} n="back"/></button><h2>${title}</h2></div><div className="sheet-body wrap">${children}</div></div></div>`;
 }
 function AiLabel({status}){if(status==="yes")return html`<span className="ai-label ok"><i></i>AI 해석 · 내가 확인함</span>`;if(status==="edited")return html`<span className="ai-label ok"><i></i>AI 해석 · 내가 다듬음</span>`;return html`<span className="ai-label"><i></i>AI 해석 · 아직 확인 전</span>`}

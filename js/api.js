@@ -6,7 +6,8 @@ function cbtDay(joinedAt){if(!joinedAt)return 1;return Math.max(1,daysBetween(ks
 const Err=(code,extra)=>Object.assign({code},extra||{});
 async function Q(p){const {data,error}=await p;if(error)throw Err(error.code||"db_error",{message:error.message});return data}
 function dataUrlToBlob(u){const [h,b]=u.split(",");const mime=(h.match(/data:([^;]+)/)||[])[1]||"image/jpeg";const bin=atob(b);const arr=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);return new Blob([arr],{type:mime})}
-function parseJSON(text){const a=String(text||"").indexOf("{"),b=String(text||"").lastIndexOf("}");if(a<0||b<=a)throw Err("invalid_json");try{return JSON.parse(text.slice(a,b+1))}catch(e){throw Err("invalid_json")}}
+function parseJSON(text){const t=String(text||"").replace(/```(?:json)?/gi,"");const a=t.indexOf("{"),b=t.lastIndexOf("}");if(a<0||b<=a)throw Err("invalid_json");const body=t.slice(a,b+1);try{return JSON.parse(body)}catch(e){}
+ try{return JSON.parse(body.replace(/[\u201c\u201d]/g,'"').replace(/,\s*([}\]])/g,"$1").replace(/[\u0000-\u001f]+/g," "))}catch(e){throw Err("invalid_json")}}
 
 const api={
  sb,
@@ -112,7 +113,7 @@ const api={
  async link(kind,ref){const pub=typeof linkSvc==="function"&&linkSvc(kind).pub;return this.call("fetch",{kind,ref},{url:pub?MIB_CONFIG.fnPub:MIB_CONFIG.fnLink})},
  async googleClientId(){try{const r=await Q(sb.from("settings").select("value").eq("key","google_client_id").maybeSingle());return (r&&typeof r.value==="string")?r.value.trim():""}catch(e){return ""}},
  async ai({task,prompt,images,signal}){const r=await this.call("ai",{task,prompt,images:images||[]},{signal});return r},
- async aiJSON(o){const r=await this.ai(o);return parseJSON(r.text)},
+ async aiJSON(o){const r=await this.ai(o);try{return parseJSON(r.text)}catch(e){if(r.truncated)throw Err("too_long");throw e}},
  async deleteMe(){return this.call("delete_me",{})},
  // ── admin
  admin:{

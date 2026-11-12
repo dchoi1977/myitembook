@@ -130,7 +130,7 @@ async function ai(req: Request, b: any) {
   content.push({ type: "text", text: prompt });
   const body = {
     model: task === "read" ? MODEL_DEEP() : MODEL_QUICK(),
-    max_tokens: task === "read" ? 8000 : 1000,
+    max_tokens: task === "read" ? 8000 : Math.min(4000, Math.max(600, Number(b.max) || (images.length ? 3000 : 2000))),
     system: SYSTEM,
     messages: [{ role: "user", content }],
   };

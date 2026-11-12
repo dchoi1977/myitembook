@@ -184,6 +184,9 @@ textarea{min-height:110px;resize:vertical}
 .reads b{color:var(--ink);font-weight:700}
 .thumbs{display:flex;gap:8px;flex-wrap:wrap}
 .thumbs img{width:64px;height:64px;object-fit:cover;border-radius:10px;border:1px solid var(--line)}
+.thumb-x{position:relative;display:inline-flex}
+.thumb-del{position:absolute;top:-7px;right:-7px;width:24px;height:24px;border-radius:50%;border:2px solid var(--bg,#fff);background:var(--ink,#1F2A28);color:#fff;font-size:15px;line-height:1;display:grid;place-items:center;padding:0;cursor:pointer}
+.thumb-del:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .filebtn{position:relative;overflow:hidden}
 .filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
 
@@ -274,6 +277,7 @@ label.btn{display:inline-flex;align-items:center;justify-content:center;cursor:p
 .day{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12px;color:var(--ink-3)}
 .dot{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;font-size:11px;font-weight:700;color:var(--ink-3);background:var(--card)}
 .dot.done{background:var(--accent-bg);border-color:var(--accent-bg);color:var(--on-accent)}
+.dot.trace{background:var(--sage-soft);border-color:var(--accent);color:var(--accent);font-weight:700}
 .dot.rest{border-color:var(--sage);background:var(--sage-soft);color:var(--accent)}
 .dot.today{box-shadow:0 0 0 2px var(--paper),0 0 0 4px var(--gold)}
 .stat{display:flex;gap:10px}
@@ -328,6 +332,9 @@ label.btn{display:inline-flex;align-items:center;justify-content:center;cursor:p
 .react{display:inline-flex;align-items:center;gap:6px;min-height:42px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--accent);font:inherit;font-size:14px;font-weight:700;cursor:pointer}
 .react.sm{min-height:34px;padding:0 11px;font-size:12.5px;flex:none}
 .react[aria-pressed=true]{background:var(--accent-bg);color:var(--on-accent);border-color:var(--accent-bg)}
+.react.on{background:#8A6420;border-color:#8A6420;color:#fff;font-weight:700}
+.list-row.cheered{background:rgba(184,134,47,.08)}
+.feed-mine{padding:8px 12px;border-radius:12px;background:rgba(184,134,47,.08);color:#6E5019;align-items:center}
 .react:disabled{opacity:.5}
 .dotmark{width:8px;height:8px;border-radius:50%;background:transparent;flex:none;align-self:center}
 .dotmark.on{background:var(--gold)}
@@ -534,6 +541,11 @@ label.btn{display:inline-flex;align-items:center;justify-content:center;cursor:p
  body{background:var(--paper-2)}
  .app.desk{max-width:1360px;width:calc(100% - 48px);margin:24px auto;min-height:calc(100vh - 48px);border-radius:24px;box-shadow:0 0 0 1px var(--line),0 40px 80px -40px rgba(10,30,28,.35);overflow:clip}
  .app.desk>.top{padding-inline:24px}
+ .page-sheet{padding-top:22px}
+.page-head{display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding-bottom:12px;margin-bottom:14px;border-bottom:1px solid var(--line)}
+.page-back{display:inline-flex;align-items:center;gap:4px;font-size:13px;color:var(--ink-3);padding:0}
+.page-back svg{width:16px;height:16px}
+.page-body{display:flex;flex-direction:column;gap:16px}
  .shell{flex:1;display:grid;grid-template-columns:232px minmax(0,1fr) 340px;align-items:start}
  .side{position:sticky;top:65px;align-self:start;height:calc(100vh - 113px);display:flex;flex-direction:column;gap:2px;padding:16px 12px;border-right:1px solid var(--line);overflow-y:auto}
  .side-me{display:flex;align-items:center;gap:10px;width:100%;padding:8px;margin-bottom:10px;border:1px solid var(--line);border-radius:14px;background:var(--card);font:inherit;color:inherit;text-align:left;cursor:pointer}
@@ -958,33 +970,33 @@ button.crest{cursor:pointer;border-radius:12px}button.crest:hover{background:rgb
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/htm@3.1.1/dist/htm.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
-<script src="js/config.js?v=110"></script>
-<script src="js/core.js?v=110"></script>
-<script src="js/zodiac.js?v=110"></script>
-<script src="js/stage.js?v=110"></script>
-<script src="js/api.js?v=110"></script>
-<script src="js/support.js?v=110"></script>
-<script src="js/avatars.js?v=110"></script>
-<script src="js/links.js?v=110"></script>
-<script src="js/traces.js?v=110"></script>
-<script src="js/google.js?v=110"></script>
-<script src="js/screens.js?v=110"></script>
-<script src="js/social.js?v=110"></script>
-<script src="js/ops.js?v=110"></script>
-<script src="js/quick.js?v=110"></script>
-<script src="js/heart.js?v=110"></script>
-<script src="js/evolve.js?v=110"></script>
-<script src="js/achieve.js?v=110"></script>
-<script src="js/bonds.js?v=110"></script>
-<script src="js/gems.js?v=110"></script>
-<script src="js/showcase.js?v=110"></script>
-<script src="js/ask.js?v=110"></script>
-<script src="js/places.js?v=110"></script>
-<script src="js/updates.js?v=110"></script>
-<script src="js/insignia.js?v=110"></script>
-<script src="js/gem3d.js?v=110"></script>
-<script src="js/gemwhy.js?v=110"></script>
-<script src="js/samples.js?v=110"></script>
-<script src="js/app.js?v=110"></script>
+<script src="js/config.js?v=111"></script>
+<script src="js/core.js?v=111"></script>
+<script src="js/zodiac.js?v=111"></script>
+<script src="js/stage.js?v=111"></script>
+<script src="js/api.js?v=111"></script>
+<script src="js/support.js?v=111"></script>
+<script src="js/avatars.js?v=111"></script>
+<script src="js/links.js?v=111"></script>
+<script src="js/traces.js?v=111"></script>
+<script src="js/google.js?v=111"></script>
+<script src="js/screens.js?v=111"></script>
+<script src="js/social.js?v=111"></script>
+<script src="js/ops.js?v=111"></script>
+<script src="js/quick.js?v=111"></script>
+<script src="js/heart.js?v=111"></script>
+<script src="js/evolve.js?v=111"></script>
+<script src="js/achieve.js?v=111"></script>
+<script src="js/bonds.js?v=111"></script>
+<script src="js/gems.js?v=111"></script>
+<script src="js/showcase.js?v=111"></script>
+<script src="js/ask.js?v=111"></script>
+<script src="js/places.js?v=111"></script>
+<script src="js/updates.js?v=111"></script>
+<script src="js/insignia.js?v=111"></script>
+<script src="js/gem3d.js?v=111"></script>
+<script src="js/gemwhy.js?v=111"></script>
+<script src="js/samples.js?v=111"></script>
+<script src="js/app.js?v=111"></script>
 </body>
 </html>
