@@ -171,6 +171,7 @@ function App(){
   setSheet(k);
  }
  const openUser=(id,focus)=>{if(!id)return;setSheet("user:"+id+(focus?":"+focus:""))};
+ useEffect(()=>{if(profile&&profile.role==="admin"&&st&&/^#admin$/i.test(location.hash||"")){setRoute("admin");setSheet(null);try{history.replaceState(null,"",location.pathname+location.search)}catch(e){}}},[profile&&profile.role,!!st]);
  window.__openUser=openUser;window.__uid=uid;window.__reloadSoc=reloadSoc;
 
  // ── render
