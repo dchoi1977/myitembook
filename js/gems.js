@@ -26,7 +26,7 @@ async function renderPublicCardImage(card,name){
 }
 
 const UNCUT={stone:"수정",form:"덩이",texture:"유백",light:"번짐",facets:6,hardness:1,grain:0,polish:1};
-function MyGems({fids,cardOf,names,soc,uid,openUser,toast,onFind}){
+function MyGems({fids,cardOf,names,soc,uid,openUser,toast,onFind,reloadSoc,demo}){
  const desk=useDesktop();const cols=desk?6:4;
  const sorted=[...fids].sort((a,b)=>(cardOf(b)?1:0)-(cardOf(a)?1:0)||nick(names,a).localeCompare(nick(names,b)));
  const slots=Math.max(cols*2,Math.ceil((sorted.length+1)/cols)*cols);
@@ -74,7 +74,7 @@ function MyGems({fids,cardOf,names,soc,uid,openUser,toast,onFind}){
     </button>`})}
   </div>
   <p className="mg-note">카드를 공개한 친구는 빛나는 젬으로, 아직 공개 전인 친구는 깎이기 전 원석으로 담겨요. 젬을 누르면 카드가 열립니다.</p>
-  ${news&&html`<${GemNews} key=${news.id} name=${nick(names,news.id)} prev=${news.prev} card=${news.card} changes=${news.changes} feed=${news.feed} onClose=${()=>closeNews()} onCard=${()=>closeNews(id=>setPop(id))} onProfile=${()=>closeNews(id=>openUser(id))}/>`}
+  ${news&&html`<${GemNews} key=${news.id} name=${nick(names,news.id)} prev=${news.prev} card=${news.card} changes=${news.changes} feed=${news.feed} onClose=${()=>closeNews()} onCard=${()=>closeNews(id=>setPop(id))} onProfile=${()=>closeNews(id=>openUser(id,"cheer"))} uid=${uid} fid=${news.id} soc=${soc} reloadSoc=${reloadSoc} toast=${toast} demo=${demo}/>`}
   ${pop&&(cardOf(pop)?html`<${CardShowcase} key=${pop} faces=${otherCardFaces(cardOf(pop),nick(names,pop),pop)} toast=${toast} onClose=${()=>setPop(null)} onProfile=${()=>{const id=pop;setPop(null);openUser(id)}}/>`:html`<${GemPopup} id=${pop} card=${null} names=${names} onClose=${()=>setPop(null)} openUser=${id=>{setPop(null);openUser(id)}} toast=${toast}/>`)}
  </section>`;
 }

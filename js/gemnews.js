@@ -31,7 +31,7 @@ function friendDiff(p,c){if(!p||!c)return [];const out=[];const pg=p.g||{},cg=c.
 const gnGemChanged=ch=>ch.some(x=>x.k==="stage"||x.k==="stone"||x.k==="name"||x.k==="facets"||x.k.startsWith("aw:")||x.k.startsWith("mark:")||x.k==="hard"||x.k==="grain");
 
 /* 연출 + 카드뉴스 */
-function GemNews({name,prev,card,changes,feed,onClose,onCard,onProfile}){
+function GemNews({name,prev,card,changes,feed,onClose,onCard,onProfile,uid,fid,soc,reloadSoc,toast,demo}){
  const cur=friendSnap(card);const reduce=typeof matchMedia==="function"&&matchMedia("(prefers-reduced-motion: reduce)").matches;
  const morph=!!prev&&gnGemChanged(changes)&&!reduce;
  const [phase,setPhase]=useState(morph?"old":"cards");const [i,setI]=useState(0);const track_=useRef(null);
@@ -61,9 +61,21 @@ function GemNews({name,prev,card,changes,feed,onClose,onCard,onProfile}){
       <p className="small">${prev?`달라진 것 ${changes.length}가지`:list.length?`최근 소식 ${list.length}개`:"아직 소식이 없어요"} · 옆으로 넘겨 보세요 ›</p>`
     :p.k==="c"?html`<span className="gn-glyph"><${Glyph} name=${p.x.glyph} size=${34}/></span><h3 className="serif">${p.x.h}</h3><p>${p.x.d}</p>${p.x.big&&html`<div className="gn-mini"><${GemView} g=${cur.g} seed=${cur.n} size=${96}/></div>`}`
     :html`<span className="eyebrow">함께 기뻐하기</span><h3 className="serif">${name}님에게\n한마디 건네 볼까요?</h3>${more>0&&html`<p className="small">그 밖에 달라진 것 ${more}가지는 카드에서 볼 수 있어요.</p>`}
-      <div className="gn-acts"><button className="btn block" onClick=${onProfile}>응원·한 단어 남기러 가기</button><button className="btn ghost block" onClick=${onCard}>카드 펼쳐 보기</button><button className="linkbtn small" onClick=${onClose}>닫기</button></div>`}
+      <${GnCheer} uid=${uid} fid=${fid} soc=${soc} reloadSoc=${reloadSoc} toast=${toast} demo=${demo} words=${!!(card&&card.data&&card.data.acceptWords)}/>
+      <div className="gn-acts"><button className="btn ghost block" onClick=${onCard}>카드 펼쳐 보기</button><button className="linkbtn small" onClick=${onProfile}>프로필로 가기</button></div>`}
    </section>`)}
   </div>
   <div className="gn-nav"><button className="gn-arrow" aria-label="이전" disabled=${i===0} onClick=${()=>go(i-1)}>‹</button><div className="gn-dots">${pages.map((_,n)=>html`<i key=${n} className=${n===i?"on":""}></i>`)}</div><button className="gn-arrow" aria-label="다음" disabled=${i===pages.length-1} onClick=${()=>go(i+1)}>›</button></div>
  </div>`;
 }
+
+/* 마지막 장에서 바로 — 공감 세 가지와 한 단어 */
+function GnCheer({uid,fid,soc,reloadSoc,toast,demo,words}){
+ soc=soc||{};const [busy,setBusy]=useState(false);const myWord=(soc.wordsFrom||[]).find(w=>w.to_id===fid);const [word,setWord]=useState(myWord?myWord.word:"");
+ const mine=k=>(soc.reactFrom||[]).find(r=>r.to_id===fid&&r.target==="card"&&r.kind===k);
+ async function toggle(k){if(demo||busy||!fid)return;setBusy(true);try{const m=mine(k);if(m){await api.unreact(m.id)}else{await api.react(fid,k);track("react",{kind:k,from:"gemnews"});toast&&toast(`'${REACT[k].label}'를 건넸어요.`)}reloadSoc&&await reloadSoc()}catch(e){toast&&toast("공감을 남기지 못했습니다.")}finally{setBusy(false)}}
+ async function send(){const w=word.trim().slice(0,8);if(!w||demo||busy)return;setBusy(true);try{await api.word(uid,fid,w);track("word",{edit:!!myWord,from:"gemnews"});toast&&toast("한 단어를 건넸어요.");reloadSoc&&await reloadSoc()}catch(e){toast&&toast("한 단어를 남기지 못했습니다.")}finally{setBusy(false)}}
+ return html`<div className="gn-cheer">
+  <div className="gn-react">${Object.entries(REACT).map(([k,v])=>html`<button key=${k} className=${"gn-r"+(mine(k)?" on":"")} aria-pressed=${!!mine(k)} disabled=${busy||demo} onClick=${()=>toggle(k)}><${Glyph} name=${v.glyph} size=${18}/>${mine(k)?v.label.replace(/요$/,"요 ✓"):v.label}</button>`)}</div>
+  ${words?html`<div className="gn-word"><input type="text" aria-label="한 단어 (8자 이내)" maxLength="8" value=${word} placeholder="한 단어 · 예) 든든함" onChange=${e=>setWord(e.target.value)} onKeyDown=${e=>{if(e.key==="Enter")send()}}/><button className="btn sm" disabled=${busy||demo||!word.trim()||(myWord&&myWord.word===word.trim())} onClick=${send}>${myWord?"고치기":"건네기"}</button></div>`:html`<p className="small">이 친구는 한 단어 받기를 꺼 두었어요. 공감으로 마음을 전해 보세요.</p>`}
+ </div>`}

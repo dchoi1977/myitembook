@@ -25,7 +25,7 @@ function Progress({n}){return html`<div className="progress" aria-label=${`3단�
 function SourceCard({icon,title,desc,open,onToggle,filled,children}){
  return html`<div className="source"><button className="source-head" onClick=${onToggle} aria-expanded=${open}><span className="source-ico"><${Ico} n=${icon}/></span><span className="grow"><b>${title}</b><br/><span className="small faint">${desc}</span></span>${filled?html`<span className="chip">담김</span>`:html`<span className="faint">${open?"접기":"열기"}</span>`}</button>${open&&html`<div className="source-body">${children}</div>`}</div>`;
 }
-function Connect({draft,setDraft,rt,onNext,onBack,hasItems,allowEmpty,nextLabel,toast,update,demo}){
+function Connect({draft,setDraft,rt,onNext,onBack,hasItems,allowEmpty,nextLabel,toast,update,demo,st,onAddItems}){
  const U=k=>typeof uiOpen!=="function"||uiOpen(k);
  const [open,setOpen]=useState("story");const s=draft.sources;const set=(k,v)=>setDraft(d=>({...d,sources:{...d.sources,[k]:v}}));
  const maxPhotos=4;
@@ -42,6 +42,9 @@ function Connect({draft,setDraft,rt,onNext,onBack,hasItems,allowEmpty,nextLabel,
    <${SourceCard} icon="pen" title="나의 이야기" desc="요즘 하는 일, 오래 해 온 것, 다시 시작한 것" open=${open==="story"} onToggle=${()=>tog("story")} filled=${!!s.story.trim()}>
     <div className="field"><label htmlFor="src-story">자유롭게 적어 주세요</label><textarea id="src-story" value=${s.story} onChange=${e=>set("story",e.target.value)} placeholder="예) 3년째 주말마다 동네 뒷산을 오르고, 다녀오면 사진과 짧은 글을 블로그에 올립니다. 작년에 잠시 쉬었다가 올봄 다시 시작했어요."></textarea></div>
    <//>
+   ${typeof ResumeSource==="function"&&html`<${SourceCard} icon="data" title="이력서·약력" desc=${(()=>{const R=allLinks.filter(l=>l.kind==="resume");return R.length?`${R.length}편 읽음 · ${R[R.length-1].sum}`:"이력서·자기소개서·약력·경력기술서 — 파일·사진·붙여 넣기"})()} open=${open==="resume"} onToggle=${()=>tog("resume")} filled=${allLinks.some(l=>l.kind==="resume")}>
+    <${ResumeSource} s=${s} setDraft=${setDraft} toast=${toast||(()=>{})} update=${update} st=${st} demo=${demo} onAddItems=${onAddItems}/>
+   <//>`}
    <${SourceCard} icon="yt" title="유튜브 채널" desc="채널 주소만 넣으면 업로드 목록을 읽어옵니다" open=${open==="youtube"} onToggle=${()=>tog("youtube")} filled=${!!s.youtube.trim()}>
     <${YouTubeSource} s=${s} set=${set} setDraft=${setDraft} ready=${rt.ytReady}/>
    <//>
