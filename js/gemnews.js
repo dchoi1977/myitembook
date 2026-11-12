@@ -60,8 +60,8 @@ function GemNews({name,prev,card,changes,feed,onClose,onCard,onProfile,uid,fid,s
       <p className="gn-gname">${cur.n}</p>
       <p className="small">${prev?`달라진 것 ${changes.length}가지`:list.length?`최근 소식 ${list.length}개`:"아직 소식이 없어요"} · 옆으로 넘겨 보세요 ›</p>`
     :p.k==="c"?html`<span className="gn-glyph"><${Glyph} name=${p.x.glyph} size=${34}/></span><h3 className="serif">${p.x.h}</h3><p>${p.x.d}</p>${p.x.big&&html`<div className="gn-mini"><${GemView} g=${cur.g} seed=${cur.n} size=${96}/></div>`}`
-    :html`<span className="eyebrow">함께 기뻐하기</span><h3 className="serif">${name}님에게\n한마디 건네 볼까요?</h3>${more>0&&html`<p className="small">그 밖에 달라진 것 ${more}가지는 카드에서 볼 수 있어요.</p>`}
-      <${GnCheer} uid=${uid} fid=${fid} soc=${soc} reloadSoc=${reloadSoc} toast=${toast} demo=${demo} words=${!!(card&&card.data&&card.data.acceptWords)}/>
+    :html`<span className="eyebrow">함께 기뻐하기</span><h3 className="serif">${name}님에게\n마음을 건네 볼까요?</h3>${more>0&&html`<p className="small">그 밖에 달라진 것 ${more}가지는 카드에서 볼 수 있어요.</p>`}
+      <${MnSend} fid=${fid} name=${name} ctx=${prev&&changes[0]?changes[0].h:(list[0]&&list[0].h)||"젬 소식"} toast=${toast} demo=${demo}/>
       <div className="gn-acts"><button className="btn ghost block" onClick=${onCard}>카드 펼쳐 보기</button><button className="linkbtn small" onClick=${onProfile}>프로필로 가기</button></div>`}
    </section>`)}
   </div>
