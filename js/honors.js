@@ -53,7 +53,7 @@ const HONOR_RULES=`종류:
 - plaque(기념패): 자랑스러운 순간 — 입사, 임용·위촉(교수·위원), 회사·단체 설립, 팀장·대표 취임, 선정. tier는 ${HONOR_TIERS.plaque.join("·")} 중 하나.
 "title"은 무엇을(예: "큐플레이 라이브 개발", "올해의 게임상 대상", "넥서스 설립"), "sub"는 역할·팀·수여한 곳(예: "디렉터", "넥슨 큐플레이팀 · 미래창조과학부"), "year"·"to"는 네 자리 연도(모르면 빈 문자열, 진행 중이면 to는 "현재").`;
 async function honorFind(texts){const body=texts.filter(Boolean).join("\n\n").slice(0,12000);if(body.replace(/\s/g,"").length<40)throw {code:"hn_empty"};
- const j=await api.aiJSON({task:"quick",max:3000,prompt:`아래 [기록]은 사용자가 직접 건넨 자기 이력·소개·활동 기록이다. 이 사람이 직접 만들어 냈거나, 달성했거나, 이루어 낸 것을 찾아 트로피·메달·기념패 후보로 JSON 객체 하나로 답한다.
+ const j=await api.aiJSON({task:"read",prompt:`아래 [기록]은 사용자가 직접 건넨 자기 이력·소개·활동 기록이다. 이 사람이 직접 만들어 냈거나, 달성했거나, 이루어 낸 것을 찾아 트로피·메달·기념패 후보로 JSON 객체 하나로 답한다.
 {"awards":[{"kind":"trophy|medal|plaque","title":"30자 이내","sub":"30자 이내","year":"","to":"","tier":""}]}
 ${HONOR_RULES}
 규칙:
@@ -113,7 +113,7 @@ function HonorsSheet({st,update,onClose,toast,canAI,demo}){
      <div className="field" style=${{margin:0,width:"86px"}}><label htmlFor="aw-year">연도</label><input type="text" id="aw-year" inputMode="numeric" maxLength="4" value=${form.year} onChange=${e=>setForm(f=>({...f,year:e.target.value.replace(/\D/g,"")}))}/></div>
      ${form.kind==="trophy"&&html`<div className="field" style=${{margin:0,width:"86px"}}><label htmlFor="aw-to">끝난 해</label><input type="text" id="aw-to" maxLength="4" placeholder="현재" value=${form.to} onChange=${e=>setForm(f=>({...f,to:e.target.value}))}/></div>`}</div>
     <div className="row" style=${{gap:"8px"}}><button className="btn grow" disabled=${!form.title.trim()||demo} onClick=${saveForm}>새기기</button><button className="btn ghost" onClick=${()=>setForm(null)}>취소</button></div></div>`
-  :html`<div className="row" style=${{gap:"8px"}}><button className="btn grow" disabled=${busy||!canAI||demo||!hasTexts} onClick=${find}>${busy?"기록을 살펴보는 중… 15초쯤 걸려요":"내 기록에서 찾아 주기"}</button><button className="btn quiet grow" disabled=${demo} onClick=${()=>setForm({kind:"trophy",title:"",sub:"",year:"",to:"",tier:"주도"})}>직접 새기기</button></div>
+  :html`<div className="row" style=${{gap:"8px"}}><button className="btn grow" disabled=${busy||!canAI||demo||!hasTexts} onClick=${find}>${busy?"기록을 꼼꼼히 살펴보는 중… 30초쯤 걸려요":"내 기록에서 찾아 주기"}</button><button className="btn quiet grow" disabled=${demo} onClick=${()=>setForm({kind:"trophy",title:"",sub:"",year:"",to:"",tier:"주도"})}>직접 새기기</button></div>
    ${!hasTexts&&html`<p className="small faint" style=${{margin:0}}>'새 기록 더하기'에서 이력서·약력이나 소개 글을 이으면 AI가 후보를 찾아 드려요.</p>`}`}
   <div className="segs" role="group" aria-label="종류">${[["all","전체"],...Object.entries(HONOR_KINDS).map(([k,v])=>[k,v.n])].map(([k,t])=>html`<button key=${k} aria-pressed=${tab===k} onClick=${()=>setTab(k)}>${t} ${k==="all"?H.list.length:H.list.filter(a=>a.kind===k).length}</button>`)}</div>
   ${list.length?html`<div className="aw-grid">${list.map(a=>{const on=H.shelf.includes(a.id);return html`<button key=${a.id} type="button" className=${"aw-card"+(on?" on":"")} onClick=${()=>setSel(a)}><${Award} a=${a} size=${46}/><span className="grow" style=${{minWidth:0}}><b>${a.title}</b><span className="small faint">${[HONOR_KINDS[a.kind].n+(a.tier?" · "+a.tier:""),honorYears(a),a.sub].filter(Boolean).join(" · ")}</span></span>${on&&html`<span className="chip gold">진열</span>`}</button>`})}</div>`:html`<p className="small faint">아직 새긴 것이 없어요.</p>`}

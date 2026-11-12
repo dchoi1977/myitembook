@@ -69,13 +69,4 @@ function GemNews({name,prev,card,changes,feed,onClose,onCard,onProfile,uid,fid,s
  </div>`;
 }
 
-/* 마지막 장에서 바로 — 공감 세 가지와 한 단어 */
-function GnCheer({uid,fid,soc,reloadSoc,toast,demo,words}){
- soc=soc||{};const [busy,setBusy]=useState(false);const myWord=(soc.wordsFrom||[]).find(w=>w.to_id===fid);const [word,setWord]=useState(myWord?myWord.word:"");
- const mine=k=>(soc.reactFrom||[]).find(r=>r.to_id===fid&&r.target==="card"&&r.kind===k);
- async function toggle(k){if(demo||busy||!fid)return;setBusy(true);try{const m=mine(k);if(m){await api.unreact(m.id)}else{await api.react(fid,k);track("react",{kind:k,from:"gemnews"});toast&&toast(`'${REACT[k].label}'를 건넸어요.`)}reloadSoc&&await reloadSoc()}catch(e){toast&&toast("공감을 남기지 못했습니다.")}finally{setBusy(false)}}
- async function send(){const w=word.trim().slice(0,8);if(!w||demo||busy)return;setBusy(true);try{await api.word(uid,fid,w);track("word",{edit:!!myWord,from:"gemnews"});toast&&toast("한 단어를 건넸어요.");reloadSoc&&await reloadSoc()}catch(e){toast&&toast("한 단어를 남기지 못했습니다.")}finally{setBusy(false)}}
- return html`<div className="gn-cheer">
-  <div className="gn-react">${Object.entries(REACT).map(([k,v])=>html`<button key=${k} className=${"gn-r"+(mine(k)?" on":"")} aria-pressed=${!!mine(k)} disabled=${busy||demo} onClick=${()=>toggle(k)}><${Glyph} name=${v.glyph} size=${18}/>${mine(k)?v.label.replace(/요$/,"요 ✓"):v.label}</button>`)}</div>
-  ${words?html`<div className="gn-word"><input type="text" aria-label="한 단어 (8자 이내)" maxLength="8" value=${word} placeholder="한 단어 · 예) 든든함" onChange=${e=>setWord(e.target.value)} onKeyDown=${e=>{if(e.key==="Enter")send()}}/><button className="btn sm" disabled=${busy||demo||!word.trim()||(myWord&&myWord.word===word.trim())} onClick=${send}>${myWord?"고치기":"건네기"}</button></div>`:html`<p className="small">이 친구는 한 단어 받기를 꺼 두었어요. 공감으로 마음을 전해 보세요.</p>`}
- </div>`}
+

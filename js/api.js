@@ -116,7 +116,7 @@ const api={
  async link(kind,ref){const pub=typeof linkSvc==="function"&&linkSvc(kind).pub;return this.call("fetch",{kind,ref},{url:pub?MIB_CONFIG.fnPub:MIB_CONFIG.fnLink})},
  async googleClientId(){try{const r=await Q(sb.from("settings").select("value").eq("key","google_client_id").maybeSingle());return (r&&typeof r.value==="string")?r.value.trim():""}catch(e){return ""}},
  async ai({task,prompt,images,signal}){const r=await this.call("ai",{task,prompt,images:images||[]},{signal});return r},
- async aiJSON(o){const r=await this.ai(o);try{return parseJSON(r.text)}catch(e){if(r.truncated)throw Err("too_long");throw e}},
+ async aiJSON(o){const r=await this.ai(o);try{return parseJSON(r.text)}catch(e){if(r.truncated){/* 끊기면 한 번만 더 — 깊게 읽는 모델(한도 8000)로 */if(o.task!=="read"&&!o._retry){track("ai_retry",{why:"too_long"});const r2=await this.ai({...o,task:"read",_retry:true});try{return parseJSON(r2.text)}catch(e2){throw Err(r2.truncated?"too_long":"invalid_json")}}throw Err("too_long")}throw e}},
  async deleteMe(){return this.call("delete_me",{})},
  // ── admin
  admin:{

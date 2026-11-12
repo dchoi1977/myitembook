@@ -232,7 +232,7 @@ function App(){
  let sheetEl=null;const close=()=>setSheet(null);
  if(sheet==="help")sheetEl=html`<${HelpSheet} supportUrl=${supportUrl} onClose=${close} onFeedback=${()=>{setSheet(null);openFeedback()}}/>`;
  else if(sheet==="avatar")sheetEl=html`<${AvatarSheet} profile=${profile} uid=${uid} onClose=${close} onSaved=${onAvatarSaved} toast=${toast}/>`;
- else if(sheet==="inbox")sheetEl=html`<${InboxSheet} uid=${uid} notes=${notes} anns=${anns} names=${names} soc=${soc} onClose=${()=>{close();loadInbox()}} openUser=${openUser} reloadSoc=${reloadSoc} toast=${toast} isPublic=${!!(st&&st.visibility.public)} onPublish=${st&&st.analysis?()=>setSheet("publish"):null} onAsk=${k=>setSheet(k)} asksMe=${asksMe}/>`;
+ else if(sheet==="inbox")sheetEl=html`<${InboxSheet} uid=${uid} notes=${notes} anns=${anns} names=${names} soc=${soc} onClose=${()=>{close();loadInbox()}} openUser=${openUser} reloadSoc=${reloadSoc} toast=${toast} isPublic=${!!(st&&st.visibility.public)} onPublish=${st&&st.analysis?()=>setSheet("publish"):null} onAsk=${k=>{if(k==="minds"){setSheet(null);loadMinds().then(()=>setMindOpen(true));return}setSheet(k)}} asksMe=${asksMe}/>`;
  else if(sheet==="data")sheetEl=html`<${DataSheet} st=${st} items=${items} profile=${profile} onClose=${close} onWipe=${wipe} onReread=${()=>openSheet("reread")} onLogout=${logout} toast=${toast} demo=${demo} setQuiet=${setQuiet}/>`;
  else if(sheet&&sheet.startsWith("user:"))sheetEl=html`<${ProfileSheet} key=${sheet} id=${sheet.split(":")[1]} focus=${sheet.split(":")[2]||null} uid=${uid} st=${st} soc=${soc} names=${names} onClose=${close} openUser=${openUser} reloadSoc=${reloadSoc} toast=${toast} demo=${demo} ensureNames=${ensureNames}/>`;
  else if(sheet&&st.analysis){

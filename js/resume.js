@@ -53,7 +53,7 @@ awards는 이 사람이 만들어 내고 이루어 낸 것(최대 16개) — ${t
 
 [문서]
 ${clean||"(글자 없음 — 첨부한 사진을 읽는다)"}`;
- const j=await api.aiJSON({task:"quick",prompt,images:imgs,max:4000});
+ const j=await api.aiJSON({task:"read",prompt,images:imgs});
  if(!j||j.ok===false)throw {code:"rs_not"};
  const S=(v,n)=>linkScrub(String(v||"")).replace(/\d{7,}/g,"").trim().slice(0,n);const A=(v,n)=>(Array.isArray(v)?v:[]).slice(0,n);
  const edu=A(j.edu,6).map(x=>({name:S(x&&x.name,40),type:RS_SCHOOL.includes(x&&x.type)?x.type:"배움터",major:S(x&&x.major,30),from:yr(x&&x.from),to:nowish(x&&x.to)?"현재":yr(x&&x.to)})).filter(x=>x.name);
@@ -96,7 +96,7 @@ function ResumeSource({s,setDraft,toast,update,st,demo,onAddItems}){
  const [mode,setMode]=useState("file");const [files,setFiles]=useState([]);const [text,setText]=useState("");const [ok,setOk]=useState(false);const [busy,setBusy]=useState("");const [err,setErr]=useState("");const [res,setRes]=useState(null);const [rows,setRows]=useState([]);const [saving,setSaving]=useState(false);const [aws,setAws]=useState([]);
  const ready=ok&&(mode==="file"?files.length>0:text.trim().length>=60);
  const choose=e=>{const fl=[...(e.target.files||[])];e.target.value="";if(fl.length)setFiles(f=>addPicks(f,fl,4))};
- async function go(){if(!ready||busy)return;setErr("");setRes(null);try{setBusy("이 기기 안에서 글자를 꺼내는 중…");const src=mode==="file"?await resumeExtract(files):{text,images:[]};setBusy("걸어온 길을 읽는 중… 15초쯤 걸려요");const r=await resumeRead(src);
+ async function go(){if(!ready||busy)return;setErr("");setRes(null);try{setBusy("이 기기 안에서 글자를 꺼내는 중…");const src=mode==="file"?await resumeExtract(files):{text,images:[]};setBusy("걸어온 길을 꼼꼼히 읽는 중… 30초쯤 걸려요");const r=await resumeRead(src);
    const E0=((st&&st.identity)||{}).entries||[];setRes(r);setRows(resumeCrests(r,E0));{const have=new Set(((st&&st.honors&&st.honors.list)||[]).map(a=>a.kind+a.title.replace(/\s/g,"")));setAws((r.awards||[]).filter(x=>!have.has(x.kind+x.title.replace(/\s/g,""))))}track("resume_read",{mode,edu:r.edu.length,work:r.work.length,honors:r.honors.length})}
   catch(x){const c=x&&x.code;setErr(LINK_ERR[c]||(typeof errCopy==="function"&&c?errCopy(x):"읽지 못했어요. 잠시 뒤 다시 시도해 주세요."));track("resume_fail",{mode,code:c||"error"})}finally{setBusy("")}}
  const setRow=(i,p)=>setRows(L=>L.map((y,k)=>k===i?{...y,...p}:y));

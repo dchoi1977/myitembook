@@ -153,7 +153,7 @@ function FeedTab({uid,soc,names,openUser,toast,demo,reloadSoc,ensureNames}){
 }
 
 /* 알림함 — notifications + announcements */
-const NOTE_TEXT={friend_request:"님이 친구를 요청했어요",friend_accept:"님과 친구가 되었어요",word:"님이 한 단어를 건넸어요",reaction:"님이 공감을 남겼어요",card_request:"님이 내 카드를 보고 싶어 해요",card_opened:"님이 카드를 공개했어요",ask:"님이 질문을 보냈어요",ask_answer:"님이 내 질문에 답했어요",bond_request:"님이 관계 이름을 제안했어요",bond_accept:"님이 관계 제안을 수락했어요",bond_decline:"님이 관계 제안을 사양했어요"};
+const NOTE_TEXT={heart:"님이 마음을 건넸어요 💌",friend_request:"님이 친구를 요청했어요",friend_accept:"님과 친구가 되었어요",word:"님이 한 단어를 건넸어요",reaction:"님이 공감을 남겼어요",card_request:"님이 내 카드를 보고 싶어 해요",card_opened:"님이 카드를 공개했어요",ask:"님이 질문을 보냈어요",ask_answer:"님이 내 질문에 답했어요",bond_request:"님이 관계 이름을 제안했어요",bond_accept:"님이 관계 제안을 수락했어요",bond_decline:"님이 관계 제안을 사양했어요"};
 function InboxSheet({uid,notes,anns,names,soc,onClose,openUser,reloadSoc,toast,onPublish,isPublic,onAsk,asksMe}){
  useEffect(()=>{const ids=notes.filter(n=>!n.read_at).map(n=>n.id);if(ids.length)api.markRead(ids).catch(()=>{});try{localStorage.setItem("mib-ann-seen",String(anns[0]?anns[0].id:0))}catch(e){}track("open_inbox",{unread:ids.length})},[]);
  const go=n=>{const p=n.payload||{};track("inbox_go",{kind:n.kind});switch(n.kind){
@@ -161,6 +161,7 @@ function InboxSheet({uid,notes,anns,names,soc,onClose,openUser,reloadSoc,toast,o
   case "friend_request":case "friend_accept":return openUser(n.actor_id,"friend");
   case "ask":return onAsk&&onAsk("answer:"+(p.round||""));
   case "ask_answer":return onAsk&&onAsk("asks");
+  case "heart":return onAsk&&onAsk("minds");
   case "word":case "reaction":return onAsk&&onAsk("mine");
   case "card_request":return (!isPublic&&onPublish)?onPublish():openUser(n.actor_id);
   default:return openUser(n.actor_id)}};
