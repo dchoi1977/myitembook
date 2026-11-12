@@ -15,8 +15,8 @@ function gemWhyRows(g,seed,own){g=g||{};const I=gemIdentity(g,seed);const st=STO
   {k:"결",sub:"내부의 금빛 결",v:`${g.grain||0}줄`,why:"기록 속 전환점, 그리고 쉬었다가 다시 시작한 순간마다 금빛 결이 한 줄씩 새겨져요.",ev:ev("결")},
   {k:"상",sub:"안쪽의 상징",v:g.symbol||"별",why:"이 사람을 대표하는 장면에서 고른 상징이 젬 안에 비쳐요. 주인이 직접 바꿀 수 있어요.",ev:ev("상")},
   {k:"각",sub:"결정면",v:`${facets}면 · ${layers}층`,why:"관심 영역의 수에서 출발해, 나를 다시 읽거나 연마 단계가 오르거나 배운 곳을 휘장으로 남길 때마다 면과 층이 늘어요.",ev:ev("각")}]}
-function gemWhyExtras(g,seed){g=g||{};const I=gemIdentity(g,seed);const out=[];const pol=clamp(Math.round(g.polish||g.stage||1),1,5);const mk=g.marks||{},im=g.idm||{};
- out.push({t:`연마 ${pol}단계 · ${STAGES[pol]}`,d:["","갓 만난 원석이라 작고 거칠며 돌 껍질이 남아 있어요.","초벌을 거쳐 껍질이 얇아지고 윤곽이 다듬어졌어요.","연마를 거쳐 윤곽이 깨끗해지고 본래 빛깔이 드러났어요.","광택 단계라 채도가 오르고 꼭짓점이 반짝여요.","명품 단계라 가장 크고 짙으며, 무지갯빛 불꽃이 깜빡여요."][pol]+" 활동한 날과 주고받은 마음이 쌓일수록 올라요."});
+function gemWhyExtras(g,seed){g=g||{};const I=gemIdentity(g,seed);const out=[];const pol=clamp(Math.round(g.polish||g.stage||1),1,7);const mk=g.marks||{},im=g.idm||{};
+ out.push({t:`연마 ${pol}단계 · ${STAGES[pol]}`,d:["","갓 만난 원석이라 작고 거칠며 돌 껍질이 남아 있어요.","초벌을 거쳐 껍질이 얇아지고 윤곽이 다듬어졌어요.","연마를 거쳐 윤곽이 깨끗해지고 본래 빛깔이 드러났어요.","광택 단계라 채도가 오르고 꼭짓점이 반짝여요.","명품 단계라 크고 짙으며, 무지갯빛 불꽃이 깜빡여요.","걸작 단계라 더 커지고 불꽃이 짙게 피어나요.","전설 단계라 가장 크고 깊으며, 금빛 광륜이 젬을 감싸요."][pol]+" 활동한 날과 주고받은 마음이 쌓일수록 올라요."});
  if(I.pattern)out.push({t:`무늬 · ${I.pattern}`,d:"이 젬이 타고난 무늬예요. 사람마다 정해져 있어요."});
  I.feats.forEach(k=>out.push({t:`숨은 특성 · ${INCLUSIONS[k].name}`,d:`${INCLUSIONS[k].desc}. ${INCLUSIONS[k].rar} 특성으로, 타고난 것이에요.`}));
  (I.aw||[]).forEach(a=>out.push({t:`발현 · ${a.n}`,d:`연마 ${a.at}단계에 오를 때 깨어난 ${AW_TIERS[a.t][0]} 발현이에요. 무엇이 깨어날지는 그 단계에 닿기 전까지 알 수 없어요.`}));

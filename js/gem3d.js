@@ -8,7 +8,7 @@ function loadThree(){if(window.THREE)return Promise.resolve(window.THREE);if(__t
 /* palette & shape from the same rules as the 2D gem */
 function gem3dSpec(g,seed){g=g||{};const T=gemTraits(g,seed);let st=STONES[g.stone]||STONES["오팔"];const v=variantOf(g.stone||"오팔",T);if(v.base)st={...st,base:v.base,light:v.light,deep:v.deep,tint:v.tint};
  const fp=g.fp||null;if(fp)st={...st,base:hueShift(st.base,fp.hue,fp.sat),light:hueShift(st.light,fp.hue*.6,fp.sat*.5),deep:hueShift(st.deep,fp.hue,fp.sat)};
- const pol=clamp(Math.round(g.polish||g.stage||3),1,5);const PO=POLISH[pol];st={...st,base:hueShift(st.base,T.hueX,PO.sat),light:hueShift(st.light,T.hueX*.6,PO.sat),deep:hueShift(st.deep,T.hueX,PO.sat)};
+ const pol=clamp(Math.round(g.polish||g.stage||3),1,7);const PO=POLISH[pol];st={...st,base:hueShift(st.base,T.hueX,PO.sat),light:hueShift(st.light,T.hueX*.6,PO.sat),deep:hueShift(st.deep,T.hueX,PO.sat)};
  const form=FORMS.includes(g.form)?g.form:"덩이";const aw=awakenings(g,seed,pol);const shape=aw.some(a=>a.k==="star")?"별 컷":aw.some(a=>a.k==="heart")?"하트 컷":cutOf(form,T);
  const tex=TEXTURES.includes(g.texture)?g.texture:"맑음";const facets=clamp(Math.round(g.facets||8),6,14);
  return {st,form,cut:shape,tex,facets,pol,scale:PO.sc*T.scale,ws:fp?fp.ws:1,hs:fp?fp.hs:1,bi:T.bi?hueShift(st.base,T.hue2*.6,.1):null,glow:hueShift(st.light==="#FFFFFF"?st.tint:st.light,T.glowHue,.15),R:rng(seed+"|3d|"+form+facets)}}
