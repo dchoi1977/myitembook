@@ -727,6 +727,9 @@ function useBackLayer(onClose){const ref=useRef(onClose);ref.current=onClose;
 /* PC에서는 '나를 꾸미는 화면'을 옆 창 대신 가운데 본문 페이지로 연다 */
 const PageCtx=React.createContext(false);
 const PAGE_KEYS=["honors","identity","identityproof","shelf","shelfscan","publish","achieve","badgebox","attrs","evidence"];
+/* 눌러서 열린 것이 화면 밖에 있으면 그쪽으로 데려가고 잠깐 빛나게 — 열린 줄 모르는 일을 막는다 */
+function revealEl(el,opt){if(!el)return;const r=el.getBoundingClientRect();const vh=window.innerHeight||800;const off=r.top<70||r.top>vh*.55;if(off){try{el.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"})}catch(e){el.scrollIntoView()}}if(!(opt&&opt.quiet)){el.classList.remove("focus-pulse");void el.offsetWidth;el.classList.add("focus-pulse");setTimeout(()=>el.classList.remove("focus-pulse"),2800)}}
+function useReveal(dep,skipFirst){const ref=useRef(null);const first=useRef(true);useEffect(()=>{if(first.current&&skipFirst){first.current=false;return}first.current=false;if(!dep)return;const t=setTimeout(()=>revealEl(ref.current),60);return()=>clearTimeout(t)},[dep]);return ref}
 function Sheet({title,onClose,children}){
  const page=React.useContext(PageCtx);
  useBackLayer(onClose);

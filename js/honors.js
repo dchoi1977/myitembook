@@ -127,6 +127,7 @@ function HonorPick({cands,setCands}){const set=(i,p)=>setCands(L=>L.map((y,k)=>k
 function HonorsSheet({st,update,onClose,toast,canAI,demo}){
  const H=honorsOf(st);const shown=honorShown(st);const [tab,setTab]=useState("all");const [sel,setSel]=useState(null);const [form,setForm]=useState(null);const [cands,setCands]=useState(null);const [busy,setBusy]=useState(false);
  const list=H.list.filter(a=>tab==="all"||a.kind===tab);
+ const editRef=useReveal(form?"form":cands?"cands":null);
  const texts=()=>{const L=typeof linkList==="function"?linkList((st&&st.sources)||{}):[];const pick=L.filter(l=>["resume","about"].includes(l.kind)||(linkSvc(l.kind).m==="feed"||linkSvc(l.kind).m==="wall"));return [st.sources&&st.sources.story?`[나의 이야기]\n${st.sources.story}`:"",...pick.map(l=>`[${linkSvc(l.kind).n}]\n${String(l.text||"").slice(0,2600)}`)]};
  const hasTexts=texts().some(t=>t.replace(/\s/g,"").length>40);
  async function find(){if(busy)return;setBusy(true);try{const c=await honorFind(texts());const have=new Set(H.list.map(a=>a.kind+a.title.replace(/\s/g,"")));const fresh=c.filter(x=>!have.has(x.kind+x.title.replace(/\s/g,"")));setCands(fresh);track("honor_find",{n:c.length,fresh:fresh.length});if(!fresh.length)toast(c.length?"찾은 것이 모두 이미 진열장에 있어요.":"기록에서 찾지 못했어요. 이력서·약력을 먼저 읽어 보세요.")}catch(e){toast(e&&e.code==="hn_empty"?"찾아볼 기록이 아직 없어요. '새 기록 더하기'에서 이력서·약력이나 소개 글을 먼저 이어 주세요.":errCopy(e));track("honor_fail",{code:(e&&e.code)||"error"})}finally{setBusy(false)}}
@@ -138,12 +139,12 @@ function HonorsSheet({st,update,onClose,toast,canAI,demo}){
  return html`<${Sheet} title="명예의 진열장" onClose=${onClose}>
   <p className="small muted">직접 만들어 낸 것은 <b>트로피</b>, 대회에서 받은 상은 <b>메달</b>, 입사·임용·설립 같은 자랑스러운 순간은 <b>기념패</b>로 새겨요. 여섯 개를 골라 선반 위 진열장에 올려 두면, 선반을 공개했을 때 카드와 친구 방문에서도 보여요.</p>
   <div className="aw-shelfwrap"><div className="row between"><b>진열장 · ${shown.length}/${HONOR_SHOW}</b>${shown.length>1&&html`<span className="small faint">누르면 순서를 바꿀 수 있어요</span>`}</div><${HonorCase} list=${shown} onPick=${a=>setSel(a)} empty=${H.list.length?"아래에서 올리기":"아직 비어 있어요"}/></div>
-  ${cands?html`<div className="stack">
+  ${cands?html`<div className="stack" ref=${editRef}>
     <div className="row between"><b>기록에서 찾은 후보 · ${cands.length}개</b><span className="small faint">아닌 것은 체크를 풀어 주세요</span></div>
     ${cands.length?html`<${HonorPick} cands=${cands} setCands=${setCands}/>`:html`<p className="small faint">새로 담을 후보가 없어요.</p>`}
     <div className="row" style=${{gap:"8px"}}><button className="btn grow" disabled=${!cands.some(x=>x.on)||demo} onClick=${saveCands}>고른 ${cands.filter(x=>x.on).length}개 담기</button><button className="btn ghost" onClick=${()=>setCands(null)}>닫기</button></div>
     <p className="note">AI가 기록을 읽고 고른 후보예요. 이름·연도·역할을 확인해 주세요.</p></div>`
-  :form?html`<div className="panel stack">
+  :form?html`<div className="panel stack" ref=${editRef}>
     <div className="segs mini" role="group" aria-label="종류">${Object.entries(HONOR_KINDS).map(([k,v])=>html`<button key=${k} type="button" aria-pressed=${form.kind===k} onClick=${()=>setForm(f=>({...f,kind:k,tier:HONOR_TIERS[k][0]}))}>${v.n}</button>`)}</div>
     <div className="row" style=${{gap:"12px",alignItems:"center"}}><${Award} a=${form} size=${48}/><span className="small muted">${HONOR_KINDS[form.kind].d}</span></div>
     <div className="field" style=${{margin:0}}><label htmlFor="aw-title">무엇을</label><input type="text" id="aw-title" maxLength="30" value=${form.title} placeholder=${HONOR_KINDS[form.kind].ex} onChange=${e=>setForm(f=>({...f,title:e.target.value}))}/></div>

@@ -216,7 +216,8 @@ function LinkPanel({svc,cur,onDone,onClose}){
  const readCaps=()=>run(async()=>{setNote("화면을 읽는 중… 10초쯤 걸려요");onDone(await linkFromCaptures(svc,caps))});
  const savePaste=()=>{const t=text.trim();if(t.length<10)return;const lines=t.split(/\n+/).map(x=>x.trim()).filter(Boolean);onDone(makeLink(svc,"paste","",{title:svc.n,total:0},lines.slice(0,60).map(x=>({t:x}))))};
  const MODE_N={cap:"화면 캡처",file:"내 정보 파일",paste:"직접 적기"};
- return html`<div className="panel lk-panel stack">
+ const pref=useReveal(svc.k);
+ return html`<div className="panel lk-panel stack" ref=${pref}>
   <div className="row between" style=${{flexWrap:"nowrap"}}><span className="row" style=${{gap:"10px",flexWrap:"nowrap"}}><${LinkMono} svc=${svc}/><b>${svc.n}</b></span><button className="linkbtn small" onClick=${onClose}>닫기</button></div>
   ${svc.m==="feed"?html`<form className="field" style=${{margin:0}} onSubmit=${fetchFeed}><label htmlFor="lk-ref">내 ${svc.k==="rss"?"블로그·방송":"계정"} 주소</label>
     <div className="row" style=${{flexWrap:"nowrap"}}><input type="text" id="lk-ref" value=${ref} onChange=${e=>setRef(e.target.value)} placeholder=${"예) "+svc.ph} autoCapitalize="off" autoCorrect="off" spellCheck="false" style=${{flex:1,minWidth:0}}/><button className="btn sm" disabled=${busy||!ref.trim()||!mine}>${busy?"읽는 중…":"가져오기"}</button></div>

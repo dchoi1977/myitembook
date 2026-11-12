@@ -93,7 +93,7 @@ const RS_N={school:"배움",org:"소속",honor:"영예",root:"뿌리"};
 
 function ResumeSource({s,setDraft,toast,update,st,demo,onAddItems}){
  const mine=linkList(s).filter(l=>l.kind==="resume");
- const [mode,setMode]=useState("file");const [files,setFiles]=useState([]);const [text,setText]=useState("");const [ok,setOk]=useState(false);const [busy,setBusy]=useState("");const [err,setErr]=useState("");const [res,setRes]=useState(null);const [rows,setRows]=useState([]);const [saving,setSaving]=useState(false);const [aws,setAws]=useState([]);
+ const [mode,setMode]=useState("file");const [files,setFiles]=useState([]);const [text,setText]=useState("");const [ok,setOk]=useState(false);const [busy,setBusy]=useState("");const [err,setErr]=useState("");const [res,setRes]=useState(null);const [rows,setRows]=useState([]);const [saving,setSaving]=useState(false);const [aws,setAws]=useState([]);const resRef=useReveal(res?res.headline||"r":null);
  const ready=ok&&(mode==="file"?files.length>0:text.trim().length>=60);
  const choose=e=>{const fl=[...(e.target.files||[])];e.target.value="";if(fl.length)setFiles(f=>addPicks(f,fl,4))};
  async function go(){if(!ready||busy)return;setErr("");setRes(null);try{setBusy("이 기기 안에서 글자를 꺼내는 중…");const src=mode==="file"?await resumeExtract(files):{text,images:[]};setBusy("걸어온 길을 꼼꼼히 읽는 중… 30초쯤 걸려요");const r=await resumeRead(src);
@@ -131,7 +131,7 @@ function ResumeSource({s,setDraft,toast,update,st,demo,onAddItems}){
    <div className="row"><button className="btn sm" disabled=${!ready||!!busy||demo} onClick=${go}>${busy||"걸어온 길 읽기"}</button></div>
   </div>`}
   ${err&&html`<p className="err" role="alert" style=${{margin:0}}>${err}</p>`}
-  ${res&&html`<div className="stack rs-res">
+  ${res&&html`<div className="stack rs-res" ref=${resRef}>
    <div className="panel tint small stack" style=${{gap:"4px"}}>${res.headline&&html`<b className="serif">${res.headline}</b>`}<span>${[yrs?`일한 햇수 약 ${yrs}년`:"",res.work.length?`일한 곳 ${res.work.length}`:"",res.edu.length?`배움 ${res.edu.length}`:"",res.honors.length?`영예 ${res.honors.length}`:"",res.projects.length?`해낸 일 ${res.projects.length}`:""].filter(Boolean).join(" · ")}</span>${res.themes.length>0&&html`<div className="row" style=${{gap:"6px",flexWrap:"wrap"}}>${res.themes.map(t=>html`<span key=${t} className="chip gold">${t}</span>`)}</div>`}</div>
    ${rows.length>0&&html`<div className="row between"><b>휘장으로 새길 것</b><span className="small faint">아닌 것은 체크를 풀어 주세요</span></div>
    <div className="scan-list">${rows.map((x,i)=>html`<div key=${i} className=${"proof-row"+(x.on?"":" off")}>

@@ -61,6 +61,7 @@ function TraceRows({links,setDraft}){const [seen,setSeen]=useState(null);if(!lin
   ${seen===l.id&&html`<pre className="lk-pre">${l.text}</pre>`}</div>`})}</div>`}
 function ShotSource({s,setDraft,toast}){
  const mine=linkList(s).filter(l=>linkSvc(l.kind).m==="shot");const [sel,setSel]=useState(null);const [caps,setCaps]=useState([]);const [busy,setBusy]=useState(false);const [err,setErr]=useState("");
+ const kref=useReveal(sel);
  const urls=useMemo(()=>caps.map(f=>URL.createObjectURL(f)),[caps]);useEffect(()=>()=>urls.forEach(u=>URL.revokeObjectURL(u)),[urls]);
  const kind=SHOT_KINDS.find(k=>k.k===sel);
  async function read(){if(!kind||!caps.length)return;setBusy(true);setErr("");try{const l=await shotRead(kind,caps);trPut(setDraft,l);setSel(null);setCaps([]);toast(`${kind.n} · 읽었어요`);track("shot_add",{kind:kind.k,n:l.n})}catch(e){setErr(LINK_ERR[e&&e.code]||"읽지 못했어요. 잠시 뒤 다시 시도해 주세요.");track("shot_fail",{kind:kind.k,code:(e&&e.code)||"error"})}finally{setBusy(false)}}
@@ -68,7 +69,7 @@ function ShotSource({s,setDraft,toast}){
   <p className="small muted" style=${{margin:0}}>폰이 이미 정리해 둔 화면을 캡처해서 올리면, 보이는 것만 AI가 읽어요. 아무것도 적지 않아도 돼요.</p>
   <${TraceRows} links=${mine} setDraft=${setDraft}/>
   <div className="lk-grid">${SHOT_KINDS.map(k=>{const on=mine.some(l=>l.kind===k.k);return html`<button key=${k.k} className=${"lk-tile"+(sel===k.k?" sel":"")+(on?" on":"")} aria-pressed=${sel===k.k} onClick=${()=>{setSel(sel===k.k?null:k.k);setCaps([]);setErr("")}}><${LinkMono} svc=${k} size=${30}/><span className="lk-n">${k.n}</span>${on?html`<span className="lk-on">읽음</span>`:html`<span className="lk-how">캡처 한 장</span>`}</button>`})}</div>
-  ${kind&&html`<div className="panel lk-panel stack">
+  ${kind&&html`<div className="panel lk-panel stack" ref=${kref}>
    <div className="row between" style=${{flexWrap:"nowrap"}}><span className="row" style=${{gap:"10px",flexWrap:"nowrap"}}><${LinkMono} svc=${kind}/><b>${kind.n}</b></span><button className="linkbtn small" onClick=${()=>setSel(null)}>닫기</button></div>
    <p className="small" style=${{margin:0}}>${kind.how}</p>
    <${PickThumbs} urls=${urls} files=${caps} onChange=${setCaps} max=${3} id="shot-file" label="캡처 고르기" alt="올린 캡처" toast=${toast}/>
@@ -171,13 +172,14 @@ const TRACE_UI={
   guide:["크롬(PC): 오른쪽 위 ⋮ → 북마크 및 목록 → 북마크 관리자 → ⋮ → 북마크 내보내기","웨일·엣지: 즐겨찾기(북마크) 관리 → 내보내기","사파리(맥): 파일 → 내보내기 → 책갈피","받은 HTML 파일을 여기에 올려 주세요"],note:"제목과 사이트 이름, 폴더 이름만 읽어요. 방문 기록은 읽지 않아요."}};
 function TraceSource({s,setDraft,toast}){
  const mine=linkList(s).filter(l=>linkSvc(l.kind).m==="trace");const [sel,setSel]=useState(null);const [busy,setBusy]=useState(false);const [err,setErr]=useState("");const [note,setNote]=useState("");
+ const kref=useReveal(sel);
  const kind=TRACE_KINDS.find(k=>k.k===sel);const ui=kind&&TRACE_UI[kind.k];
  async function read(files){if(!kind||!files||!files.length)return;setBusy(true);setErr("");setNote("이 기기 안에서 읽는 중…");try{const l=kind.k==="trace_photos"?await tracePhotos(files,(a,b)=>setNote(`사진 ${a}/${b}장의 시각을 읽는 중…`)):kind.k==="trace_selfchat"?await traceSelfChat(files):await traceBookmarks(files);trPut(setDraft,l);setSel(null);toast(`${kind.n} · 읽었어요`);track("trace_add",{kind:kind.k,n:l.n})}catch(e){setErr(LINK_ERR[e&&e.code]||"읽지 못했어요. 파일을 확인해 주세요.");track("trace_fail",{kind:kind.k,code:(e&&e.code)||"error"})}finally{setBusy(false);setNote("")}}
  return html`<div className="stack">
   <p className="small muted" style=${{margin:0}}>이미 폰과 PC 안에 쌓여 있는 흔적이에요. 내용이 아니라 리듬과 갈래를 읽고, 파일은 이 기기를 떠나지 않아요.</p>
   <${TraceRows} links=${mine} setDraft=${setDraft}/>
   <div className="lk-grid">${TRACE_KINDS.map(k=>{const on=mine.some(l=>l.kind===k.k);return html`<button key=${k.k} className=${"lk-tile"+(sel===k.k?" sel":"")+(on?" on":"")} aria-pressed=${sel===k.k} onClick=${()=>{setSel(sel===k.k?null:k.k);setErr("")}}><${LinkMono} svc=${k} size=${30}/><span className="lk-n">${k.n}</span>${on?html`<span className="lk-on">읽음</span>`:html`<span className="lk-how">${k.k==="trace_photos"?"사진 고르기":"파일"}</span>`}</button>`})}</div>
-  ${kind&&html`<div className="panel lk-panel stack">
+  ${kind&&html`<div className="panel lk-panel stack" ref=${kref}>
    <div className="row between" style=${{flexWrap:"nowrap"}}><span className="row" style=${{gap:"10px",flexWrap:"nowrap"}}><${LinkMono} svc=${kind}/><b>${kind.n}</b></span><button className="linkbtn small" onClick=${()=>setSel(null)}>닫기</button></div>
    <p className="small" style=${{margin:0}}>${ui.lead}</p>
    <details className="lk-guide"><summary>이렇게 해요</summary><ol>${ui.guide.map((g,i)=>html`<li key=${i}>${g}</li>`)}</ol></details>
