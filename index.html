@@ -308,7 +308,7 @@ label.btn{display:inline-flex;align-items:center;justify-content:center;cursor:p
 .tab[aria-current=page]{color:var(--accent);font-weight:700}
 
 /* toast */
-.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:60;background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:12px;font-size:14px;max-width:min(400px,calc(100% - 32px));box-shadow:0 10px 30px -10px rgba(0,0,0,.4)}
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:120;background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:12px;font-size:14px;max-width:min(400px,calc(100% - 32px));box-shadow:0 10px 30px -10px rgba(0,0,0,.4)}
 .splash{min-height:70vh;display:grid;place-items:center;text-align:center;gap:12px}
 .note{font-size:12.5px;color:var(--ink-3);line-height:1.6}
 .err{font-size:13.5px;color:var(--danger)}
@@ -1062,6 +1062,7 @@ button.crest{cursor:pointer;border-radius:12px}button.crest:hover{background:rgb
 .mn-msg{margin:0;padding:16px 18px;border-radius:18px;background:rgba(255,246,227,.08);border:1px solid rgba(216,180,101,.35);color:#FFF6E3;font-size:19px;line-height:1.5;word-break:keep-all;max-width:340px}
 .mn-banner{display:flex;align-items:center;gap:12px;text-align:left;cursor:pointer;border:1px solid var(--gold);background:var(--gold-soft);width:100%;color:inherit}
 .mn-b-emo{font-size:28px}
+.mn-err{color:#FFB4A8!important}
 @media (prefers-reduced-motion:reduce){.mn-rain span,.mn-big span{animation:none}}
 
 /* 도착한 마음 — 감성 연출 */
@@ -1104,37 +1105,37 @@ button.crest{cursor:pointer;border-radius:12px}button.crest:hover{background:rgb
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/htm@3.1.1/dist/htm.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
-<script src="js/config.js?v=117"></script>
-<script src="js/core.js?v=117"></script>
-<script src="js/zodiac.js?v=117"></script>
-<script src="js/stage.js?v=117"></script>
-<script src="js/api.js?v=117"></script>
-<script src="js/support.js?v=117"></script>
-<script src="js/avatars.js?v=117"></script>
-<script src="js/links.js?v=117"></script>
-<script src="js/traces.js?v=117"></script>
-<script src="js/resume.js?v=117"></script>
-<script src="js/honors.js?v=117"></script>
-<script src="js/google.js?v=117"></script>
-<script src="js/screens.js?v=117"></script>
-<script src="js/social.js?v=117"></script>
-<script src="js/ops.js?v=117"></script>
-<script src="js/quick.js?v=117"></script>
-<script src="js/heart.js?v=117"></script>
-<script src="js/evolve.js?v=117"></script>
-<script src="js/achieve.js?v=117"></script>
-<script src="js/bonds.js?v=117"></script>
-<script src="js/gems.js?v=117"></script>
-<script src="js/gemnews.js?v=117"></script>
-<script src="js/mindnotes.js?v=117"></script>
-<script src="js/showcase.js?v=117"></script>
-<script src="js/ask.js?v=117"></script>
-<script src="js/places.js?v=117"></script>
-<script src="js/updates.js?v=117"></script>
-<script src="js/insignia.js?v=117"></script>
-<script src="js/gem3d.js?v=117"></script>
-<script src="js/gemwhy.js?v=117"></script>
-<script src="js/samples.js?v=117"></script>
-<script src="js/app.js?v=117"></script>
+<script src="js/config.js?v=118"></script>
+<script src="js/core.js?v=118"></script>
+<script src="js/zodiac.js?v=118"></script>
+<script src="js/stage.js?v=118"></script>
+<script src="js/api.js?v=118"></script>
+<script src="js/support.js?v=118"></script>
+<script src="js/avatars.js?v=118"></script>
+<script src="js/links.js?v=118"></script>
+<script src="js/traces.js?v=118"></script>
+<script src="js/resume.js?v=118"></script>
+<script src="js/honors.js?v=118"></script>
+<script src="js/google.js?v=118"></script>
+<script src="js/screens.js?v=118"></script>
+<script src="js/social.js?v=118"></script>
+<script src="js/ops.js?v=118"></script>
+<script src="js/quick.js?v=118"></script>
+<script src="js/heart.js?v=118"></script>
+<script src="js/evolve.js?v=118"></script>
+<script src="js/achieve.js?v=118"></script>
+<script src="js/bonds.js?v=118"></script>
+<script src="js/gems.js?v=118"></script>
+<script src="js/gemnews.js?v=118"></script>
+<script src="js/mindnotes.js?v=118"></script>
+<script src="js/showcase.js?v=118"></script>
+<script src="js/ask.js?v=118"></script>
+<script src="js/places.js?v=118"></script>
+<script src="js/updates.js?v=118"></script>
+<script src="js/insignia.js?v=118"></script>
+<script src="js/gem3d.js?v=118"></script>
+<script src="js/gemwhy.js?v=118"></script>
+<script src="js/samples.js?v=118"></script>
+<script src="js/app.js?v=118"></script>
 </body>
 </html>
