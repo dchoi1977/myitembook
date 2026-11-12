@@ -19,28 +19,67 @@ const publicAward=a=>({kind:a.kind,title:a.title,sub:a.sub||"",year:a.year||"",t
 
 /* ── 그림 — 트로피(컵)·메달(리본과 원판)·기념패(나무판과 금속판) ── */
 let AW_N=0;
-function Award({a,size=72,lit=true}){const id=useMemo(()=>"aw"+(++AW_N),[]);const k=a.kind||"trophy";
- const M=AW_METAL[k==="medal"?AW_TIERMETAL(a.tier):k==="trophy"?(a.tier==="함께"?"은":"금"):"금"];const [hi,mid,lo]=M;const op=lit?1:.35;
- if(k==="medal")return html`<svg viewBox="0 0 80 96" width=${size} height=${size*1.2} role="img" aria-label=${`메달 · ${a.title}`} style=${{opacity:op}}>
-  <defs><linearGradient id=${id} x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color=${hi}/><stop offset=".55" stop-color=${mid}/><stop offset="1" stop-color=${lo}/></linearGradient></defs>
-  <path d="M22 2h14l8 30H30z" fill="#1F3A68"/><path d="M58 2H44l-8 30h14z" fill="#7A1F2B"/><path d="M33 2h14l-4 30h-6z" fill="#E9C25A" opacity=".85"/>
-  <circle cx="40" cy="62" r="27" fill=${`url(#${id})`} stroke=${lo} stroke-width="2"/><circle cx="40" cy="62" r="20" fill="none" stroke=${hi} stroke-width="1.6" opacity=".9"/>
-  <text x="40" y="68" text-anchor="middle" font-size=${(a.tier||"").length>2?11:15} font-weight="800" fill=${lo} font-family="sans-serif">${(a.tier||"★").slice(0,3)}</text></svg>`;
- if(k==="plaque")return html`<svg viewBox="0 0 80 96" width=${size} height=${size*1.2} role="img" aria-label=${`기념패 · ${a.title}`} style=${{opacity:op}}>
-  <defs><linearGradient id=${id+"w"} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8A5A34"/><stop offset="1" stop-color="#4E2F18"/></linearGradient><linearGradient id=${id} x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color=${hi}/><stop offset=".6" stop-color=${mid}/><stop offset="1" stop-color=${lo}/></linearGradient></defs>
-  <path d="M10 8h60l4 4v74l-4 4H10l-4-4V12z" fill=${`url(#${id}w)`}/><rect x="16" y="18" width="48" height="58" rx="3" fill=${`url(#${id})`}/>
-  <rect x="21" y="23" width="38" height="48" rx="2" fill="none" stroke=${lo} stroke-width="1" opacity=".6"/>
-  <path d="M40 30l3 6 6 1-4.5 4 1 6-5.5-3-5.5 3 1-6-4.5-4 6-1z" fill=${lo} opacity=".75"/>
-  <rect x="26" y="52" width="28" height="2.4" rx="1.2" fill=${lo} opacity=".55"/><rect x="29" y="58" width="22" height="2.4" rx="1.2" fill=${lo} opacity=".4"/><rect x="31" y="64" width="18" height="2.4" rx="1.2" fill=${lo} opacity=".3"/>
-  <circle cx="40" cy="13" r="1.8" fill="#D9B98A"/></svg>`;
- return html`<svg viewBox="0 0 80 96" width=${size} height=${size*1.2} role="img" aria-label=${`트로피 · ${a.title}`} style=${{opacity:op}}>
-  <defs><linearGradient id=${id} x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color=${hi}/><stop offset=".5" stop-color=${mid}/><stop offset="1" stop-color=${lo}/></linearGradient></defs>
-  <path d="M18 10c-12 0-12 20 4 22" fill="none" stroke=${mid} stroke-width="4"/><path d="M62 10c12 0 12 20-4 22" fill="none" stroke=${mid} stroke-width="4"/>
-  <path d="M18 6h44v10c0 16-9 27-22 29C27 43 18 32 18 16z" fill=${`url(#${id})`} stroke=${lo} stroke-width="1.5"/>
-  <path d="M28 10c0 12 4 22 10 26" fill="none" stroke=${hi} stroke-width="2.4" opacity=".8"/>
-  <rect x="35" y="45" width="10" height="12" fill=${mid}/><path d="M28 57h24l3 7H25z" fill=${`url(#${id})`}/>
-  <rect x="18" y="64" width="44" height="22" rx="2" fill="#2E2A24"/><rect x="23" y="69" width="34" height="12" rx="1.5" fill=${`url(#${id})`}/>
-  <text x="40" y="78" text-anchor="middle" font-size="7" font-weight="800" fill=${lo} font-family="sans-serif">${(a.year||"").slice(0,4)}</text></svg>`}
+const AW_RIBBON={"금":["#C22B3A","#7E1420"],"은":["#2A5DA8","#16376B"],"동":["#22795A","#134A33"],"특별":["#7A4CC0","#49287A"]};
+const awLeaves=(cx,cy,r,a0,a1,n,fill,op,sc=1)=>[...Array(n)].map((_,i)=>{const t=a0+(a1-a0)*i/(n-1);const x=cx+Math.cos(t)*r,y=cy+Math.sin(t)*r;const rot=t*180/Math.PI+90+(a1>a0?-38:38);return `<ellipse cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="${3.1*sc}" ry="${1.25*sc}" transform="rotate(${rot.toFixed(0)} ${x.toFixed(1)} ${y.toFixed(1)})" fill="${fill}" opacity="${op}"/>`}).join("");
+const awStar=(cx,cy,R,r)=>[...Array(10)].map((_,i)=>{const a=-Math.PI/2+i*Math.PI/5,q=i%2?r:R;return (cx+Math.cos(a)*q).toFixed(1)+","+(cy+Math.sin(a)*q).toFixed(1)}).join(" ");
+function awardSVG(a,id){const k=a.kind||"trophy";const mk=k==="medal"?AW_TIERMETAL(a.tier):k==="trophy"?(a.tier==="함께"?"은":"금"):"금";const [hi,mid,lo]=AW_METAL[mk];
+ const br=mix(hi,"#FFFFFF",.55),dp=mix(lo,"#000000",.4);const esc=t=>String(t||"").replace(/[&<>"]/g,"");
+ const defs=`<linearGradient id="${id}c" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="${lo}"/><stop offset=".22" stop-color="${mid}"/><stop offset=".42" stop-color="${br}"/><stop offset=".6" stop-color="${hi}"/><stop offset=".82" stop-color="${mid}"/><stop offset="1" stop-color="${dp}"/></linearGradient>
+ <linearGradient id="${id}d" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${br}"/><stop offset=".35" stop-color="${hi}"/><stop offset=".55" stop-color="${mid}"/><stop offset=".7" stop-color="${hi}"/><stop offset="1" stop-color="${lo}"/></linearGradient>
+ <radialGradient id="${id}r" cx="38%" cy="30%" r="80%"><stop offset="0" stop-color="${br}"/><stop offset=".5" stop-color="${hi}"/><stop offset="1" stop-color="${mid}"/></radialGradient>
+ <linearGradient id="${id}g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF" stop-opacity=".7"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></linearGradient>
+ <linearGradient id="${id}w" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#A06A3C"/><stop offset=".5" stop-color="#6E4222"/><stop offset="1" stop-color="#3E2210"/></linearGradient>
+ <linearGradient id="${id}b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4A4038"/><stop offset="1" stop-color="#1C1713"/></linearGradient>`;
+ const spark=(x,y,s)=>`<path d="M${x} ${y-s}l${s*.28} ${s*.72} ${s*.72} ${s*.28}-${s*.72} ${s*.28}-${s*.28} ${s*.72}-${s*.28}-${s*.72}-${s*.72}-${s*.28} ${s*.72}-${s*.28}z" fill="#FFFFFF" opacity=".95"/>`;
+ let body="";
+ if(k==="medal"){const [r1,r2]=AW_RIBBON[mk];const tier=esc((a.tier||"★").slice(0,3));
+  body=`<ellipse cx="40" cy="92.5" rx="20" ry="2.6" fill="#000" opacity=".28"/>
+  <polygon points="19,0 37,0 47,33 33,38" fill="${r1}"/><polygon points="25,0 29.5,0 41.5,35.6 37.8,36.8" fill="#F6E7B8" opacity=".9"/><polygon points="19,0 21.5,0 35,37.4 33,38" fill="#000" opacity=".18"/>
+  <polygon points="61,0 43,0 33,33 47,38" fill="${r2}"/><polygon points="55,0 50.5,0 38.5,35.6 42.2,36.8" fill="#F6E7B8" opacity=".85"/><polygon points="43,0 45.5,0 36,31.5 34,30" fill="#000" opacity=".28"/>
+  <circle cx="40" cy="37.5" r="4.2" fill="none" stroke="${dp}" stroke-width="3"/><circle cx="40" cy="37.5" r="4.2" fill="none" stroke="url(#${id}d)" stroke-width="1.8"/>
+  <circle cx="40" cy="65" r="26" fill="url(#${id}d)" stroke="${dp}" stroke-width=".9"/>
+  <circle cx="40" cy="65" r="24.3" fill="none" stroke="${dp}" stroke-opacity=".5" stroke-width="1.5" stroke-dasharray=".9 1.5"/>
+  <circle cx="40" cy="65" r="21.6" fill="${lo}"/><circle cx="40" cy="65" r="20.6" fill="url(#${id}r)"/>
+  <circle cx="40" cy="65" r="20.6" fill="none" stroke="${br}" stroke-opacity=".7" stroke-width=".6"/>
+  ${awLeaves(40,65,15.6,Math.PI*.62,Math.PI*1.38,7,lo,.62)}${awLeaves(40,65,15.6,Math.PI*.38,-Math.PI*.38,7,lo,.62)}
+  <text x="40.5" y="${tier.length>2?69.4:70.6}" text-anchor="middle" font-family="'Noto Serif KR',serif" font-weight="900" font-size="${tier.length>2?9.5:tier.length>1?12:16}" fill="${br}" opacity=".9">${tier}</text>
+  <text x="40" y="${tier.length>2?68.9:70.1}" text-anchor="middle" font-family="'Noto Serif KR',serif" font-weight="900" font-size="${tier.length>2?9.5:tier.length>1?12:16}" fill="${dp}">${tier}</text>
+  <clipPath id="${id}p"><circle cx="40" cy="65" r="20.6"/></clipPath><ellipse cx="36" cy="51" rx="19" ry="10" fill="url(#${id}g)" opacity=".75" clip-path="url(#${id}p)"/>
+  <path d="M19 55a23 23 0 0 1 14-13" fill="none" stroke="#FFFFFF" stroke-opacity=".7" stroke-width="1.3" stroke-linecap="round"/>${spark(60,46,4.2)}`}
+ else if(k==="plaque"){const tier=esc((a.tier||"").slice(0,3));
+  body=`<ellipse cx="40" cy="92.5" rx="27" ry="2.6" fill="#000" opacity=".28"/>
+  <path d="M12 5h56a5 5 0 0 1 5 5v73a5 5 0 0 1-5 5H12a5 5 0 0 1-5-5V10a5 5 0 0 1 5-5z" fill="url(#${id}w)" stroke="#2A1608" stroke-width=".9"/>
+  <path d="M9 24c20-5 42 5 62-1M9 46c22 5 40-6 62 0M9 68c18-4 44 6 62 1" fill="none" stroke="#2A1608" stroke-opacity=".22" stroke-width="1"/>
+  <rect x="9.6" y="7.6" width="60.8" height="77.8" rx="3.6" fill="none" stroke="#E2B988" stroke-opacity=".4" stroke-width=".8"/>
+  <rect x="15" y="14.6" width="50" height="65" rx="3" fill="#000" opacity=".35"/>
+  <rect x="15" y="13.6" width="50" height="65" rx="3" fill="url(#${id}d)" stroke="${dp}" stroke-width=".8"/>
+  <rect x="18.6" y="17.2" width="42.8" height="57.8" rx="1.8" fill="none" stroke="${dp}" stroke-opacity=".55" stroke-width=".7"/><rect x="19.3" y="17.9" width="42.8" height="57.8" rx="1.8" fill="none" stroke="${br}" stroke-opacity=".55" stroke-width=".5"/>
+  ${[[18.4,17],[61.6,17],[18.4,75.2],[61.6,75.2]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="1.5" fill="${br}" stroke="${dp}" stroke-width=".5"/>`).join("")}
+  ${awLeaves(40,36,10.5,Math.PI*.6,Math.PI*1.36,6,dp,.6,.9)}${awLeaves(40,36,10.5,Math.PI*.4,-Math.PI*.36,6,dp,.6,.9)}
+  <polygon points="${awStar(40.4,36.4,6.4,2.7)}" fill="${br}" opacity=".8"/><polygon points="${awStar(40,36,6.4,2.7)}" fill="${dp}" opacity=".82"/>
+  ${tier?`<text x="40.4" y="59.4" text-anchor="middle" font-family="'Noto Serif KR',serif" font-weight="900" font-size="9" fill="${br}" opacity=".85" letter-spacing="1">${tier}</text><text x="40" y="59" text-anchor="middle" font-family="'Noto Serif KR',serif" font-weight="900" font-size="9" fill="${dp}" letter-spacing="1">${tier}</text>`:""}
+  <rect x="26" y="${tier?63.5:54}" width="28" height="1.6" rx=".8" fill="${dp}" opacity=".5"/><rect x="30" y="${tier?67.6:59}" width="20" height="1.6" rx=".8" fill="${dp}" opacity=".36"/>
+  <clipPath id="${id}p"><rect x="15" y="13.6" width="50" height="65" rx="3"/></clipPath><polygon points="15,13 37,13 21,79 15,79" fill="#FFFFFF" opacity=".2" clip-path="url(#${id}p)"/><polygon points="46,13 51,13 35,79 30,79" fill="#FFFFFF" opacity=".12" clip-path="url(#${id}p)"/>
+  <circle cx="40" cy="9.4" r="1.7" fill="#1E1008"/><circle cx="39.6" cy="9" r=".6" fill="#E2B988" opacity=".7"/>`}
+ else{const yr=esc((a.year||"").slice(0,4));
+  body=`<ellipse cx="40" cy="92.5" rx="27" ry="2.6" fill="#000" opacity=".28"/>
+  <path d="M19 13c-15-2-15 21 5 24" fill="none" stroke="${dp}" stroke-width="5.4" stroke-linecap="round"/><path d="M19 13c-15-2-15 21 5 24" fill="none" stroke="url(#${id}d)" stroke-width="3.4" stroke-linecap="round"/>
+  <path d="M61 13c15-2 15 21-5 24" fill="none" stroke="${dp}" stroke-width="5.4" stroke-linecap="round"/><path d="M61 13c15-2 15 21-5 24" fill="none" stroke="url(#${id}d)" stroke-width="3.4" stroke-linecap="round"/>
+  <path d="M17 8h46v7c0 18-9 29-23 31C26 44 17 33 17 15z" fill="url(#${id}c)" stroke="${dp}" stroke-width=".8"/>
+  <path d="M19.5 20c2 12 9 20 20.5 22.5 11.5-2.5 18.5-10.5 20.5-22.5" fill="none" stroke="${dp}" stroke-opacity=".25" stroke-width=".8"/>
+  <ellipse cx="40" cy="8" rx="23.4" ry="4.3" fill="${br}" stroke="${dp}" stroke-width=".7"/><ellipse cx="40" cy="8.4" rx="20.4" ry="3" fill="${dp}" opacity=".88"/><path d="M21 8.6a20 3 0 0 0 38 0" fill="none" stroke="${mid}" stroke-opacity=".6" stroke-width=".8"/>
+  <polygon points="${awStar(40.5,25.5,7.2,3)}" fill="${br}" opacity=".85"/><polygon points="${awStar(40,25,7.2,3)}" fill="${lo}" opacity=".8"/>
+  <path d="M24.5 15c.5 11 4 19 9.5 24" fill="none" stroke="#FFFFFF" stroke-opacity=".7" stroke-width="2.4" stroke-linecap="round"/><path d="M55.5 15c0 7-1.2 12-3.2 16" fill="none" stroke="#FFFFFF" stroke-opacity=".3" stroke-width="1.2" stroke-linecap="round"/>
+  <path d="M35.5 45.500h9l-1.8 8.500h-5.400z" fill="url(#${id}c)" stroke="${dp}" stroke-width=".5"/><ellipse cx="40" cy="49.6" rx="6.4" ry="2.5" fill="url(#${id}c)" stroke="${dp}" stroke-width=".5"/>
+  <path d="M27.5 61c0-4.6 5.5-7 12.5-7s12.5 2.4 12.5 7z" fill="url(#${id}c)" stroke="${dp}" stroke-width=".6"/>
+  <rect x="21" y="60.5" width="38" height="6" rx="1.6" fill="#4A4038" stroke="#15110D" stroke-width=".5"/><rect x="22" y="61.2" width="36" height="1" rx=".5" fill="#FFFFFF" opacity=".22"/>
+  <rect x="15.5" y="66" width="49" height="21.5" rx="2.2" fill="url(#${id}b)" stroke="#15110D" stroke-width=".6"/><rect x="16.5" y="66.8" width="47" height="1" rx=".5" fill="#FFFFFF" opacity=".2"/>
+  <rect x="24" y="71.2" width="32" height="11" rx="1.6" fill="url(#${id}d)" stroke="${dp}" stroke-width=".5"/>
+  ${yr?`<text x="40" y="79.4" text-anchor="middle" font-family="'Noto Serif KR',serif" font-weight="900" font-size="7.6" fill="${dp}" letter-spacing=".6">${yr}</text>`:`<rect x="29" y="75" width="22" height="1.4" rx=".7" fill="${dp}" opacity=".5"/><rect x="32" y="78" width="16" height="1.4" rx=".7" fill="${dp}" opacity=".35"/>`}
+  ${spark(60,5.5,4.6)}${spark(22,3.5,2.6)}`}
+ return `<svg viewBox="0 0 80 96" xmlns="http://www.w3.org/2000/svg"><defs>${defs}</defs>${body}</svg>`}
+function Award({a,size=72,lit=true}){const id=useMemo(()=>"aw"+(++AW_N),[]);const svg=useMemo(()=>awardSVG(a,id),[a.kind,a.tier,a.year,id]);const KN={trophy:"트로피",medal:"메달",plaque:"기념패"};
+ return html`<span className="award" role="img" aria-label=${`${KN[a.kind]||"트로피"} · ${a.title||""}`} style=${{width:size,height:size*1.2,display:"inline-block",lineHeight:0,flex:"none",opacity:lit?1:.35,filter:size>=40?"drop-shadow(0 3px 5px rgba(0,0,0,.28))":"none"}} dangerouslySetInnerHTML=${{__html:svg}}></span>`}
 
 /* 진열장 — 선반 위 여섯 칸 */
 function HonorCase({list,onPick,empty,compact}){const slots=Array.from({length:HONOR_SHOW},(_,i)=>list[i]||null);
