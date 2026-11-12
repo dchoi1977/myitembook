@@ -33,9 +33,18 @@ function MyGems({fids,cardOf,names,soc,uid,openUser,toast,onFind}){
  const [pop,setPop]=useState(null);
  const SK="mib_gemseen_"+uid;const NEW_MS=72*36e5;const upAt=id=>{const c=cardOf(id);return c?Math.max(Date.parse(c.updated_at||0)||0,(c.data&&c.data.updatedAt)||0):0};
  const [seen,setSeen]=useState(()=>{try{const v=JSON.parse(localStorage.getItem(SK)||"null");if(v&&typeof v==="object")return v}catch(e){}return null});
+ const [snaps,setSnaps]=useState(()=>gnLoad(uid));const [news,setNews]=useState(null);
  useEffect(()=>{if(seen||!fids.length)return;const base={_t:Date.now()};setSeen(base);try{localStorage.setItem(SK,JSON.stringify(base))}catch(e){}},[fids.length,!!seen]);
- const isNew=id=>{if(!seen)return false;const u=upAt(id);return u>0&&u>(seen[id]||seen._t||0)&&Date.now()-u<NEW_MS};
- const markSeen=id=>{const nx={...(seen||{_t:Date.now()}),[id]:Date.now()};setSeen(nx);try{localStorage.setItem(SK,JSON.stringify(nx))}catch(e){}};
+ /* 처음 보는 친구는 지금 모습을 기준으로 조용히 기억(옛 방식으로 NEW인 친구는 소식으로 대신 보여 준다) */
+ const oldNew=id=>{if(!seen)return false;const u=upAt(id);return u>0&&u>(seen[id]||seen._t||0)&&Date.now()-u<NEW_MS};
+ useEffect(()=>{if(!seen)return;let ch=false;const nx={...snaps};fids.forEach(id=>{const c=cardOf(id);if(c&&!nx[id]&&!oldNew(id)){nx[id]=friendSnap(c);ch=true}});if(ch){setSnaps(nx);gnSave(uid,nx)}},[fids.join(","),!!seen,fids.map(id=>upAt(id)).join(",")]);
+ const diffOf=id=>{const c=cardOf(id);const p=snaps[id];return c&&p?friendDiff(p,friendSnap(c)):[]};
+ const isNew=id=>{const c=cardOf(id);if(!c)return false;return snaps[id]?diffOf(id).length>0:oldNew(id)};
+ const remember=id=>{const c=cardOf(id);if(!c)return;const nx={...snaps,[id]:friendSnap(c)};setSnaps(nx);gnSave(uid,nx);const sv={...(seen||{_t:Date.now()}),[id]:Date.now()};setSeen(sv);try{localStorage.setItem(SK,JSON.stringify(sv))}catch(e){}};
+ async function openNews(id){const c=cardOf(id);const prev=snaps[id]||null;const changes=prev?diffOf(id):[];let feed=[];
+  if(!prev){try{const f=await api.feed();const since=(seen&&(seen[id]||seen._t))||0;feed=(f||[]).filter(ev=>ev.user_id===id&&Date.parse(ev.created_at)>since-864e5)}catch(e){}}
+  setNews({id,prev,card:c,changes,feed});track("gemnews_open",{n:changes.length,first:!prev})}
+ const closeNews=then=>{const id=news&&news.id;if(id)remember(id);setNews(null);if(then)then(id)};
  const shown=sorted.filter(id=>cardOf(id)).length;
  return html`<section className="mygems" aria-label="My GEMS">
   <div className="mg-head"><div><div className="mg-eyebrow">INVENTORY</div><h2 className="mg-title">My GEMS</h2></div><span className="mg-count">${sorted.length}<small> 개의 젬 · 빛나는 ${shown}</small></span></div>
@@ -55,7 +64,7 @@ function MyGems({fids,cardOf,names,soc,uid,openUser,toast,onFind}){
    ${Array.from({length:slots}).map((_,i)=>{const id=sorted[i];
     if(!id)return i===sorted.length?html`<button key=${"add"+i} className="mg-slot add" onClick=${onFind}><span className="mg-plus" aria-hidden="true">+</span><span className="mg-name">친구 찾기</span></button>`:html`<div key=${"e"+i} className="mg-slot empty" aria-hidden="true"></div>`;
     const c=cardOf(id);const g=c?c.data.gem:UNCUT;
-    return html`<button key=${id} className=${"mg-slot"+(c?"":" sealed")} onClick=${()=>{const nw=isNew(id);if(nw)markSeen(id);setPop(id);track("mygems_open",{card:!!c,fresh:nw})}} aria-label=${nick(names,id)+(c?" · "+c.data.gemName:" · 아직 원석")+(isNew(id)?" · 새 소식":"")}>
+    return html`<button key=${id} className=${"mg-slot"+(c?"":" sealed")} onClick=${()=>{const nw=isNew(id);track("mygems_open",{card:!!c,fresh:nw});if(nw){openNews(id);return}if(c)remember(id);setPop(id)}} aria-label=${nick(names,id)+(c?" · "+c.data.gemName:" · 아직 원석")+(isNew(id)?" · 달라진 것: "+(diffOf(id).map(x=>x.h).slice(0,3).join(", ")||"새 소식"):"")}>
      ${isNew(id)&&html`<span className="mg-new">NEW</span>`}
      <span className="mg-gem"><${GemView} g=${g} seed=${c?c.data.gemName:id} size=${desk?74:54}/></span>
      ${c&&(()=>{const f=gemFeatures(c.data.gem||{},c.data.gemName);const I=gemIdentity(c.data.gem||{},c.data.gemName);const r=f.find(k=>k==="star"||k==="cat");const ep=(I.aw||[]).some(a=>a.t>=3);return (r||I.rareVariant||ep)?html`<span className="mg-rare" title=${r?INCLUSIONS[r].name:I.variant}>✦</span>`:null})()}
@@ -65,6 +74,7 @@ function MyGems({fids,cardOf,names,soc,uid,openUser,toast,onFind}){
     </button>`})}
   </div>
   <p className="mg-note">카드를 공개한 친구는 빛나는 젬으로, 아직 공개 전인 친구는 깎이기 전 원석으로 담겨요. 젬을 누르면 카드가 열립니다.</p>
+  ${news&&html`<${GemNews} key=${news.id} name=${nick(names,news.id)} prev=${news.prev} card=${news.card} changes=${news.changes} feed=${news.feed} onClose=${()=>closeNews()} onCard=${()=>closeNews(id=>setPop(id))} onProfile=${()=>closeNews(id=>openUser(id))}/>`}
   ${pop&&(cardOf(pop)?html`<${CardShowcase} key=${pop} faces=${otherCardFaces(cardOf(pop),nick(names,pop),pop)} toast=${toast} onClose=${()=>setPop(null)} onProfile=${()=>{const id=pop;setPop(null);openUser(id)}}/>`:html`<${GemPopup} id=${pop} card=${null} names=${names} onClose=${()=>setPop(null)} openUser=${id=>{setPop(null);openUser(id)}} toast=${toast}/>`)}
  </section>`;
 }

@@ -195,7 +195,7 @@ function ShelfScan({onAdd,onClose,toast,canAI,demo}){
  async function scan(){if(!file)return;setBusy(true);setFound(null);try{const img=await imageForAI(file);
   const j=await api.aiJSON({task:"quick",images:[img],prompt:`사진에 보이는 물건들(책장의 책, 책상 위 도구와 기기, 가방 속 물건, 취미 장비, 반려동물, 자격증 등)을 최대 10개까지 찾아 다음 JSON으로만 답한다: {"scene":"무엇을 찍은 사진인지 한 줄(20자 이내)","items":[{"name":"짧은 이름. 책은 제목, 브랜드·모델은 또렷이 보일 때만","category":"장비|자격|반려 중 하나 (책·도구·기기·취미 용품은 장비)","why":"그렇게 본 이유 한 줄(30자 이내)"}]}. 또렷이 보이는 것만 적고 추측으로 채우지 않는다. 같은 물건을 두 번 적지 않는다. 사람 얼굴, 번호판, 주소, 증서 번호, 화면에 떠 있는 개인정보는 언급하지 않는다. 약·의료용품, 신분증, 카드, 현금은 넣지 않는다. 가격이나 시세는 말하지 않는다.`});
   const list=(Array.isArray(j.items)?j.items:[]).map(x=>({name:String(x&&x.name||"").trim().slice(0,30),category:["장비","자격","반려"].includes(x&&x.category)?x.category:"장비",why:String(x&&x.why||"").slice(0,60),on:true})).filter(x=>x.name).slice(0,10);
-  setScene(String(j.scene||"").slice(0,30));setFound(list);track("shelf_scan",{n:list.length});if(!list.length)toast("또렷이 보이는 물건을 찾지 못했어요. 조금 더 가까이에서 찍어 보세요.")}catch(e){toast(errCopy(e))}finally{setBusy(false)}}
+  setScene(String(j.scene||"").slice(0,30));setFound(list);track("shelf_scan",{n:list.length});if(!list.length)toast("또렷이 보이는 물건을 찾지 못했어요. 조금 더 가까이에서 찍어 보세요.")}catch(e){toast(errCopy(e));track("scan_fail",{code:(e&&e.code)||"error"})}finally{setBusy(false)}}
  const pickN=found?found.filter(x=>x.on&&x.name.trim()).length:0;
  async function save(){if(!pickN||saving)return;setSaving(true);const fresh=file&&Date.now()-(file.lastModified||0)<10*60*1000;try{await onAdd(found.filter(x=>x.on&&x.name.trim()).map(x=>({id:"item-"+rid(),name:x.name.trim(),category:x.category,since:"",story:"",photo:"",thumb:"",verify:fresh?"사진 인증 · 방금 촬영":"사진에서 찾음",at:Date.now()})))}finally{setSaving(false)}}
  return html`<${Sheet} title="사진 한 장으로 담기" onClose=${onClose}>
@@ -286,7 +286,7 @@ type 목록 — honor: ${PROOF_CATS.honor.join(", ")} / school: ${PROOF_CATS.sch
   if(!j||j.ok===false){toast(String(j&&j.why||"").slice(0,60)||"증명서로 읽히지 않았어요. 글씨가 잘 보이게 다시 찍어 주세요.");track("proof_scan",{ok:false});return}
   const items=(Array.isArray(j.items)?j.items:[]).map(x=>{const cat=PROOF_CATS[x&&x.cat]?x.cat:"honor";const type=PROOF_CATS[cat].includes(x&&x.type)?x.type:PROOF_CATS[cat][cat==="honor"?5:cat==="school"?5:6];const year=/^(19|20)\d{2}$/.test(String(x&&x.year||""))?String(x.year):"";return {cat,type,name:linkScrub(x&&x.name||"").replace(/\d{6,}/g,"").slice(0,40),extra:linkScrub(x&&x.extra||"").replace(/\d{6,}/g,"").slice(0,40),year,on:true,shelf:cat==="honor"&&type==="자격·면허"}}).filter(x=>x.name).slice(0,3);
   if(!items.length){toast("문서에서 새길 내용을 찾지 못했어요.");return}
-  setRes({doc:linkScrub(j.doc||"증명서").slice(0,24),holder:linkScrub(j.holder||"").slice(0,20),items});track("proof_scan",{ok:true,n:items.length})}catch(e){toast(errCopy(e))}finally{setBusy(false)}}
+  setRes({doc:linkScrub(j.doc||"증명서").slice(0,24),holder:linkScrub(j.holder||"").slice(0,20),items});track("proof_scan",{ok:true,n:items.length})}catch(e){toast(errCopy(e));track("proof_fail",{code:(e&&e.code)||"error"})}finally{setBusy(false)}}
  const set=(i,p)=>setRes(r=>({...r,items:r.items.map((y,k)=>k===i?{...y,...p}:y)}));
  const chosen=res?res.items.filter(x=>x.on&&x.name.trim()):[];
  async function save(){if(!chosen.length||!mineOk||saving||demo)return;setSaving(true);try{

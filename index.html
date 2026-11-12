@@ -960,6 +960,56 @@ button.crest{cursor:pointer;border-radius:12px}button.crest:hover{background:rgb
 .err-stack{font-size:11.5px;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;white-space:pre-wrap;word-break:break-all;max-height:260px;overflow:auto;margin:0}
 @media (prefers-reduced-motion: reduce){.evo,.evo-new,.evo-text,.evo-out,.evo.p2 .evo-rays,.evo-away-tile,.evo-hint{animation:none!important}}
 .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.04em}
+
+/* 친구 젬 소식 — 연출 + 카드뉴스 */
+.gn{position:fixed;inset:0;z-index:90;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(120% 90% at 50% 40%,#22365a 0%,#121a2e 60%,#0b1020 100%);color:#F4F1E9}
+.gn .eyebrow{color:#D8B465;letter-spacing:.24em}
+.gn-stage{cursor:pointer;gap:22px}
+.gn-rays{position:absolute;inset:0;background:repeating-conic-gradient(from 0deg at 50% 42%,rgba(255,236,190,.07) 0 6deg,transparent 6deg 18deg);opacity:0;transition:opacity 1s}
+.gn-stage.shift .gn-rays,.gn-stage.new .gn-rays{opacity:1;animation:gnspin 14s linear infinite}
+@keyframes gnspin{to{transform:rotate(360deg)}}
+.gn-morph{position:relative;width:220px;height:220px;display:grid;place-items:center}
+.gn-morph>span{position:absolute;inset:0;display:grid;place-items:center;transition:opacity 1s ease,transform 1.2s cubic-bezier(.2,.8,.2,1),filter 1s}
+.gn-old{opacity:1;transform:scale(.92)}.gn-new{opacity:0;transform:scale(.7)}
+.gn-stage.shift .gn-old{opacity:0;transform:scale(1.1);filter:blur(3px)}
+.gn-stage.shift .gn-new,.gn-stage.new .gn-new{opacity:1;transform:scale(1.08)}
+.gn-stage.new .gn-old{opacity:0}
+.gn-flash{position:absolute;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(255,244,214,.95),rgba(255,214,140,.35) 40%,transparent 70%);opacity:0;pointer-events:none}
+.gn-stage.shift .gn-flash{animation:gnflash 1.1s ease-out}
+@keyframes gnflash{0%{opacity:0;transform:scale(.3)}35%{opacity:1}100%{opacity:0;transform:scale(1.5)}}
+.gn-cap{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding:0 24px}
+.gn-cap b{font-size:22px;font-family:var(--serif,serif)}
+.gn-cap .small{color:#C9D3E6}
+.gn-skip{position:absolute;bottom:28px;font-size:12px;color:rgba(244,241,233,.6)}
+.gn-cards{justify-content:flex-start;padding:16px 0 calc(18px + env(safe-area-inset-bottom,0px))}
+.gn-top{width:min(440px,100%);display:flex;justify-content:space-between;align-items:center;padding:0 16px 10px;color:#C9D3E6}
+.gn-x{width:36px;height:36px;border-radius:50%;border:1px solid rgba(244,241,233,.3);background:transparent;color:#F4F1E9;font-size:20px;cursor:pointer}
+.gn-track{flex:1;width:min(440px,100%);display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;min-height:0}
+.gn-track::-webkit-scrollbar{display:none}
+.gn-card{flex:0 0 100%;scroll-snap-align:center;box-sizing:border-box;padding:8px 16px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:12px}
+.gn-card>*{max-width:360px}
+.gn-card h2,.gn-card h3{white-space:pre-line;margin:0;color:#FFF6E3;line-height:1.35}
+.gn-card h2{font-size:26px}.gn-card h3{font-size:22px}
+.gn-card p{margin:0;color:#D6DCE8;line-height:1.6;word-break:keep-all}
+.gn-card h2,.gn-card h3{word-break:keep-all}
+@media (min-height:760px){.gn-track{max-height:600px;align-self:center}}
+.gn-card .small{color:#AFBAD0}
+.gn-card:not(.cover):not(.end){background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));border:1px solid rgba(216,180,101,.28);border-radius:22px;margin:0 12px;flex-basis:calc(100% - 24px)}
+.gn-ba{display:flex;align-items:center;gap:14px}
+.gn-ba span{display:flex;flex-direction:column;align-items:center;gap:4px}
+.gn-ba small{font-size:12px;color:#AFBAD0}
+.gn-ba b{color:#D8B465;font-size:22px}
+.gn-gname{font-family:var(--serif,serif);font-size:18px;color:#D8B465 !important}
+.gn-glyph{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;background:rgba(216,180,101,.16);color:#E9C77A}
+.gn-acts{display:flex;flex-direction:column;gap:10px;width:100%;align-items:stretch;margin-top:8px}
+.gn-acts .btn:not(.ghost){background:#D8B465;border-color:#D8B465;color:#1B1A14}
+.gn-acts .btn.ghost{color:#F4F1E9;border-color:rgba(244,241,233,.35)}
+.gn-acts .linkbtn{color:#C9D3E6;align-self:center}
+.gn-nav{display:flex;align-items:center;gap:16px;padding-top:10px}
+.gn-arrow{width:40px;height:40px;border-radius:50%;border:1px solid rgba(244,241,233,.3);background:transparent;color:#F4F1E9;font-size:22px;cursor:pointer}
+.gn-arrow:disabled{opacity:.3;cursor:default}
+.gn-dots{display:flex;gap:6px}.gn-dots i{width:6px;height:6px;border-radius:3px;background:rgba(244,241,233,.3);transition:width .2s}.gn-dots i.on{width:18px;background:#D8B465}
+@media (prefers-reduced-motion:reduce){.gn-rays{animation:none!important}}
 </style>
 </head>
 <body>
@@ -970,33 +1020,34 @@ button.crest{cursor:pointer;border-radius:12px}button.crest:hover{background:rgb
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/htm@3.1.1/dist/htm.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
-<script src="js/config.js?v=111"></script>
-<script src="js/core.js?v=111"></script>
-<script src="js/zodiac.js?v=111"></script>
-<script src="js/stage.js?v=111"></script>
-<script src="js/api.js?v=111"></script>
-<script src="js/support.js?v=111"></script>
-<script src="js/avatars.js?v=111"></script>
-<script src="js/links.js?v=111"></script>
-<script src="js/traces.js?v=111"></script>
-<script src="js/google.js?v=111"></script>
-<script src="js/screens.js?v=111"></script>
-<script src="js/social.js?v=111"></script>
-<script src="js/ops.js?v=111"></script>
-<script src="js/quick.js?v=111"></script>
-<script src="js/heart.js?v=111"></script>
-<script src="js/evolve.js?v=111"></script>
-<script src="js/achieve.js?v=111"></script>
-<script src="js/bonds.js?v=111"></script>
-<script src="js/gems.js?v=111"></script>
-<script src="js/showcase.js?v=111"></script>
-<script src="js/ask.js?v=111"></script>
-<script src="js/places.js?v=111"></script>
-<script src="js/updates.js?v=111"></script>
-<script src="js/insignia.js?v=111"></script>
-<script src="js/gem3d.js?v=111"></script>
-<script src="js/gemwhy.js?v=111"></script>
-<script src="js/samples.js?v=111"></script>
-<script src="js/app.js?v=111"></script>
+<script src="js/config.js?v=112"></script>
+<script src="js/core.js?v=112"></script>
+<script src="js/zodiac.js?v=112"></script>
+<script src="js/stage.js?v=112"></script>
+<script src="js/api.js?v=112"></script>
+<script src="js/support.js?v=112"></script>
+<script src="js/avatars.js?v=112"></script>
+<script src="js/links.js?v=112"></script>
+<script src="js/traces.js?v=112"></script>
+<script src="js/google.js?v=112"></script>
+<script src="js/screens.js?v=112"></script>
+<script src="js/social.js?v=112"></script>
+<script src="js/ops.js?v=112"></script>
+<script src="js/quick.js?v=112"></script>
+<script src="js/heart.js?v=112"></script>
+<script src="js/evolve.js?v=112"></script>
+<script src="js/achieve.js?v=112"></script>
+<script src="js/bonds.js?v=112"></script>
+<script src="js/gems.js?v=112"></script>
+<script src="js/gemnews.js?v=112"></script>
+<script src="js/showcase.js?v=112"></script>
+<script src="js/ask.js?v=112"></script>
+<script src="js/places.js?v=112"></script>
+<script src="js/updates.js?v=112"></script>
+<script src="js/insignia.js?v=112"></script>
+<script src="js/gem3d.js?v=112"></script>
+<script src="js/gemwhy.js?v=112"></script>
+<script src="js/samples.js?v=112"></script>
+<script src="js/app.js?v=112"></script>
 </body>
 </html>
