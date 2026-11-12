@@ -42,7 +42,8 @@ async function resumeRead({text,images}){
  if(clean.replace(/\s/g,"").length<60&&!images.length)throw {code:"rs_short"};
  const imgs=[];for(const f of images.slice(0,3))imgs.push(await imageForAI(f));
  const prompt=`${imgs.length?"첨부한 사진과 ":""}아래 [문서]는 사용자가 직접 건넨 자기 이력서·자기소개서·약력·경력기술서다. 문서에 적힌 것만 읽어 이 사람이 걸어온 길을 JSON 객체 하나로 답한다.
-{"ok":true,"headline":"이 사람이 걸어온 길 한 줄(40자 이내, 평가하지 않는다)","edu":[{"name":"학교·교육기관 이름","type":"${RS_SCHOOL.join("|")}","major":"전공·학위·과정","from":"시작 연도","to":"마친 연도 또는 현재"}],"work":[{"name":"회사·기관 이름","role":"직함·역할","from":"시작 연도","to":"마친 연도 또는 현재","did":"한 일 한 줄(40자 이내)"}],"orgs":[{"name":"단체·학회·모임·교회·봉사단 등 일 밖의 소속","type":"${RS_ORG.slice(2).join("|")}|단체","role":"역할","from":"","to":""}],"honors":[{"name":"수상·자격·면허·장학 이름","type":"${RS_HONOR.join("|")}","by":"수여·발급한 곳","year":"연도"}],"projects":["주요 경력·프로젝트·성과·저서·강의를 한 줄씩, 최대 10개, 각 60자 이내"],"skills":["다룰 줄 아는 일·도구·언어 최대 10개, 각 2~12자"],"themes":["활동 갈래 2~6개, 각 2~8자"],"root":"문서에 '출신지·고향'으로 적힌 지역(없으면 빈 문자열)"}
+{"ok":true,"headline":"이 사람이 걸어온 길 한 줄(40자 이내, 평가하지 않는다)","edu":[{"name":"학교·교육기관 이름","type":"${RS_SCHOOL.join("|")}","major":"전공·학위·과정","from":"시작 연도","to":"마친 연도 또는 현재"}],"work":[{"name":"회사·기관 이름","role":"직함·역할","from":"시작 연도","to":"마친 연도 또는 현재","did":"한 일 한 줄(40자 이내)"}],"orgs":[{"name":"단체·학회·모임·교회·봉사단 등 일 밖의 소속","type":"${RS_ORG.slice(2).join("|")}|단체","role":"역할","from":"","to":""}],"honors":[{"name":"수상·자격·면허·장학 이름","type":"${RS_HONOR.join("|")}","by":"수여·발급한 곳","year":"연도"}],"projects":["주요 경력·프로젝트·성과·저서·강의를 한 줄씩, 최대 10개, 각 60자 이내"],"skills":["다룰 줄 아는 일·도구·언어 최대 10개, 각 2~12자"],"themes":["활동 갈래 2~6개, 각 2~8자"],"awards":[{"kind":"trophy|medal|plaque","title":"30자 이내","sub":"역할·팀·수여한 곳 30자 이내","year":"","to":"","tier":""}],"root":"문서에 '출신지·고향'으로 적힌 지역(없으면 빈 문자열)"}
+awards는 이 사람이 만들어 내고 이루어 낸 것(최대 16개) — ${typeof HONOR_RULES!=="undefined"?HONOR_RULES:""}
 규칙:
 - 이력서·약력·자기소개서가 아니면 {"ok":false} 만 답한다.
 - 개수 상한: edu 6, work 10, orgs 6, honors 12. 고등학교 아래(초·중학교)는 뺀다. 연도는 네 자리 숫자로, 모르면 빈 문자열.
@@ -61,7 +62,7 @@ ${clean||"(글자 없음 — 첨부한 사진을 읽는다)"}`;
  const honors=A(j.honors,12).map(x=>({name:S(x&&x.name,40),type:RS_HONOR.includes(x&&x.type)?x.type:"기타 영예",by:S(x&&x.by,30),year:yr(x&&x.year)})).filter(x=>x.name);
  const projects=A(j.projects,10).map(x=>S(x,70)).filter(Boolean),skills=A(j.skills,10).map(x=>S(x,14)).filter(Boolean),themes=A(j.themes,6).map(x=>S(x,12)).filter(Boolean);
  if(!edu.length&&!work.length&&!honors.length&&!orgs.length&&!projects.length)throw {code:"rs_not"};
- return {headline:S(j.headline,50),edu,work,orgs,honors,projects,skills,themes,root:S(j.root,30)}}
+ return {headline:S(j.headline,50),edu,work,orgs,honors,projects,skills,themes,root:S(j.root,30),awards:typeof honorClean==="function"?honorClean(j.awards):[]}}
 
 /* 경력 햇수 — 일한 기간을 겹치지 않게 더한다 */
 function careerYears(work){const Y=new Date().getFullYear();const iv=work.map(w=>[+w.from||0,w.to==="현재"?Y:(+w.to||+w.from||0)]).filter(([a,b])=>a>1950&&b>=a).sort((a,b)=>a[0]-b[0]);let tot=0,cs=null,ce=null;iv.forEach(([a,b])=>{if(cs===null){cs=a;ce=b}else if(a<=ce)ce=Math.max(ce,b);else{tot+=ce-cs;cs=a;ce=b}});if(cs!==null)tot+=ce-cs;return Math.max(0,tot)}
@@ -92,11 +93,11 @@ const RS_N={school:"배움",org:"소속",honor:"영예",root:"뿌리"};
 
 function ResumeSource({s,setDraft,toast,update,st,demo,onAddItems}){
  const mine=linkList(s).filter(l=>l.kind==="resume");
- const [mode,setMode]=useState("file");const [files,setFiles]=useState([]);const [text,setText]=useState("");const [ok,setOk]=useState(false);const [busy,setBusy]=useState("");const [err,setErr]=useState("");const [res,setRes]=useState(null);const [rows,setRows]=useState([]);const [saving,setSaving]=useState(false);
+ const [mode,setMode]=useState("file");const [files,setFiles]=useState([]);const [text,setText]=useState("");const [ok,setOk]=useState(false);const [busy,setBusy]=useState("");const [err,setErr]=useState("");const [res,setRes]=useState(null);const [rows,setRows]=useState([]);const [saving,setSaving]=useState(false);const [aws,setAws]=useState([]);
  const ready=ok&&(mode==="file"?files.length>0:text.trim().length>=60);
  const choose=e=>{const fl=[...(e.target.files||[])];e.target.value="";if(fl.length)setFiles(f=>addPicks(f,fl,4))};
  async function go(){if(!ready||busy)return;setErr("");setRes(null);try{setBusy("이 기기 안에서 글자를 꺼내는 중…");const src=mode==="file"?await resumeExtract(files):{text,images:[]};setBusy("걸어온 길을 읽는 중… 15초쯤 걸려요");const r=await resumeRead(src);
-   const E0=((st&&st.identity)||{}).entries||[];setRes(r);setRows(resumeCrests(r,E0));track("resume_read",{mode,edu:r.edu.length,work:r.work.length,honors:r.honors.length})}
+   const E0=((st&&st.identity)||{}).entries||[];setRes(r);setRows(resumeCrests(r,E0));{const have=new Set(((st&&st.honors&&st.honors.list)||[]).map(a=>a.kind+a.title.replace(/\s/g,"")));setAws((r.awards||[]).filter(x=>!have.has(x.kind+x.title.replace(/\s/g,""))))}track("resume_read",{mode,edu:r.edu.length,work:r.work.length,honors:r.honors.length})}
   catch(x){const c=x&&x.code;setErr(LINK_ERR[c]||(typeof errCopy==="function"&&c?errCopy(x):"읽지 못했어요. 잠시 뒤 다시 시도해 주세요."));track("resume_fail",{mode,code:c||"error"})}finally{setBusy("")}}
  const setRow=(i,p)=>setRows(L=>L.map((y,k)=>k===i?{...y,...p}:y));
  const picked=rows.filter(x=>x.on&&String(x.name).trim());
@@ -111,9 +112,10 @@ function ResumeSource({s,setDraft,toast,update,st,demo,onAddItems}){
     if(I.entries.filter(y=>y.display).length<ID_MAX_SHOW&&(r.cat==="honor"||r.cat==="school")&&I.entries.filter(y=>y.display).length<3){e.display=true;e.shownAt=Date.now()}I.entries.push(e);fresh++});x.identity=I});
   const shelf=picked.filter(r=>r.cat==="honor"&&r.shelf&&!r.dup).map(r=>({id:"item-"+rid(),name:String(r.name).trim().slice(0,30),category:"자격",since:r.year?r.year+"-01":"",story:String(r.extra||"").trim().slice(0,60),photo:"",thumb:"",verify:"이력서로 확인",at:Date.now()}));
   if(shelf.length&&onAddItems)await onAddItems(shelf,{stay:true});
-  track("resume_add",{crests:picked.length,shelf:shelf.length,years:l.years});
-  toast(`걸어온 길을 담았어요${picked.length?` · 휘장 ${picked.length}개`:""}${shelf.length?` · 선반 ${shelf.length}개`:""}. '다시 읽기'를 누르면 젬에 스며들어요.`);
-  setRes(null);setRows([]);setFiles([]);setText("");setOk(false)}finally{setSaving(false)}}
+  const awPick=aws.filter(x=>x.on&&String(x.title).trim());const awN=awPick.length&&update&&typeof honorAdd==="function"?honorAdd(update,awPick,"resume"):0;
+  track("resume_add",{crests:picked.length,shelf:shelf.length,years:l.years,awards:awN});
+  toast(`걸어온 길을 담았어요${picked.length?` · 휘장 ${picked.length}개`:""}${awN?` · 트로피·메달 ${awN}개`:""}${shelf.length?` · 선반 ${shelf.length}개`:""}. '다시 읽기'를 누르면 젬에 스며들어요.`);
+  setRes(null);setRows([]);setAws([]);setFiles([]);setText("");setOk(false)}finally{setSaving(false)}}
  const yrs=res?careerYears(res.work):0;
  return html`<div className="stack">
   <p className="small muted" style=${{margin:0}}>이력서, 자기소개서, 약력, 경력기술서를 건네면 <b>배움·일·소속·영예</b>를 읽어 휘장으로 새기고, 걸어온 길을 젬에 담아요. 일한 햇수가 쌓일수록 젬이 단단해지고, 갈래가 많을수록 면이 늘어요.</p>
@@ -138,8 +140,9 @@ function ResumeSource({s,setDraft,toast,update,st,demo,onAddItems}){
     <div className="row" style=${{flexWrap:"nowrap",gap:"8px"}}><input type="text" value=${x.extra} maxLength="40" aria-label="덧붙일 말" placeholder=${x.cat==="honor"?"수여한 곳":x.cat==="school"?"전공·과정":"직함·기간"} style=${{flex:1,minWidth:0}} onChange=${e=>setRow(i,{extra:e.target.value})}/><input type="text" inputMode="numeric" value=${x.year} maxLength="4" aria-label="연도" placeholder="연도" style=${{width:"76px",flex:"none"}} onChange=${e=>setRow(i,{year:e.target.value.replace(/\D/g,"")})}/></div>
     ${x.cat==="honor"&&x.type==="자격·면허"&&!x.dup&&html`<label className="lk-mine" style=${{marginTop:0}}><input type="checkbox" checked=${!!x.shelf} onChange=${e=>setRow(i,{shelf:e.target.checked})}/><span>선반의 '자격'에도 담기</span></label>`}
    </div>`)}</div>`}
+   ${aws.length>0&&typeof HonorPick==="function"&&html`<div className="row between"><b>명예의 진열장에 올릴 것</b><span className="small faint">트로피·메달·기념패</span></div><${HonorPick} cands=${aws} setCands=${setAws}/>`}
    ${res.projects.length>0&&html`<details className="rs-more"><summary className="small">해낸 일 ${res.projects.length}줄 · 기록으로 담겨요</summary><ul className="small">${res.projects.map((p,i)=>html`<li key=${i}>${p}</li>`)}</ul></details>`}
-   <div className="row" style=${{gap:"8px"}}><button className="btn grow" disabled=${saving||demo} onClick=${save}>${saving?"담는 중…":picked.length?`휘장 ${picked.length}개 새기고 기록 담기`:"기록만 담기"}</button><button className="btn ghost" onClick=${()=>{setRes(null);setRows([])}}>다시</button></div>
+   <div className="row" style=${{gap:"8px"}}><button className="btn grow" disabled=${saving||demo} onClick=${save}>${saving?"담는 중…":picked.length||aws.some(x=>x.on)?`${[picked.length?`휘장 ${picked.length}`:"",aws.filter(x=>x.on).length?`트로피·메달 ${aws.filter(x=>x.on).length}`:""].filter(Boolean).join(" · ")} 새기고 기록 담기`:"기록만 담기"}</button><button className="btn ghost" onClick=${()=>{setRes(null);setRows([])}}>다시</button></div>
    <p className="note">AI가 문서를 읽은 것이라 틀릴 수 있어요. 이름과 연도를 확인해 주세요. 새긴 휘장에는 '이력서로 확인'이 붙어요.</p>
   </div>`}
   <div className="reads"><b>읽는 것</b><span>학교·전공, 일한 곳과 직함·기간, 소속, 상·자격, 해낸 일과 다룰 줄 아는 것</span><b>읽지 않음</b><span>이름·나이·주소·연락처·주민번호·연봉·가족·건강·종교·병역 — 보내기 전에 이 기기에서 지워요</span><b>보관</b><span>파일과 원문은 저장하지 않고, 읽어 낸 이력 줄만 저장해요. 오늘의 AI 읽기 1회를 써요</span></div>

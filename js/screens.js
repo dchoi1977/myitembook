@@ -303,6 +303,7 @@ function ShelfSheet({st,items,onOpen,onClose,canAI}){
   <p className="serif" style=${{color:"var(--accent)",fontSize:"17px"}}>"얼마짜리인가"가 아니라 "얼마나 함께했는가".</p>
   <p className="small muted">실제로 가지고, 쓰고, 돌보는 것을 담습니다. 가격·시세 칸은 없고, 소유물은 젬의 크기나 밝기에 반영되지 않습니다.</p>
   <div className="panel tint small row between" style=${{alignItems:"center"}}><span>${st.visibility.public&&st.visibility.fields.shelf?html`<b>선반 공개 중</b> · ${items.filter(i=>!i.private).length}개 보임${items.some(i=>i.private)?` · ${items.filter(i=>i.private).length}개 숨김`:""}`:html`<b>선반은 나만 보기</b> · 카드 공개 설정에서 켤 수 있어요`}</span><button className="linkbtn small" onClick=${()=>onOpen("publish")}>공개 설정</button></div>
+  ${typeof HonorCase==="function"&&html`<div className="aw-shelfwrap"><div className="row between"><b>명예의 진열장</b><button className="linkbtn small" onClick=${()=>onOpen("honors")}>${honorsOf(st).list.length?"진열장 관리":"트로피·메달 새기기"}</button></div><${HonorCase} list=${honorShown(st)} compact=${true} onPick=${()=>onOpen("honors")} empty=${"트로피·메달·기념패"}/></div>`}
   <div className="segs" role="group" aria-label="카테고리">${["전체","장비","자격","반려"].map(c=>html`<button key=${c} aria-pressed=${cat===c} onClick=${()=>setCat(c)}>${c}</button>`)}</div>
   ${list.length?html`<div className="shelf">${list.map(i=>html`<${ItemTile} key=${i.id} item=${i} featured=${(st.featured||[]).includes(i.id)} onClick=${()=>onOpen("item:"+i.id)}/>`)}</div>`:html`<div className="panel tint small">아직 담은 아이템이 없습니다. 오래 쓴 카메라, 함께 사는 반려견, 준비해서 딴 자격증처럼 나와 함께한 것을 하나 담아 보세요.</div>`}
   <div className="row"><button className="btn grow" onClick=${()=>onOpen("item:new")}>아이템 담기</button>${typeof ShelfScan==="function"&&(typeof uiOpen!=="function"||uiOpen("scan"))&&html`<button className="btn quiet grow" onClick=${()=>onOpen("shelfscan")}>사진 한 장으로 여러 개</button>`}</div>
@@ -376,7 +377,7 @@ function buildPublicCard(st,items,stats){
   showHex:!!fl.hexagon,badgesAll:fl.badges?earnedIds(st,stats).filter(id=>fl.tags||(badgeById(id)||{}).g!=="연륜"):[],badges:fl.badges?showcaseBadges(st,stats,12).filter(id=>fl.tags||(badgeById(id)||{}).g!=="연륜").slice(0,8):[],...(()=>{const e=equipped(st,stats);const src=id=>BADGES.find(b=>b.title===id);const hideT=!fl.tags&&e.title&&(src(e.title)||{}).g==="연륜";return {title:hideT?"":e.title,frame:!fl.tags&&e.frame==="ring"?"":e.frame}})(),
   shelf:fl.shelf?items.filter(i=>!i.private).length:0,
   items:fl.items?items.filter(i=>(st.featured||[]).includes(i.id)).slice(0,4).map(i=>({name:i.name,category:i.category,since:i.since||"",story:i.story||"",verify:i.verify||""})):[],
-  acceptWords:!!fl.words,tags:fl.tags?cardTags(st):[],crests:fl.crests!==false?shownCrests(st).map(publicCrest):[],motto:fl.crests!==false?idLine(st):"",mottoOwn:!!((st.identity||{}).motto||"").trim(),zodiac:fl.tags&&myZodiac(st)?myZodiac(st).k:null};
+  awards:fl.shelf&&typeof honorShown==="function"?honorShown(st).map(publicAward):[],acceptWords:!!fl.words,tags:fl.tags?cardTags(st):[],crests:fl.crests!==false?shownCrests(st).map(publicCrest):[],motto:fl.crests!==false?idLine(st):"",mottoOwn:!!((st.identity||{}).motto||"").trim(),zodiac:fl.tags&&myZodiac(st)?myZodiac(st).k:null};
  return card;
 }
 function PublicCardView({card,name,compact,who}){
