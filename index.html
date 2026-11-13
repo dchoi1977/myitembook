@@ -1100,6 +1100,84 @@ button.crest{cursor:pointer;border-radius:12px}button.crest:hover{background:rgb
 .mn-card.on .mn-keep span{display:inline-block;animation:mnBeat 1.6s ease-in-out .3s 2 both}
 @keyframes mnBeat{0%,100%{transform:scale(1)}30%{transform:scale(1.25)}60%{transform:scale(.95)}}
 @media (prefers-reduced-motion:reduce){.mn-inner{opacity:1!important;animation:none!important}.mn-card *{animation:none!important}.mn-dust{display:none}}
+
+/* 함께하기 — 우주에 나란히 뜬 두 젬 */
+.tg{position:fixed;inset:0;z-index:92;overflow:hidden;color:#F4F1E9;background:radial-gradient(130% 90% at 50% 45%,#1B2350 0%,#0D1230 45%,#05060F 100%);display:flex;flex-direction:column}
+.tg-neb{position:absolute;inset:-20%;background:radial-gradient(40% 30% at 30% 40%,color-mix(in srgb,var(--ca) 35%,transparent),transparent 70%),radial-gradient(38% 32% at 72% 58%,color-mix(in srgb,var(--cb) 35%,transparent),transparent 70%);filter:blur(30px);opacity:.55;animation:tgNeb 22s ease-in-out infinite alternate}
+@keyframes tgNeb{to{transform:translate(3%,-2%) scale(1.08)}}
+.tg-stars{position:absolute;inset:0;width:100%;height:100%}
+.tg-top{position:relative;z-index:3;display:flex;justify-content:space-between;align-items:center;padding:14px 16px;color:#C9D3E6}
+.tg-stage{position:relative;z-index:2;flex:1;min-height:0;transition:transform 1.6s cubic-bezier(.2,.8,.2,1)}
+.tg-gem{position:absolute;top:50%;display:flex;flex-direction:column;align-items:center;gap:6px;transition:left 1.5s cubic-bezier(.3,.9,.2,1),transform 1.5s cubic-bezier(.3,.9,.2,1),filter 1s}
+.tg-gem.a{left:24%;transform:translate(-50%,-62%) scale(.72)}.tg-gem.b{left:76%;transform:translate(-50%,-38%) scale(.72)}
+.tg-bob{animation:tgBob 5.5s ease-in-out infinite;filter:drop-shadow(0 0 22px color-mix(in srgb,var(--ca) 55%,transparent))}
+.tg-gem.b .tg-bob{animation-duration:6.3s;animation-delay:-2s;filter:drop-shadow(0 0 22px color-mix(in srgb,var(--cb) 55%,transparent))}
+@keyframes tgBob{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-16px) rotate(2deg)}}
+.tg-name{font-size:13px;color:#DCE4F4;text-shadow:0 1px 6px #000}
+.tg-fx{position:absolute;left:50%;top:50%;width:min(130vw,820px);transform:translate(-50%,-50%);pointer-events:none;overflow:visible}
+.tg-fx>*{opacity:0}
+.tg-cta{position:relative;z-index:3;display:flex;flex-direction:column;align-items:center;gap:10px;padding:0 16px calc(28px + env(safe-area-inset-bottom,0px));text-align:center;color:#C9D3E6}
+.tg-go{min-width:220px;min-height:52px;font-size:17px;background:linear-gradient(135deg,var(--ca),var(--cb));border:0;color:#0E1430;font-weight:800;box-shadow:0 0 30px color-mix(in srgb,var(--ca) 50%,transparent);animation:tgPulse 2s ease-in-out infinite}
+@keyframes tgPulse{50%{box-shadow:0 0 50px color-mix(in srgb,var(--cb) 70%,transparent)}}
+/* 다가가기 — 두 젬이 붙고 카메라가 다가간다 */
+.tg.ph-near .tg-gem.a,.tg.ph-fx .tg-gem.a,.tg.ph-burst .tg-gem.a{left:35%;transform:translate(-50%,-50%) scale(1)}
+.tg.ph-near .tg-gem.b,.tg.ph-fx .tg-gem.b,.tg.ph-burst .tg-gem.b{left:65%;transform:translate(-50%,-50%) scale(1)}
+.tg.ph-near .tg-stage,.tg.ph-fx .tg-stage{transform:scale(1.18)}
+.tg.ph-burst .tg-stage{transform:scale(1.32)}
+.tg.ph-fx .tg-bob,.tg.ph-burst .tg-bob{animation:tgShake .12s linear infinite}
+@keyframes tgShake{0%{transform:translate(0,0)}25%{transform:translate(var(--amp),calc(var(--amp)*-.5))}50%{transform:translate(calc(var(--amp)*-.6),var(--amp))}75%{transform:translate(calc(var(--amp)*.4),calc(var(--amp)*.7))}100%{transform:translate(0,0)}}
+.tg.ph-fx .tg-beam{opacity:1;stroke-dasharray:6 10;animation:tgBeam .6s linear infinite}
+@keyframes tgBeam{to{stroke-dashoffset:-32}}
+.tg.ph-fx .tg-trails{opacity:1}.tg-trails path{stroke-dasharray:420;stroke-dashoffset:420;opacity:.8}
+.tg.ph-fx .tg-trails path{animation:tgTrail 2.4s ease-out forwards}
+@keyframes tgTrail{to{stroke-dashoffset:0}}
+.tg.ph-fx .tg-orbit,.tg.ph-burst .tg-orbit{opacity:1;transform-box:view-box;transform-origin:200px 150px;animation:tgOrbit 3s linear infinite}
+@keyframes tgOrbit{to{transform:rotate(360deg)}}
+.tg.ph-fx .tg-core{opacity:.9;transform-box:fill-box;transform-origin:center;animation:tgCore 1.4s ease-in-out infinite}
+@keyframes tgCore{50%{transform:scale(1.25);opacity:.6}}
+.tg.ph-burst .tg-core{opacity:1;transform-box:fill-box;transform-origin:center;animation:tgFlash .9s ease-out forwards}
+@keyframes tgFlash{0%{transform:scale(1);opacity:1}100%{transform:scale(4);opacity:0}}
+.tg.ph-burst .tg-burst{opacity:1}.tg-burst circle{opacity:0}
+.tg.ph-burst .tg-burst circle{animation:tgBurst .9s ease-out forwards}
+@keyframes tgBurst{0%{opacity:1;transform:translate(0,0)}100%{opacity:0;transform:translate(var(--dx),var(--dy))}}
+/* 결과 */
+.tg.ph-result .tg-gem{filter:blur(2px);opacity:.35}
+.tg.ph-result .tg-gem.a{left:30%}.tg.ph-result .tg-gem.b{left:70%}
+.tg-res{position:absolute;inset:auto 0 0 0;z-index:4;max-height:88%;overflow:auto;padding:0 14px calc(16px + env(safe-area-inset-bottom,0px));animation:tgUp .7s cubic-bezier(.2,.9,.2,1) both}
+@keyframes tgUp{from{transform:translateY(40px);opacity:0}}
+.tg-card{max-width:440px;margin:0 auto;padding:20px 18px 16px;border-radius:24px;background:linear-gradient(180deg,rgba(28,36,80,.94),rgba(12,16,40,.96));border:1px solid rgba(216,180,101,.4);box-shadow:0 30px 80px -30px #000;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
+.tg-card .eyebrow{color:#D8B465;letter-spacing:.18em}
+.tg-mini{display:flex;align-items:center;gap:6px}.tg-x{color:#D8B465}
+.tg-score{display:flex;align-items:baseline;gap:2px;font-family:var(--serif,serif);color:#FFF3D6}.tg-score b{font-size:54px;line-height:1}.tg-score span{font-size:22px}
+.tg-rel{margin:0;font-size:28px;color:#FFE2A0;text-shadow:0 0 24px rgba(255,214,140,.45);word-break:keep-all}
+.tg-role{margin:0;font-size:13px;color:#E9C77A}
+.tg-text{margin:0;color:#E6EBF5;line-height:1.6;word-break:keep-all}
+.tg-why{margin:0;color:#AFBAD0}
+.tg-rows{width:100%;display:flex;flex-direction:column;gap:5px;margin-top:6px}
+.tg-row{display:grid;grid-template-columns:22px 1fr 54px 1fr 40px;align-items:center;gap:6px;font-size:12px}
+.tg-k{font-weight:800;color:#D8B465}.tg-v{color:#DCE4F4;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.tg-v.a{text-align:right}.tg-v.b{text-align:left}
+.tg-bar{height:5px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden}.tg-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--ca),var(--cb))}
+.tg-tag{font-size:10.5px;font-weight:800;border-radius:999px;padding:2px 0;text-align:center}.t-s{background:rgba(255,214,140,.2);color:#FFE2A0}.t-c{background:rgba(143,199,255,.2);color:#BFE0FF}.t-w{background:rgba(255,255,255,.1);color:#DCE4F4}
+.tg-note{margin:4px 0 0;font-size:11.5px;color:#C9B89A}.tg-sig{margin:2px 0 0;font-size:10.5px;color:#7F8AA6}
+.tg-acts{max-width:440px;margin:10px auto 0;display:flex;flex-direction:column;gap:8px;align-items:stretch}
+.tg-acts .btn.ghost{color:#F4F1E9;border-color:rgba(244,241,233,.35)}.tg-acts .linkbtn{color:#C9D3E6;align-self:center}
+.tg-bond{background:#D8B465;border-color:#D8B465;color:#1B1A14}
+.tg-open{background:linear-gradient(135deg,#1F2B5E,#3B2A5E);color:#FFE2A0;border-color:#3B2A5E}
+@media (min-width:900px){.tg-gem.a{left:32%}.tg-gem.b{left:68%}}
+@media (prefers-reduced-motion:reduce){.tg-neb,.tg-bob,.tg-go{animation:none!important}}
+
+/* 함께 자라기 · 롤모델 */
+.grow-rows{display:flex;flex-direction:column;gap:6px}
+.grow-row{display:grid;grid-template-columns:62px 1fr auto;align-items:center;gap:10px}
+.grow-n{font-weight:700;font-size:14px}.grow-pips{display:flex;gap:4px}.grow-pips i{flex:1;height:7px;border-radius:4px;background:var(--line)}.grow-pips i.on{background:linear-gradient(90deg,var(--accent),var(--gold))}
+.grow-v{min-width:44px;text-align:right}
+.role-item{border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.role-head{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border:0;background:var(--card,#fff);text-align:left;cursor:pointer;color:inherit}
+.role-map{display:flex;flex-direction:column;gap:10px;padding:4px 14px 14px;background:var(--paper-2,#F6F3EC)}
+.role-map p{margin:2px 0 0;line-height:1.55}.role-mission{padding:10px 12px;border-radius:12px;background:var(--gold-soft);border:1px solid var(--gold)}
+.role-pick h3{margin:0;font-size:19px;color:#FFF3DA}.role-traits{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.role-t{cursor:pointer;background:rgba(255,255,255,.08);color:#F4E8D2;border:1px solid rgba(233,199,122,.4)}.role-t.on{background:#E9C77A;color:#2A1D12;border-color:#E9C77A}
+.tg-pv{color:#5B3FA0}
 </style>
 </head>
 <body>
@@ -1110,37 +1188,39 @@ button.crest{cursor:pointer;border-radius:12px}button.crest:hover{background:rgb
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/htm@3.1.1/dist/htm.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
-<script src="js/config.js?v=124"></script>
-<script src="js/core.js?v=124"></script>
-<script src="js/zodiac.js?v=124"></script>
-<script src="js/stage.js?v=124"></script>
-<script src="js/api.js?v=124"></script>
-<script src="js/support.js?v=124"></script>
-<script src="js/avatars.js?v=124"></script>
-<script src="js/links.js?v=124"></script>
-<script src="js/traces.js?v=124"></script>
-<script src="js/resume.js?v=124"></script>
-<script src="js/honors.js?v=124"></script>
-<script src="js/google.js?v=124"></script>
-<script src="js/screens.js?v=124"></script>
-<script src="js/social.js?v=124"></script>
-<script src="js/ops.js?v=124"></script>
-<script src="js/quick.js?v=124"></script>
-<script src="js/heart.js?v=124"></script>
-<script src="js/evolve.js?v=124"></script>
-<script src="js/achieve.js?v=124"></script>
-<script src="js/bonds.js?v=124"></script>
-<script src="js/gems.js?v=124"></script>
-<script src="js/gemnews.js?v=124"></script>
-<script src="js/mindnotes.js?v=124"></script>
-<script src="js/showcase.js?v=124"></script>
-<script src="js/ask.js?v=124"></script>
-<script src="js/places.js?v=124"></script>
-<script src="js/updates.js?v=124"></script>
-<script src="js/insignia.js?v=124"></script>
-<script src="js/gem3d.js?v=124"></script>
-<script src="js/gemwhy.js?v=124"></script>
-<script src="js/samples.js?v=124"></script>
-<script src="js/app.js?v=124"></script>
+<script src="js/config.js?v=125"></script>
+<script src="js/core.js?v=125"></script>
+<script src="js/zodiac.js?v=125"></script>
+<script src="js/stage.js?v=125"></script>
+<script src="js/api.js?v=125"></script>
+<script src="js/support.js?v=125"></script>
+<script src="js/avatars.js?v=125"></script>
+<script src="js/links.js?v=125"></script>
+<script src="js/traces.js?v=125"></script>
+<script src="js/resume.js?v=125"></script>
+<script src="js/honors.js?v=125"></script>
+<script src="js/google.js?v=125"></script>
+<script src="js/screens.js?v=125"></script>
+<script src="js/social.js?v=125"></script>
+<script src="js/ops.js?v=125"></script>
+<script src="js/quick.js?v=125"></script>
+<script src="js/heart.js?v=125"></script>
+<script src="js/evolve.js?v=125"></script>
+<script src="js/achieve.js?v=125"></script>
+<script src="js/bonds.js?v=125"></script>
+<script src="js/gems.js?v=125"></script>
+<script src="js/gemnews.js?v=125"></script>
+<script src="js/mindnotes.js?v=125"></script>
+<script src="js/showcase.js?v=125"></script>
+<script src="js/ask.js?v=125"></script>
+<script src="js/places.js?v=125"></script>
+<script src="js/updates.js?v=125"></script>
+<script src="js/insignia.js?v=125"></script>
+<script src="js/gem3d.js?v=125"></script>
+<script src="js/gemwhy.js?v=125"></script>
+<script src="js/together.js?v=125"></script>
+<script src="js/grow.js?v=125"></script>
+<script src="js/samples.js?v=125"></script>
+<script src="js/app.js?v=125"></script>
 </body>
 </html>

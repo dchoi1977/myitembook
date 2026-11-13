@@ -78,6 +78,9 @@ function App(){
 
  // stage only rises; badges stay; a visible change of the gem plays the evolve ceremony
  const [fx,setFx]=useState([]);const [show,setShow]=useState(null);const [askStat,setAskStat]=useState(null);const [asksMe,setAsksMe]=useState([]);const evo=fx[0]||null;const pushFx=list=>setFx(q=>[...q,...list.filter(Boolean)]);const nextFx=()=>setFx(q=>q.slice(1));
+ const [roles,setRoles]=useState(null);const [roleFans,setRoleFans]=useState(0);
+ const loadRoles=useCallback(async()=>{if(!uid||demo||typeof api.roleList!=="function")return;try{const [r,f]=await Promise.all([api.roleList(),api.roleFollowers().catch(()=>0)]);setRoles(r||[]);setRoleFans(+f||0)}catch(e){setRoles([])}},[uid,demo]);
+ useEffect(()=>{loadRoles()},[loadRoles]);
  const [minds,setMinds]=useState([]);const [mindOpen,setMindOpen]=useState(false);const mindAuto=useRef(false);
  const loadMinds=useCallback(async()=>{if(!uid||demo||typeof api.heartInbox!=="function")return;try{const r=await api.heartInbox(uid);setMinds(r||[]);if(r&&r.length)ensureNames(r.map(x=>x.from_id))}catch(e){}},[uid,demo]);
  useEffect(()=>{loadMinds();const t=setInterval(()=>{if(document.visibilityState==="visible")loadMinds()},120000);return()=>clearInterval(t)},[loadMinds]);
@@ -122,6 +125,9 @@ function App(){
  // keep the public card fresh
  const pubT=useRef(null);
  useEffect(()=>{if(demo||!uid||!st||!st.visibility.public||!st.analysis||!loaded.current)return;clearTimeout(pubT.current);pubT.current=setTimeout(()=>{api.publishCard(uid,buildPublicCard(st,items,stats),st.visibility.audience||"all").catch(()=>{})},1500);return()=>clearTimeout(pubT.current)},[st&&JSON.stringify([st.analysis,st.visibility,st.gemOverride,st.featured,st.honors,st.identity,activeDays(st),st.quick&&st.quick.answers&&[st.quick.answers.mbti,st.quick.answers.blood],st.flags&&[st.flags.title,st.flags.frame,st.flags.pins,st.flags.marks,(st.flags.badgesSeen||[]).length]]),items.length,items.filter(i=>i.private).length,stats&&stageOf(st,stats),stats&&stats.connections]);
+ /* 함께하기용 젬 모양 — 카드 공개와 상관없이 젬의 모양만 (나이테·문장·능력치·휘장 이름은 넣지 않음) */
+ const shapeT=useRef(null);const shapeKey=(!demo&&st&&st.analysis&&typeof tgShape==="function")?(()=>{try{const g=livingGem(st);return JSON.stringify([tgFp(tgShape(g,stageOf(st,stats),st.createdAt)),!!(st.flags&&st.flags.noRole)])}catch(e){return ""}})():"";
+ useEffect(()=>{if(!shapeKey||!uid||!loaded.current)return;clearTimeout(shapeT.current);shapeT.current=setTimeout(()=>{const g={...livingGem(st)};delete g.rings;delete g.basis;delete g.reasons;delete g.value;delete g.domains;api.shapeSave(uid,{v:1,gem:g,gemName:gemName(g),stage:stageOf(st,stats),seed:st.createdAt},!!(st.flags&&st.flags.noRole)).catch(()=>{})},2500);return()=>clearTimeout(shapeT.current)},[shapeKey]);
 
  const update=useCallback(fn=>setSt(s=>{const n=clone(s);fn(n);return n}),[]);
  useEffect(()=>{try{window.scrollTo(0,0)}catch(e){}},[route,tab]);
@@ -176,7 +182,7 @@ function App(){
  }
  const openUser=(id,focus)=>{if(!id)return;setSheet("user:"+id+(focus?":"+focus:""))};
  useEffect(()=>{if(profile&&profile.role==="admin"&&st&&/^#admin$/i.test(location.hash||"")){setRoute("admin");setSheet(null);try{history.replaceState(null,"",location.pathname+location.search)}catch(e){}}},[profile&&profile.role,!!st]);
- window.__openUser=openUser;window.__uid=uid;window.__loadMinds=loadMinds;window.__reloadSoc=reloadSoc;
+ window.__openUser=openUser;window.__uid=uid;window.__loadMinds=loadMinds;window.__reloadRoles=loadRoles;window.__reloadSoc=reloadSoc;
 
  // ── render
  if(boot||route==="loading")return html`<div className="app"><div className="splash wrap"><div className="stack" style=${{alignItems:"center"}}><div className="pulse"><${GemView} g=${{stone:"오팔",form:"결정",texture:"유백",light:"번짐",hardness:2,grain:1,facets:8}} seed="splash" size=${120}/></div><p className="faint small">MyItemBook을 여는 중</p></div></div></div>`;
@@ -208,6 +214,8 @@ function App(){
  const mid=!demo&&html`<div className="stack">
   <${DailyQuestion} key=${"dq"+day} day=${day} answered=${dailyAnswered} toast=${toast} onDone=${reloadSoc}/>
   ${(typeof uiOpen!=="function"||uiOpen("ask"))&&html`<${AskPanel} stat=${askStat} incoming=${asksMe.filter(a=>!((st.flags&&st.flags.askPass)||{})[a.round])} names=${names} onOpen=${openSheet} st=${st} update=${update} toast=${toast} friendsCount=${friendIds(uid,soc.friendships).length}/>`}
+  ${typeof GrowPanel==="function"&&html`<${GrowPanel} vals=${growValues({uid,soc,askStat,asksMe,roleFans})}/>`}
+  ${typeof RolePanel==="function"&&st.analysis&&html`<${RolePanel} st=${st} stats=${stats} update=${update} toast=${toast} openUser=${openUser} roles=${roles} fans=${roleFans} reload=${loadRoles}/>`}
   <${Missions} day=${day} stats=${stats} onOpen=${openSheet}/>
   ${(typeof uiOpen!=="function"||uiOpen("identity"))&&html`<${IdPrompt} st=${st} update=${update} onOpen=${openSheet} day=${day}/>`}
   ${day>=4&&stats.analyses<2&&html`<div className="panel tint stack"><b>중간 다시 읽기 · Day 4</b><span className="small muted">사흘 동안 남긴 한 줄과 한 걸음을 더해 나를 다시 읽어 보세요. 육각형에 지난 모습이 점선으로 겹쳐 보입니다.</span><button className="btn sm" onClick=${()=>openSheet("reread")}>새 기록 더해 다시 읽기</button></div>`}
