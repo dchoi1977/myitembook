@@ -98,7 +98,7 @@ function TogetherView({me,other,onClose,canBond,onBond,toast}){
  async function save(){if(busy)return;setBusy(true);try{const H2C=await loadH2C();const cv=await H2C(card.current,{backgroundColor:"#0E1430",scale:2,useCORS:true,logging:false});const blob=await new Promise(r=>cv.toBlob(r,"image/png"));const file=new File([blob],`MIB-함께하기-${res.name}.png`,{type:"image/png"});
    if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],title:`${me.name} × ${other.name} · ${res.name}`})}catch(e){}}else{const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=file.name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}track("together_save")}catch(e){toast&&toast("이미지를 만들지 못했어요.")}finally{setBusy(false)}}
  const bondName=res.name.length>10?res.name.replace(/\s/g,"").slice(0,10):res.name;
- return html`<div className=${"tg ph-"+phase} role="dialog" aria-modal="true" aria-label=${`함께하기 · ${me.name}과 ${other.name}`} style=${{"--ca":ca,"--cb":cb,"--amp":amp+"px"}}>
+ return ReactDOM.createPortal(html`<div className=${"tg ph-"+phase} role="dialog" aria-modal="true" aria-label=${`함께하기 · ${me.name}과 ${other.name}`} style=${{"--ca":ca,"--cb":cb,"--amp":amp+"px"}}>
   <div className="tg-neb" aria-hidden="true"></div><${TgStars} warp=${phase==="near"?1:phase==="fx"?.4:0}/>
   <div className="tg-top"><span className="small">함께하기 · ${phase==="float"?"광활한 우주에 두 젬이 떠 있어요":phase==="result"?"우리 둘의 결":"두 젬이 서로를 느끼는 중…"}</span><button className="gn-x" aria-label="닫기" onClick=${onClose}>×</button></div>
   <div className="tg-stage">
@@ -133,5 +133,5 @@ function TogetherView({me,other,onClose,canBond,onBond,toast}){
     <button className="linkbtn small" onClick=${onClose}>닫기</button>
    </div>
   </div>`}
- </div>`;
+ </div>`,document.body);
 }

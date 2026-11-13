@@ -718,11 +718,13 @@ function Toast({msg}){return msg?html`<div className="toast" role="status">${msg
 /* 뒤로 가기(아이폰 가장자리 쓸기·안드로이드 뒤로 버튼·브라우저 뒤로)로 맨 위에 열린 화면부터 닫는다 */
 const BACK={layers:[],ignore:0,ready:false,pend:0,timer:0};
 function backInit(){if(BACK.ready||typeof window==="undefined")return;BACK.ready=true;window.addEventListener("popstate",()=>{if(BACK.ignore>0){BACK.ignore--;return}const top=BACK.layers.pop();if(top){top.byPop=true;try{top.close()}catch(e){}}})}
-function backFlush(){BACK.timer=0;const n=BACK.pend;BACK.pend=0;if(n>0){BACK.ignore++;try{history.go(-n)}catch(e){BACK.ignore--}}}
+/* 앱이 쌓은 기록만큼만 뒤로 — 빠르게 열고 닫아도 앱 밖(이전 페이지)으로 나가지 않게 */
+const backDepth=()=>{try{const d=history.state&&history.state.mibD;return typeof d==="number"?d:0}catch(e){return 0}};
+function backFlush(){BACK.timer=0;const n=Math.min(BACK.pend,backDepth());BACK.pend=0;if(n>0){BACK.ignore++;try{history.go(-n)}catch(e){BACK.ignore--}}}
 function useBackLayer(onClose){const ref=useRef(onClose);ref.current=onClose;
  useEffect(()=>{backInit();const layer={close:()=>ref.current&&ref.current(),byPop:false};BACK.layers.push(layer);
   /* a page that replaces another in the same moment reuses its history entry */
-  if(BACK.pend>0)BACK.pend--;else{try{history.pushState({mib:"layer"},"")}catch(e){}}
+  if(BACK.pend>0)BACK.pend--;else{try{history.pushState({mib:"layer",mibD:backDepth()+1},"")}catch(e){}}
   return()=>{const i=BACK.layers.indexOf(layer);if(i>=0){BACK.layers.splice(i,1);if(!layer.byPop){BACK.pend++;if(!BACK.timer)BACK.timer=setTimeout(backFlush,0)}}}},[])}
 /* PC에서는 '나를 꾸미는 화면'을 옆 창 대신 가운데 본문 페이지로 연다 */
 const PageCtx=React.createContext(false);
