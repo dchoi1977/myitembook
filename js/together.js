@@ -137,8 +137,10 @@ function TogetherView({me,other,onClose,canBond,onBond,toast}){
 }
 
 /* ── 결과 이미지 — 화면을 찍지 않고 캔버스에 바로 그린다(빠르고 매번 같은 모양) ── */
+/* 낱말 단위로 줄바꿈 — 낱말이 줄 끝에서 갈라지지 않게 */
+function tgWrap(x,text,maxW,max){const out=[];let line="";for(const w of String(text||"").split(/\s+/)){const t=line?line+" "+w:w;if(x.measureText(t).width>maxW&&line){out.push(line);line=w}else line=t}if(line)out.push(line);return out.slice(0,max)}
 async function tgImage(res,me,other){
- const W=1080,H=1380,cv=document.createElement("canvas");cv.width=W;cv.height=H;const x=cv.getContext("2d");
+ const W=1080,H=1700,cv=document.createElement("canvas");cv.width=W;cv.height=H;const x=cv.getContext("2d");
  try{await document.fonts.ready}catch(e){}
  const SERIF='"Noto Serif KR","Apple SD Gothic Neo",serif',SANS='"Noto Sans KR","Apple SD Gothic Neo",sans-serif';
  const sa=STONES[me.g.stone]||STONES["오팔"],sb=STONES[other.g.stone]||STONES["오팔"];const ca=sa.light==="#FFFFFF"?sa.tint:sa.light,cb=sb.light==="#FFFFFF"?sb.tint:sb.light;
@@ -152,14 +154,15 @@ async function tgImage(res,me,other){
  x.fillStyle="#D8B465";x.font=`700 26px ${SANS}`;x.fillText("우 리  둘 의  결",W/2,660);
  x.fillStyle="#FFF3D6";x.font=`800 150px ${SERIF}`;const sw=x.measureText(String(res.score)).width;x.font=`700 54px ${SERIF}`;const pw=x.measureText("%").width;const sx=W/2-(sw+pw+6)/2;x.textAlign="left";x.font=`800 150px ${SERIF}`;x.fillText(String(res.score),sx,810);x.font=`700 54px ${SERIF}`;x.fillText("%",sx+sw+6,810);x.textAlign="center";
  x.shadowColor="rgba(255,214,140,.55)";x.shadowBlur=30;x.fillStyle="#FFE2A0";x.font=`800 76px ${SERIF}`;x.fillText(res.name,W/2,915);x.shadowBlur=0;
- let y=975;if(res.role){x.fillStyle="#E9C77A";x.font=`600 30px ${SANS}`;x.fillText(`${res.role.lead} · ${res.role.labels[0]}   ⟶   ${res.role.follow} · ${res.role.labels[1]}`,W/2,y);y+=56}
- x.fillStyle="#E6EBF5";x.font=`500 36px ${SANS}`;wrapLines(x,res.text,W-200,3).forEach(l=>{x.fillText(l,W/2,y);y+=54});
+ let y=995;if(res.role){x.fillStyle="#E9C77A";x.font=`600 30px ${SANS}`;x.fillText(`${res.role.lead} · ${res.role.labels[0]}   ⟶   ${res.role.follow} · ${res.role.labels[1]}`,W/2,y);y+=56}
+ x.fillStyle="#E6EBF5";x.font=`500 36px ${SANS}`;tgWrap(x,res.text,W-200,3).forEach(l=>{x.fillText(l,W/2,y);y+=54});
  y+=16;const rows=res.rows;const top=y,cw=(W-200)/4;rows.forEach((r,i)=>{const cx=100+cw*(i%4)+cw/2,cy=top+Math.floor(i/4)*120;x.fillStyle="rgba(255,255,255,.07)";x.beginPath();x.roundRect?x.roundRect(cx-cw/2+8,cy,cw-16,104,20):x.rect(cx-cw/2+8,cy,cw-16,104);x.fill();
   x.fillStyle="#D8B465";x.font=`800 30px ${SERIF}`;x.fillText(r.k,cx,cy+40);x.fillStyle=r.tag==="닮음"?"#FFE2A0":r.tag==="채움"?"#BFE0FF":"#DCE4F4";x.font=`700 26px ${SANS}`;x.fillText(r.tag,cx,cy+82)});
- y=top+250;
- x.fillStyle="#9CA7C2";x.font=`500 24px ${SANS}`;if(other.sample)x.fillText(other.real?"공개 자료로 만든 헌정 샘플과의 궁합 · 본인이 참여하지 않았어요":"가상 인물과의 궁합이에요",W/2,y),y+=40;
- x.fillStyle="#D8B465";x.font=`700 30px ${SERIF}`;x.fillText("MyItemBook",W/2,H-70);x.fillStyle="#7F8AA6";x.font=`500 22px ${SANS}`;x.fillText(`함께하기 · 같은 두 젬이면 언제나 같은 결과 (${res.ver})`,W/2,H-34);
- return cv}
+ y=top+240+52;
+ x.fillStyle="#9CA7C2";x.font=`500 24px ${SANS}`;if(other.sample){x.fillText(other.real?"공개 자료로 만든 헌정 샘플과의 궁합 · 본인이 참여하지 않았어요":"가상 인물과의 궁합이에요",W/2,y);y+=56}
+ y+=24;x.fillStyle="#D8B465";x.font=`700 30px ${SERIF}`;x.fillText("MyItemBook",W/2,y);y+=40;x.fillStyle="#7F8AA6";x.font=`500 22px ${SANS}`;x.fillText(`함께하기 · 같은 두 젬이면 언제나 같은 결과 (${res.ver})`,W/2,y);y+=44;
+ /* 내용 높이에 맞춰 자른다 — 글이 길어도 겹치지 않게 */
+ const FH=Math.min(H,Math.ceil(y));if(FH===H)return cv;const out=document.createElement("canvas");out.width=W;out.height=FH;out.getContext("2d").drawImage(cv,0,0);return out}
 function TgShare({res,me,other,toast,onClose}){
  const [st,setSt]=useState("make");const [url,setUrl]=useState("");const blobR=useRef(null);const [err,setErr]=useState("");
  const name=`MIB-함께하기-${me.name}-${other.name}.png`.replace(/[\\/:*?"<>|\s]+/g,"_");
