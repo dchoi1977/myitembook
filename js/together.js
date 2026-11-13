@@ -95,8 +95,7 @@ function TogetherView({me,other,onClose,canBond,onBond,toast}){
  const amp=((shA.hardness+shB.hardness)/2).toFixed(1);const orbN=Math.round((shA.facets+shB.facets)/2);const trails=clamp(Math.round((shA.grain+shB.grain)/2)+2,2,7);
  function approach(){if(phase!=="float")return;track("together_approach",{name:res.name});if(reduce){setPhase("result");setN(res.score);return}setPhase("near");setTimeout(()=>setPhase("fx"),1500);setTimeout(()=>setPhase("burst"),4300);setTimeout(()=>setPhase("result"),5200);try{navigator.vibrate&&navigator.vibrate([20,60,20,60,40,120,80])}catch(e){}}
  useEffect(()=>{if(phase!=="result")return;if(reduce){setN(res.score);return}let v=0;const t=setInterval(()=>{v+=Math.max(1,Math.round((res.score-v)/7));if(v>=res.score){v=res.score;clearInterval(t)}setN(v)},40);return()=>clearInterval(t)},[phase]);
- async function save(){if(busy)return;setBusy(true);try{const H2C=await loadH2C();const cv=await H2C(card.current,{backgroundColor:"#0E1430",scale:2,useCORS:true,logging:false});const blob=await new Promise(r=>cv.toBlob(r,"image/png"));const file=new File([blob],`MIB-함께하기-${res.name}.png`,{type:"image/png"});
-   if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],title:`${me.name} × ${other.name} · ${res.name}`})}catch(e){}}else{const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=file.name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}track("together_save")}catch(e){toast&&toast("이미지를 만들지 못했어요.")}finally{setBusy(false)}}
+ const [share,setShare]=useState(false);
  const bondName=res.name.length>10?res.name.replace(/\s/g,"").slice(0,10):res.name;
  return ReactDOM.createPortal(html`<div className=${"tg ph-"+phase} role="dialog" aria-modal="true" aria-label=${`함께하기 · ${me.name}과 ${other.name}`} style=${{"--ca":ca,"--cb":cb,"--amp":amp+"px"}}>
   <div className="tg-neb" aria-hidden="true"></div><${TgStars} warp=${phase==="near"?1:phase==="fx"?.4:0}/>
@@ -114,6 +113,7 @@ function TogetherView({me,other,onClose,canBond,onBond,toast}){
    <div className="tg-gem b"><div className="tg-bob"><${GemView} g=${other.g} seed=${other.seed} size=${170}/></div><span className="tg-name">${other.name}</span></div>
   </div>
   ${phase==="float"&&html`<div className="tg-cta"><p className="small">두 젬의 8가지 속성이 서로를 어떻게 비추는지 볼까요?</p><button className="btn tg-go" onClick=${approach}>✦ 다가가기</button></div>`}
+  ${share&&html`<${TgShare} res=${res} me=${me} other=${other} toast=${toast} onClose=${()=>setShare(false)}/>`}
   ${phase==="result"&&html`<div className="tg-res" role="region" aria-label="함께하기 결과">
    <div className="tg-card" ref=${card}>
     <div className="tg-mini"><${GemView} g=${me.g} seed=${me.seed} size=${54}/><span className="tg-x">✦</span><${GemView} g=${other.g} seed=${other.seed} size=${54}/></div>
@@ -129,9 +129,57 @@ function TogetherView({me,other,onClose,canBond,onBond,toast}){
    </div>
    <div className="tg-acts">
     ${canBond&&html`<button className="btn block tg-bond" onClick=${()=>onBond&&onBond(bondName)}>'${bondName}'${josa(bondName,"으로").slice(bondName.length)} 관계 명칭 제안하기</button>`}
-    <div className="row" style=${{gap:"8px"}}><button className="btn ghost grow" disabled=${busy} onClick=${save}>${busy?"만드는 중…":"결과 이미지 저장·공유"}</button><button className="btn ghost grow" onClick=${()=>{setPhase("float");setN(0)}}>다시 보기</button></div>
+    <div className="row" style=${{gap:"8px"}}><button className="btn ghost grow" onClick=${()=>setShare(true)}>결과 이미지 저장·공유</button><button className="btn ghost grow" onClick=${()=>{setPhase("float");setN(0)}}>다시 보기</button></div>
     <button className="linkbtn small" onClick=${onClose}>닫기</button>
    </div>
   </div>`}
  </div>`,document.body);
 }
+
+/* ── 결과 이미지 — 화면을 찍지 않고 캔버스에 바로 그린다(빠르고 매번 같은 모양) ── */
+async function tgImage(res,me,other){
+ const W=1080,H=1380,cv=document.createElement("canvas");cv.width=W;cv.height=H;const x=cv.getContext("2d");
+ try{await document.fonts.ready}catch(e){}
+ const SERIF='"Noto Serif KR","Apple SD Gothic Neo",serif',SANS='"Noto Sans KR","Apple SD Gothic Neo",sans-serif';
+ const sa=STONES[me.g.stone]||STONES["오팔"],sb=STONES[other.g.stone]||STONES["오팔"];const ca=sa.light==="#FFFFFF"?sa.tint:sa.light,cb=sb.light==="#FFFFFF"?sb.tint:sb.light;
+ const bg=x.createRadialGradient(W/2,H*.32,40,W/2,H*.4,H*.9);bg.addColorStop(0,"#1E2A5C");bg.addColorStop(.5,"#0D1230");bg.addColorStop(1,"#05060F");x.fillStyle=bg;x.fillRect(0,0,W,H);
+ const nb=(cx,cy,c)=>{const g=x.createRadialGradient(cx,cy,10,cx,cy,380);g.addColorStop(0,c+"66");g.addColorStop(1,c+"00");x.fillStyle=g;x.fillRect(0,0,W,H)};nb(W*.3,H*.24,ca);nb(W*.7,H*.28,cb);
+ const R=rng("tg-img|"+res.seed);for(let i=0;i<260;i++){x.globalAlpha=.25+R()*.75;x.fillStyle="#fff";x.beginPath();x.arc(R()*W,R()*H,R()*1.8+.3,0,6.283);x.fill()}x.globalAlpha=1;
+ const gl=x.createLinearGradient(W*.3,0,W*.7,0);gl.addColorStop(0,ca);gl.addColorStop(.5,"#FFFFFF");gl.addColorStop(1,cb);x.strokeStyle=gl;x.lineWidth=6;x.lineCap="round";x.globalAlpha=.85;x.beginPath();x.moveTo(W*.34,360);x.lineTo(W*.66,360);x.stroke();x.globalAlpha=1;
+ const [ia,ib]=await Promise.all([svgImage(gemSVG(me.g,me.seed,"tgia"),340,365),svgImage(gemSVG(other.g,other.seed,"tgib"),340,365)]);
+ x.drawImage(ia,W*.30-170,170,340,365);x.drawImage(ib,W*.70-170,170,340,365);
+ x.textAlign="center";x.fillStyle="#DCE4F4";x.font=`600 30px ${SANS}`;x.fillText(me.name,W*.30,575);x.fillText(other.name,W*.70,575);
+ x.fillStyle="#D8B465";x.font=`700 26px ${SANS}`;x.fillText("우 리  둘 의  결",W/2,660);
+ x.fillStyle="#FFF3D6";x.font=`800 150px ${SERIF}`;const sw=x.measureText(String(res.score)).width;x.font=`700 54px ${SERIF}`;const pw=x.measureText("%").width;const sx=W/2-(sw+pw+6)/2;x.textAlign="left";x.font=`800 150px ${SERIF}`;x.fillText(String(res.score),sx,810);x.font=`700 54px ${SERIF}`;x.fillText("%",sx+sw+6,810);x.textAlign="center";
+ x.shadowColor="rgba(255,214,140,.55)";x.shadowBlur=30;x.fillStyle="#FFE2A0";x.font=`800 76px ${SERIF}`;x.fillText(res.name,W/2,915);x.shadowBlur=0;
+ let y=975;if(res.role){x.fillStyle="#E9C77A";x.font=`600 30px ${SANS}`;x.fillText(`${res.role.lead} · ${res.role.labels[0]}   ⟶   ${res.role.follow} · ${res.role.labels[1]}`,W/2,y);y+=56}
+ x.fillStyle="#E6EBF5";x.font=`500 36px ${SANS}`;wrapLines(x,res.text,W-200,3).forEach(l=>{x.fillText(l,W/2,y);y+=54});
+ y+=16;const rows=res.rows;const top=y,cw=(W-200)/4;rows.forEach((r,i)=>{const cx=100+cw*(i%4)+cw/2,cy=top+Math.floor(i/4)*120;x.fillStyle="rgba(255,255,255,.07)";x.beginPath();x.roundRect?x.roundRect(cx-cw/2+8,cy,cw-16,104,20):x.rect(cx-cw/2+8,cy,cw-16,104);x.fill();
+  x.fillStyle="#D8B465";x.font=`800 30px ${SERIF}`;x.fillText(r.k,cx,cy+40);x.fillStyle=r.tag==="닮음"?"#FFE2A0":r.tag==="채움"?"#BFE0FF":"#DCE4F4";x.font=`700 26px ${SANS}`;x.fillText(r.tag,cx,cy+82)});
+ y=top+250;
+ x.fillStyle="#9CA7C2";x.font=`500 24px ${SANS}`;if(other.sample)x.fillText(other.real?"공개 자료로 만든 헌정 샘플과의 궁합 · 본인이 참여하지 않았어요":"가상 인물과의 궁합이에요",W/2,y),y+=40;
+ x.fillStyle="#D8B465";x.font=`700 30px ${SERIF}`;x.fillText("MyItemBook",W/2,H-70);x.fillStyle="#7F8AA6";x.font=`500 22px ${SANS}`;x.fillText(`함께하기 · 같은 두 젬이면 언제나 같은 결과 (${res.ver})`,W/2,H-34);
+ return cv}
+function TgShare({res,me,other,toast,onClose}){
+ const [st,setSt]=useState("make");const [url,setUrl]=useState("");const blobR=useRef(null);const [err,setErr]=useState("");
+ const name=`MIB-함께하기-${me.name}-${other.name}.png`.replace(/[\\/:*?"<>|\s]+/g,"_");
+ const isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+ const canShare=useMemo(()=>{try{return !!(navigator.canShare&&navigator.canShare({files:[new File([new Blob(["x"])],"x.png",{type:"image/png"})]}))}catch(e){return false}},[]);
+ useEffect(()=>{let alive=true;const t0=Date.now();(async()=>{try{const cv=await tgImage(res,me,other);const blob=await new Promise(r=>cv.toBlob(r,"image/png"));if(!alive)return;blobR.current=blob;setUrl(URL.createObjectURL(blob));setSt("ready");track("together_image",{ms:Date.now()-t0})}catch(e){if(alive){setSt("error");setErr("이미지를 만들지 못했어요. 다시 시도해 주세요.")}}})();return()=>{alive=false}},[]);
+ useEffect(()=>()=>{if(url)URL.revokeObjectURL(url)},[url]);
+ async function save(){const blob=blobR.current;if(!blob)return;setSt("saving");try{
+   if(window.showSaveFilePicker&&!isMobile){try{const h=await window.showSaveFilePicker({suggestedName:name,types:[{description:"PNG 이미지",accept:{"image/png":[".png"]}}]});const w=await h.createWritable();await w.write(blob);await w.close();setSt("saved");track("together_save",{via:"picker"});return}catch(e){if(e&&e.name==="AbortError"){setSt("ready");return}}}
+   if(/iPhone|iPad|iPod/i.test(navigator.userAgent)&&canShare){try{await navigator.share({files:[new File([blob],name,{type:"image/png"})]});setSt("saved");track("together_save",{via:"ios-share"});return}catch(e){if(e&&e.name==="AbortError"){setSt("ready");return}}}
+   const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},800);setSt("saved");track("together_save",{via:"download"})}catch(e){setSt("ready");setErr("저장하지 못했어요. 이미지를 길게 눌러 저장해 보세요.")}}
+ async function doShare(){const blob=blobR.current;if(!blob)return;setSt("sharing");try{await navigator.share({files:[new File([blob],name,{type:"image/png"})],title:`${me.name} × ${other.name} · ${res.name}`});setSt("shared");track("together_share")}catch(e){setSt("ready");if(e&&e.name!=="AbortError")setErr("공유하지 못했어요. '이미지 저장'을 써 주세요.")}}
+ const label={make:"이미지를 만드는 중…",ready:"이미지가 준비됐어요",saving:"저장하는 중…",saved:isMobile?"저장했어요 · 사진첩이나 다운로드에서 확인하세요":"저장했어요 · 다운로드 폴더를 확인하세요",sharing:"공유 창을 여는 중…",shared:"공유했어요",error:"이미지를 만들지 못했어요"}[st];
+ const busy=st==="make"||st==="saving"||st==="sharing";
+ return html`<div className="tg-share" role="dialog" aria-modal="true" aria-label="결과 이미지 저장·공유" onClick=${e=>{if(e.target===e.currentTarget&&!busy)onClose()}}><div className="tg-share-in">
+  <div className=${"tg-share-st st-"+st} role="status" aria-live="polite">${busy?html`<i className="tg-spin" aria-hidden="true"></i>`:st==="saved"||st==="shared"?html`<b aria-hidden="true">✓</b>`:null}<span>${label}</span></div>
+  <div className="tg-share-img">${url?html`<img src=${url} alt=${`${me.name}과 ${other.name}의 함께하기 결과 · ${res.name} ${res.score}%`}/>`:html`<div className="tg-share-ph"><i className="tg-spin big" aria-hidden="true"></i></div>`}</div>
+  ${err&&html`<p className="small mn-err" role="alert">${err}</p>`}
+  <div className="row" style=${{gap:"8px"}}><button className="btn grow tg-bond" disabled=${!url||busy} onClick=${save}>이미지 저장</button>${canShare&&html`<button className="btn ghost grow" disabled=${!url||busy} onClick=${doShare}>공유하기</button>`}</div>
+  ${!isMobile&&url&&html`<p className="small" style=${{color:"#AFBAD0",margin:0}}>이미지를 마우스 오른쪽 버튼으로 눌러 저장해도 돼요.</p>`}
+  ${isMobile&&url&&html`<p className="small" style=${{color:"#AFBAD0",margin:0}}>저장이 안 되면 이미지를 길게 눌러 저장하세요.</p>`}
+  <button className="linkbtn small" style=${{color:"#C9D3E6"}} disabled=${busy&&st!=="make"} onClick=${onClose}>닫기</button>
+ </div></div>`}
