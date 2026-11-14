@@ -160,8 +160,8 @@ textarea{min-height:110px;resize:vertical}
 .hero-name{margin:0;font-size:clamp(26px,7.4vw,40px);font-weight:700;color:var(--accent);letter-spacing:.01em;text-align:center;animation:heroIn 1.1s .25s cubic-bezier(.2,.7,.2,1) both}
 @keyframes heroIn{from{opacity:0;transform:translateY(18px) scale(.97)}to{opacity:1;transform:none}}
 .hero-hover{position:absolute;left:50%;bottom:62px;display:flex;gap:12px;align-items:center;white-space:nowrap;opacity:0;transform:translate(-50%,8px);transition:opacity .4s,transform .4s;pointer-events:none}
-.gem-hero:hover .hero-hover,.gem-hero:focus-within .hero-hover{opacity:1;transform:translate(-50%,0);pointer-events:auto}
-@media (hover:none){.hero-hover{display:none}}
+@media (hover:hover) and (pointer:fine){.gem-hero:hover .hero-hover,.gem-hero:has(:focus-visible) .hero-hover{opacity:1;transform:translate(-50%,0);pointer-events:auto}}
+@media (hover:none),(pointer:coarse){.hero-hover{display:none}}
 .hero-cue{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:rgba(251,250,245,.7);cursor:pointer;display:flex;align-items:center;justify-content:center;animation:heroIn 1s .8s both}
 .hero-cue span{width:9px;height:9px;border-right:2px solid var(--ink-3);border-bottom:2px solid var(--ink-3);transform:rotate(45deg) translate(-2px,-2px);animation:cueBob 1.8s ease-in-out infinite}
 @keyframes cueBob{0%,100%{translate:0 0}50%{translate:0 4px}}
@@ -1205,39 +1205,39 @@ body:has(.tg) .tabbar,body:has(.tg) .fab,body:has(.gn) .tabbar,body:has(.gn) .fa
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/htm@3.1.1/dist/htm.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
-<script src="js/config.js?v=129"></script>
-<script src="js/core.js?v=129"></script>
-<script src="js/zodiac.js?v=129"></script>
-<script src="js/stage.js?v=129"></script>
-<script src="js/api.js?v=129"></script>
-<script src="js/support.js?v=129"></script>
-<script src="js/avatars.js?v=129"></script>
-<script src="js/links.js?v=129"></script>
-<script src="js/traces.js?v=129"></script>
-<script src="js/resume.js?v=129"></script>
-<script src="js/honors.js?v=129"></script>
-<script src="js/google.js?v=129"></script>
-<script src="js/screens.js?v=129"></script>
-<script src="js/social.js?v=129"></script>
-<script src="js/ops.js?v=129"></script>
-<script src="js/quick.js?v=129"></script>
-<script src="js/heart.js?v=129"></script>
-<script src="js/evolve.js?v=129"></script>
-<script src="js/achieve.js?v=129"></script>
-<script src="js/bonds.js?v=129"></script>
-<script src="js/gems.js?v=129"></script>
-<script src="js/gemnews.js?v=129"></script>
-<script src="js/mindnotes.js?v=129"></script>
-<script src="js/showcase.js?v=129"></script>
-<script src="js/ask.js?v=129"></script>
-<script src="js/places.js?v=129"></script>
-<script src="js/updates.js?v=129"></script>
-<script src="js/insignia.js?v=129"></script>
-<script src="js/gem3d.js?v=129"></script>
-<script src="js/gemwhy.js?v=129"></script>
-<script src="js/together.js?v=129"></script>
-<script src="js/grow.js?v=129"></script>
-<script src="js/samples.js?v=129"></script>
-<script src="js/app.js?v=129"></script>
+<script src="js/config.js?v=130"></script>
+<script src="js/core.js?v=130"></script>
+<script src="js/zodiac.js?v=130"></script>
+<script src="js/stage.js?v=130"></script>
+<script src="js/api.js?v=130"></script>
+<script src="js/support.js?v=130"></script>
+<script src="js/avatars.js?v=130"></script>
+<script src="js/links.js?v=130"></script>
+<script src="js/traces.js?v=130"></script>
+<script src="js/resume.js?v=130"></script>
+<script src="js/honors.js?v=130"></script>
+<script src="js/google.js?v=130"></script>
+<script src="js/screens.js?v=130"></script>
+<script src="js/social.js?v=130"></script>
+<script src="js/ops.js?v=130"></script>
+<script src="js/quick.js?v=130"></script>
+<script src="js/heart.js?v=130"></script>
+<script src="js/evolve.js?v=130"></script>
+<script src="js/achieve.js?v=130"></script>
+<script src="js/bonds.js?v=130"></script>
+<script src="js/gems.js?v=130"></script>
+<script src="js/gemnews.js?v=130"></script>
+<script src="js/mindnotes.js?v=130"></script>
+<script src="js/showcase.js?v=130"></script>
+<script src="js/ask.js?v=130"></script>
+<script src="js/places.js?v=130"></script>
+<script src="js/updates.js?v=130"></script>
+<script src="js/insignia.js?v=130"></script>
+<script src="js/gem3d.js?v=130"></script>
+<script src="js/gemwhy.js?v=130"></script>
+<script src="js/together.js?v=130"></script>
+<script src="js/grow.js?v=130"></script>
+<script src="js/samples.js?v=130"></script>
+<script src="js/app.js?v=130"></script>
 </body>
 </html>

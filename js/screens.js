@@ -172,7 +172,7 @@ function GemHero({st,stats,onOpen}){
   <div className="hero-stage">${z&&html`<div className="hero-sky"><${ZodiacSky} z=${z} size=${Math.round(size*.98)}/></div>`}<button className="hero-gem" onClick=${()=>onOpen((typeof uiOpen!=="function"||uiOpen("gem3d"))?"gem3d":"gemwhy")} aria-label=${gemName(g)+" 젬 크게 보기"}><${GemView} g=${g} seed=${st.createdAt} size=${size}/></button></div>
   <h1 className="hero-name serif">${gemName(g)}</h1>
   <div className="hero-hover"><span className="chip gold">연마 ${stage}단계 · ${STAGES[stage]}</span><button className="linkbtn small" onClick=${()=>onOpen("gemwhy")}>왜 이런 모양일까 ›</button></div>
-  <button className="hero-cue" onClick=${()=>{const el=document.querySelector(".hero-next");if(el)el.scrollIntoView({behavior:"smooth",block:"start"})}} aria-label="아래로 내려 보기"><span></span></button>
+  <button className="hero-cue" onClick=${e=>{e.currentTarget.blur();const el=document.querySelector(".hero-next");if(el)el.scrollIntoView({behavior:"smooth",block:"start"})}} aria-label="아래로 내려 보기"><span></span></button>
  </section>`}
 function FadeIn({children,delay=0}){const ref=useRef(null);const [on,setOn]=useState(false);
  useEffect(()=>{const el=ref.current;if(!el)return;if(typeof IntersectionObserver==="undefined"||(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)){setOn(true);return}
